@@ -25,7 +25,14 @@ from app.configuracion import obtener_configuracion
 
 # Importar los módulos de modelos es lo que registra las tablas en Base.
 # Sin este import, Alembic no vería ninguna tabla y generaría migraciones vacías.
-from app.modelos import afluencia, catalogo, preferencias, usuario  # noqa: F401
+from app.modelos import (  # noqa: F401
+    afluencia,
+    catalogo,
+    itinerario,
+    preferencias,
+    transporte,
+    usuario,
+)
 
 config = context.config
 

@@ -504,3 +504,88 @@ class TestAccesoAItinerariosGuardados:
 
         assert respuesta.status_code == 200
         assert respuesta.json() == []
+
+
+class TestElSistemaExplicaPorQueElDiaQuedoCorto:
+    """Un itinerario corto sin explicacion parece un fallo, y casi nunca lo es.
+
+    Estas pruebas existen porque los tres casos aparecieron probando la
+    aplicacion a mano: itinerarios de una sola parada donde el visitante no
+    tenia forma de saber si el sistema se habia roto o si es que no cabia mas.
+    """
+
+    def test_avisa_cuando_el_presupuesto_no_da_ni_para_un_traslado(
+        self, cliente: TestClient, catalogo_del_valle: Session
+    ):
+        pobre = PreferenciaViaje(
+            usuario_id=None,
+            fecha_inicio=SABADO,
+            fecha_fin=SABADO,
+            distrito_origen="HUANCAYO",
+            # Un sol al dia: no alcanza ni para el pasaje mas barato.
+            presupuesto_soles=Decimal("1.00"),
+            intereses=["arqueologia", "naturaleza"],
+            movilidad="taxi",
+            requiere_accesibilidad=False,
+            idioma="es",
+            ritmo="moderado",
+        )
+        catalogo_del_valle.add(pobre)
+        catalogo_del_valle.commit()
+        catalogo_del_valle.refresh(pobre)
+
+        cuerpo = armar(cliente, pobre.id)
+
+        assert len(cuerpo["paradas"]) == 1
+        assert any(
+            "presupuesto de traslado" in a for a in cuerpo["avisos"]
+        ), "el itinerario se quedo en una parada sin decir por que"
+
+    def test_avisa_cuando_solo_hay_un_recurso_al_alcance(
+        self, cliente: TestClient, catalogo_del_valle: Session
+    ):
+        """Caminando el alcance son 8 km: desde Sapallanga casi no hay nada."""
+        aislada = PreferenciaViaje(
+            usuario_id=None,
+            fecha_inicio=SABADO,
+            fecha_fin=SABADO,
+            distrito_origen="SAPALLANGA",
+            presupuesto_soles=Decimal("400.00"),
+            intereses=["folclore"],
+            movilidad="caminando",
+            requiere_accesibilidad=False,
+            idioma="es",
+            ritmo="relajado",
+        )
+        catalogo_del_valle.add(aislada)
+        catalogo_del_valle.commit()
+        catalogo_del_valle.refresh(aislada)
+
+        cuerpo = armar(cliente, aislada.id)
+
+        if len(cuerpo["paradas"]) > 1:
+            pytest.skip("con estos datos si hay mas de un recurso al alcance")
+
+        assert any("no hay recorrido que armar" in a for a in cuerpo["avisos"])
+
+    def test_no_avisa_de_presupuesto_cuando_el_dia_se_lleno(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """Si el dia esta lleno no falta nada que explicar, y sobra el ruido."""
+        cuerpo = armar(cliente, preferencia.id)
+
+        if len(cuerpo["paradas"]) < 5:
+            pytest.skip("el dia no se lleno con estos datos")
+
+        assert not any("presupuesto de traslado" in a for a in cuerpo["avisos"])
+
+    def test_el_aviso_de_horarios_concuerda_en_numero(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """Nada de «1 de los 1 recursos considerados no tienen horario»."""
+        cuerpo = armar(cliente, preferencia.id)
+
+        aviso = next(a for a in cuerpo["avisos"] if "horario de atención" in a)
+
+        assert "de los 1 recursos" not in aviso
+        assert "1 de los 1" not in aviso

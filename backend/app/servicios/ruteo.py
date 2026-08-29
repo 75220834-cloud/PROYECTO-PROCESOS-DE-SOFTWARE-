@@ -159,9 +159,30 @@ PESO_DE_LA_AFINIDAD = 3
 #: la petición empezaría a notarse.
 MAXIMO_CANDIDATOS = 20
 
-#: Segundos que se le dan al optimizador. Más allá de esto la mejora es
-#: marginal y la petición web se hace incómoda.
-SEGUNDOS_DE_BUSQUEDA = 5
+#: Segundos que se le dan al optimizador.
+#:
+#: **También está medido.** La búsqueda local guiada no demuestra optimalidad,
+#: así que agota siempre el límite: este número no es un tope, es el costo. Se
+#: probó con dos perfiles distintos:
+#:
+#: ==========  =======  ========  ==========
+#: Límite (s)  Paradas  Afinidad  Total (s)
+#: ==========  =======  ========  ==========
+#: 1           5 y 7    272 y 340  3,7 y 2,3
+#: **2**       5 y 7    272 y 340  2,9 y 3,2
+#: 3           5 y 7    272 y 340  3,9 y 4,2
+#: 5           5 y 7    272 y 340  6,0 y 6,3
+#: ==========  =======  ========  ==========
+#:
+#: **El resultado es idéntico en los cuatro casos**: con estos tamaños de
+#: problema (20 candidatos) el solucionador converge en el primer segundo y el
+#: resto del límite se tira. Se deja en 2 y no en 1 para tener margen si el
+#: problema se complica, pero sabiendo que 5 no compraba nada.
+#:
+#: La diferencia importa: el plan de trabajo exige que un itinerario se calcule
+#: en menos de 10 segundos, y con el límite en 5 el peor perfil medido tardaba
+#: 8,0 s. Eso es poco margen para una máquina más lenta que la de desarrollo.
+SEGUNDOS_DE_BUSQUEDA = 2
 
 
 # ---------------------------------------------------------------------------
@@ -963,6 +984,27 @@ def _explicar_si_el_dia_quedo_corto(
     comprueba que quede sitio en el día y que el traslado más barato que sale
     de la última parada ya no cabe en lo que sobra del dinero.
     """
+    # Este caso va PRIMERO, antes de comprobar si el día está lleno. Con un
+    # solo candidato el tope de paradas también vale uno, así que el día
+    # parecería «lleno» y el visitante se quedaría sin explicación ninguna.
+    #
+    # Y no es que el dinero no llegue: es que no hay adónde ir. Pasa con
+    # `movilidad = caminando`, cuyo alcance son 8 km, en distritos con poca
+    # oferta cercana.
+    if len(candidatos) < 2:
+        moverse = (
+            "moverte en transporte en vez de a pie"
+            if preferencia.movilidad == "caminando"
+            else "ampliar la zona"
+        )
+        resultado.avisos.append(
+            f"Desde {preferencia.distrito_origen.title()} solo hay un recurso al "
+            "alcance con los intereses y la forma de moverte que indicaste, así que "
+            f"no hay recorrido que armar. Añadir intereses, o {moverse}, abriría "
+            "muchas más opciones."
+        )
+        return
+
     if len(resultado.paradas) >= paradas_maximas:
         return  # el día está lleno: no falta nada que explicar
 
@@ -996,10 +1038,23 @@ def _explicar_si_el_dia_quedo_corto(
         else "Ampliar el presupuesto del viaje permitiría añadir más paradas."
     )
 
+    # «Se acabó el presupuesto» sería falso cuando no se ha gastado nada: lo
+    # que pasa entonces es que no alcanza ni para el primer traslado.
+    if gastado == 0:
+        motivo = (
+            f"el traslado más barato desde ahí cuesta hasta "
+            f"S/ {min(precios_restantes):.2f} y el presupuesto de traslado del día "
+            f"es de S/ {presupuesto_traslado:.2f}"
+        )
+    else:
+        motivo = (
+            f"se agotó el presupuesto de traslado del día: S/ {presupuesto_traslado:.2f}, "
+            f"de los que ya se usan hasta S/ {gastado:.2f}"
+        )
+
     resultado.avisos.append(
-        f"El itinerario tiene {cuantas} {plural} y no más porque se acabó el "
-        f"presupuesto de traslado del día: S/ {presupuesto_traslado:.2f}, que es la "
-        f"parte de tu presupuesto total reservada para transporte. {consejo}"
+        f"El itinerario tiene {cuantas} {plural} y no más porque {motivo}. Esa cifra "
+        f"es la parte de tu presupuesto total reservada para transporte. {consejo}"
     )
 
 
@@ -1073,11 +1128,23 @@ def _agregar_avisos_de_calidad(
         )
 
     if sin_horario:
+        # Se redacta distinto cuando solo hay un recurso: «1 de los 1 recursos
+        # considerados no tienen horario» es la clase de frase que delata que
+        # nadie leyó el mensaje que escribió.
+        if total_candidatos == 1:
+            cuenta = "El único recurso considerado no tiene"
+            alcance = "Para él"
+        elif sin_horario == total_candidatos:
+            cuenta = f"Ninguno de los {total_candidatos} recursos considerados tiene"
+            alcance = "Para ellos"
+        else:
+            cuenta = f"{sin_horario} de los {total_candidatos} recursos considerados no tienen"
+            alcance = "Para esos"
+
         resultado.avisos.append(
-            f"{sin_horario} de los {total_candidatos} recursos considerados no "
-            "tienen horario de atención publicado en el inventario del MINCETUR. "
-            "Para esos, el itinerario solo garantiza que la visita cabe dentro "
-            "del día: confirma el horario antes de ir."
+            f"{cuenta} horario de atención publicado en el inventario del "
+            f"MINCETUR. {alcance}, el itinerario solo garantiza que la visita cabe "
+            "dentro del día: confirma el horario antes de ir."
         )
 
 

@@ -2,6 +2,7 @@
  * Punto de entrada del frontend.
  *
  * Aqui se montan los tres proveedores que necesita toda la aplicacion:
+ * - ProveedorTema: unica fuente de verdad del tema claro/oscuro.
  * - BrowserRouter: navegacion entre paginas sin recargar el navegador.
  * - QueryClientProvider: memoria temporal de las respuestas de la API.
  * - la configuracion de i18next, que se activa con solo importarla.
@@ -12,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from '@/App';
+import { ProveedorTema } from '@/componentes/ProveedorTema';
 import '@/estilos/index.css';
 import '@/i18n';
 
@@ -31,10 +33,12 @@ if (!contenedor) {
 
 createRoot(contenedor).render(
   <StrictMode>
-    <QueryClientProvider client={clienteDeConsultas}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ProveedorTema>
+      <QueryClientProvider client={clienteDeConsultas}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ProveedorTema>
   </StrictMode>,
 );

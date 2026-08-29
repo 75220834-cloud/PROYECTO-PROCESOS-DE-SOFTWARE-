@@ -1,32 +1,45 @@
 /**
- * Gancho que gestiona el tema claro/oscuro.
+ * Contexto y gancho del tema claro/oscuro.
  *
- * NOMBRE EN INGLES A PROPOSITO: React identifica los ganchos por el prefijo
- * "use". No es una convencion de estilo, es como el compilador y el revisor
- * de codigo reconocen que esta funcion puede llamar a useState y useEffect.
- * Cae dentro de la excepcion de la regla de idioma del proyecto (palabras
- * reservadas de la biblioteca). La parte propia del nombre, "Tema", sigue
- * en espanol. Ver docs/decisiones/2026-08-28-prefijo-use-en-los-ganchos.md
+ * NOMBRE EN INGLÉS A PROPÓSITO: React identifica los ganchos por el prefijo
+ * "use". No es una convención de estilo, es cómo el compilador y el revisor
+ * de código reconocen que esta función puede llamar a useState y useEffect.
+ * Cae dentro de la excepción de la regla de idioma del proyecto (palabras
+ * reservadas de la biblioteca). La parte propia del nombre, "Tema", sigue en
+ * español. Ver docs/decisiones/2026-08-28-prefijo-use-en-los-ganchos.md
  *
- * Como funciona por dentro:
- * 1. Al cargar, busca si el usuario ya eligio un tema (guardado en
- *    localStorage). Si nunca eligio, usa la preferencia del sistema operativo.
- * 2. Cuando el tema cambia, anade o quita la clase "oscuro" del elemento
- *    <html>. Esa clase es la que activa todas las variantes  dark:  de
- *    Tailwind (ver la declaracion @custom-variant en estilos/index.css).
- * 3. Guarda la eleccion para la proxima visita.
+ * POR QUÉ UN CONTEXTO Y NO SOLO UN useState:
+ * si cada componente que necesita saber el tema guardara su propio estado,
+ * tendríamos varias copias que se desincronizan entre sí — por ejemplo, un
+ * interruptor en el encabezado de escritorio y otro en el menú del móvil
+ * mostrando iconos contradictorios. El contexto garantiza una única fuente
+ * de verdad para toda la aplicación.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, useContext } from 'react';
 
 export type Tema = 'claro' | 'oscuro';
 
 /** Clave con la que se recuerda el tema en el navegador. */
 export const CLAVE_TEMA = 'rutaviva.tema';
 
-/** Clase CSS que activa el tema oscuro en todo el arbol del documento. */
-const CLASE_OSCURO = 'oscuro';
+/** Clase CSS que activa el tema oscuro en todo el árbol del documento. */
+export const CLASE_OSCURO = 'oscuro';
 
-function leerTemaInicial(): Tema {
+export interface ValorContextoTema {
+  tema: Tema;
+  alternarTema: () => void;
+  establecerTema: (tema: Tema) => void;
+}
+
+export const ContextoTema = createContext<ValorContextoTema | null>(null);
+
+/**
+ * Lee el tema que el usuario eligió antes; si nunca eligió, usa la
+ * preferencia del sistema operativo.
+ *
+ * Se exporta porque lo necesita el proveedor para calcular el estado inicial.
+ */
+export function leerTemaInicial(): Tema {
   // En las pruebas y en el renderizado del servidor no existe window.
   if (typeof window === 'undefined') return 'claro';
 
@@ -35,31 +48,26 @@ function leerTemaInicial(): Tema {
     if (guardado === 'claro' || guardado === 'oscuro') return guardado;
   } catch {
     // El navegador puede tener el almacenamiento bloqueado (modo privado,
-    // cookies desactivadas). No es motivo para romper la aplicacion.
+    // cookies desactivadas). No es motivo para romper la aplicación.
   }
 
-  // Sin eleccion previa, se respeta la preferencia del sistema operativo.
   const prefiereOscuro = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
   return prefiereOscuro ? 'oscuro' : 'claro';
 }
 
-export function useTema() {
-  const [tema, establecerTema] = useState<Tema>(leerTemaInicial);
+/**
+ * Devuelve el tema actual y las funciones para cambiarlo.
+ *
+ * Falla de forma explícita si se usa fuera del proveedor: es un error de
+ * programación y es mejor verlo de inmediato que depurar un tema que no
+ * cambia sin saber por qué.
+ */
+export function useTema(): ValorContextoTema {
+  const valor = useContext(ContextoTema);
 
-  useEffect(() => {
-    const raiz = document.documentElement;
-    raiz.classList.toggle(CLASE_OSCURO, tema === 'oscuro');
+  if (valor === null) {
+    throw new Error('useTema debe usarse dentro de <ProveedorTema>');
+  }
 
-    try {
-      window.localStorage.setItem(CLAVE_TEMA, tema);
-    } catch {
-      // Si no se puede guardar, el tema sigue funcionando en esta sesion.
-    }
-  }, [tema]);
-
-  const alternarTema = useCallback(() => {
-    establecerTema((actual) => (actual === 'oscuro' ? 'claro' : 'oscuro'));
-  }, []);
-
-  return { tema, alternarTema, establecerTema };
+  return valor;
 }

@@ -1,0 +1,71 @@
+/* ---------------------------------------------------------------------------
+ * Estilos globales de RutaVivaMantaro.
+ *
+ * Tailwind 4 se carga con una sola linea. A diferencia de Tailwind 3, ya no
+ * existe el archivo tailwind.config.js: el tema y las variantes se declaran
+ * aqui mismo, en CSS.
+ * ------------------------------------------------------------------------- */
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+ * Tema oscuro por clase.
+ *
+ * Esta linea es el equivalente en Tailwind 4 de  darkMode: 'class'  de la
+ * version 3: la clase  dark:  se aplica cuando el elemento <html> (o alguno
+ * de sus padres) lleva la clase "oscuro". Lo decide el usuario con el
+ * interruptor del encabezado, no el sistema operativo, para que su eleccion
+ * mande siempre.
+ * ------------------------------------------------------------------------- */
+@custom-variant dark (&:where(.oscuro, .oscuro *));
+
+/* ---------------------------------------------------------------------------
+ * Paleta del proyecto.
+ *
+ * Los colores se declaran como variables del tema de Tailwind, de modo que se
+ * pueden usar como  bg-verde-valle  o  text-tierra-500  en cualquier
+ * componente. La paleta evoca el Valle del Mantaro: verde de los campos,
+ * ocre de la tierra y azul del cielo de altura.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --color-valle-50: #f0f9f1;
+  --color-valle-100: #dcf0de;
+  --color-valle-300: #8fd09a;
+  --color-valle-500: #3f9d54;
+  --color-valle-600: #2f7d42;
+  --color-valle-700: #266536;
+  --color-valle-900: #16341f;
+
+  --color-tierra-100: #f6ecdd;
+  --color-tierra-300: #e0bd88;
+  --color-tierra-500: #c58a3d;
+  --color-tierra-700: #8a5c22;
+
+  --color-cielo-100: #e2f0fb;
+  --color-cielo-500: #2f80c4;
+  --color-cielo-700: #1d5581;
+
+  --color-pizarra-50: #f7f8f9;
+  --color-pizarra-100: #eceff2;
+  --color-pizarra-300: #c3cbd5;
+  --color-pizarra-500: #5a6875;
+  --color-pizarra-700: #2c3e50;
+  --color-pizarra-800: #1f2933;
+  --color-pizarra-900: #141b22;
+}
+
+/* Transicion suave al cambiar de tema, para que el salto de colores no
+ * resulte brusco. Se excluyen las transformaciones para no interferir con
+ * las animaciones de framer-motion. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-pizarra-50 text-pizarra-800 transition-colors duration-300;
+  }
+
+  .oscuro body {
+    @apply bg-pizarra-900 text-pizarra-100;
+  }
+}

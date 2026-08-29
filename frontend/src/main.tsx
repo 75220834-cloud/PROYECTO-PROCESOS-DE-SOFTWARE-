@@ -8,11 +8,13 @@
  * - la configuracion de i18next, que se activa con solo importarla.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MotionConfig } from 'framer-motion';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from '@/App';
+import { ProveedorSesion } from '@/componentes/ProveedorSesion';
 import { ProveedorTema } from '@/componentes/ProveedorTema';
 import '@/estilos/index.css';
 import '@/i18n';
@@ -33,12 +35,20 @@ if (!contenedor) {
 
 createRoot(contenedor).render(
   <StrictMode>
-    <ProveedorTema>
-      <QueryClientProvider client={clienteDeConsultas}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ProveedorTema>
+    {/* reducedMotion="user" hace que framer-motion respete la preferencia de
+        movimiento reducido del sistema operativo. La regla equivalente que hay
+        en el CSS solo afecta a las animaciones CSS; estas son de JavaScript y
+        hay que configurarlas aparte. */}
+    <MotionConfig reducedMotion="user">
+      <ProveedorTema>
+        <QueryClientProvider client={clienteDeConsultas}>
+          <BrowserRouter>
+            <ProveedorSesion>
+              <App />
+            </ProveedorSesion>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ProveedorTema>
+    </MotionConfig>
   </StrictMode>,
 );

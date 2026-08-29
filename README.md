@@ -261,7 +261,15 @@ El modelo de Ollama solo llama funciones del backend y redacta la respuesta con
 lo que esas funciones devuelven. Un lugar que no esté en el catálogo oficial no
 puede aparecer en la respuesta.
 
-### 6.4 Honestidad con los datos
+### 6.4 El diseño visual viene de Stitch
+
+La paleta, las tipografías y las formas salen del sistema de diseño
+**«Mantaro Moderno»**, definido en Stitch junto con las 26 pantallas del
+proyecto. El código copia esos valores; no los inventa. Cualquier cambio se
+hace primero en Stitch. Ver
+[la nota de decisión](docs/decisiones/2026-08-29-sistema-de-diseno-mantaro-moderno.md).
+
+### 6.5 Honestidad con los datos
 
 Las tarifas de transporte de Huancayo cambian y no existe una tarifa oficial
 única. Se guardan siempre con precio mínimo, precio máximo, fecha de referencia

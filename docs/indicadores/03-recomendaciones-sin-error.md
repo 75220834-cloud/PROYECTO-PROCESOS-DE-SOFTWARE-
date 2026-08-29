@@ -46,7 +46,7 @@ recursos con afinidad cero.
 
 **100 %**, y por construcción: un recurso que viola cualquiera de las cuatro
 condiciones no llega a la lista. Está comprobado en
-`backend/tests/test_rutas_recomendaciones.py`, clase `TestFiltrosDuros`.
+`backend/pruebas/test_rutas_recomendaciones.py`, clase `TestFiltrosDuros`.
 
 Que salga 100 % no es un logro impresionante: es lo mínimo exigible. Su valor
 está en que **el sistema puede demostrar por qué**, recurso a recurso, y eso es

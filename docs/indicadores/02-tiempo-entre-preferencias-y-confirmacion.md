@@ -59,4 +59,4 @@ dar nada habría costado visitantes.
 | Tabla | `preferencia_viaje` |
 | Endpoints | `backend/app/rutas/preferencias.py` |
 | Asistente | `frontend/src/paginas/AsistentePreferencias.tsx` |
-| Pruebas | `backend/tests/test_rutas_preferencias.py` |
+| Pruebas | `backend/pruebas/test_rutas_preferencias.py` |

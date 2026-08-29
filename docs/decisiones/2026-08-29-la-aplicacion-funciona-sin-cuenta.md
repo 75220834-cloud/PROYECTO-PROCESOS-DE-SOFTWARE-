@@ -55,7 +55,7 @@ Es una decisión consciente, no un descuido:
 ## Cómo comprobarlo
 
 - Backend: `test_se_puede_guardar_sin_haber_iniciado_sesion` y toda la clase
-  `TestReclamarPreferencia`, en `backend/tests/test_rutas_preferencias.py`.
+  `TestReclamarPreferencia`, en `backend/pruebas/test_rutas_preferencias.py`.
 - Frontend: `recorre los seis pasos sin haber iniciado sesión y guarda la
   preferencia`, en
   `frontend/src/paginas/__pruebas__/AsistentePreferencias.prueba.tsx`.

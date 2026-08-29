@@ -106,13 +106,13 @@ exclude = '(\.venv|alembic/versions|notebooks)'
 # la Fase 2; aqui queda configurado el reporte para poder medirlo.
 # ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["pruebas"]
 pythonpath = ["."]
 addopts = "-v --cov=app --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["app/__init__.py", "*/tests/*"]
+omit = ["app/__init__.py", "*/pruebas/*"]
 
 # Le indica a setuptools que el codigo del backend es el paquete "app"
 # y todos sus subpaquetes (modelos, esquemas, rutas, servicios, ia...).

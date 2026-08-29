@@ -47,7 +47,7 @@ irregular, y exigir menos dejaría el catálogo vacío en la práctica. Está en
 | Tabla que lo guarda | `registro_validacion` |
 | Endpoint | `GET /api/indicadores/catalogo` |
 | En la interfaz | Cabecera de la página `/explorar` |
-| Pruebas | `backend/tests/test_validacion_catalogo.py` |
+| Pruebas | `backend/pruebas/test_validacion_catalogo.py` |
 
 ## Cómo se genera una medición nueva
 

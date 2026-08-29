@@ -128,12 +128,12 @@ PROPORCION_DE_TRASLADO = Decimal("0.35")
 #: ==========  =======  ========  =======  ==========
 #: Peso        Paradas  Afinidad  km       min viaje
 #: ==========  =======  ========  =======  ==========
-#: 1           4        233        10,5     49
-#: 2           5        263        17,5     79
-#: **3**       **5**    **302**   **72,9**  **172**
-#: 5           5        302        74,2     173
-#: 10          5        302        74,2     173
-#: 20          5        302        74,2     173
+#: 1           5        263        14,8     71
+#: 2           5        288        38,9     107
+#: **3**       **5**    **302**   **57,1**  **151**
+#: 5           5        302        57,1     151
+#: 10          5        302        57,1     151
+#: 20          5        302        57,1     151
 #: *reglas*    5        263        14,8     71
 #: ==========  =======  ========  =======  ==========
 #:
@@ -142,8 +142,13 @@ PROPORCION_DE_TRASLADO = Decimal("0.35")
 #: óptimo**, para que el tiempo de viaje siga desempatando entre soluciones de
 #: igual afinidad.
 #:
+#: (Esta tabla se volvió a medir después de corregir el modelo de circuito
+#: cerrado a recorrido abierto. Con el circuito cerrado, el mismo peso 3 daba
+#: 72,9 km y 172 minutos para la misma afinidad: el regreso a la primera parada
+#: estaba pagándose en tiempo y en dinero.)
+#:
 #: La tabla también deja ver el canje que el visitante paga: +39 puntos de
-#: afinidad sobre la alternativa por reglas cuestan +58 km y +101 minutos de
+#: afinidad sobre la alternativa por reglas cuestan +42 km y +80 minutos de
 #: combi. El objetivo que fija el plan de trabajo es maximizar la afinidad, así
 #: que se respeta; pero el itinerario muestra los tiempos y el costo de cada
 #: traslado para que esa decisión no quede escondida.
@@ -468,22 +473,52 @@ def resolver_con_ortools(
     una penalización por no hacerla. Saltarse un recurso de afinidad 90 cuesta
     900; visitarlo cuesta los minutos de viaje. Minimizar esa suma es lo mismo
     que maximizar la afinidad recogida dentro del tiempo disponible.
+
+    ## Por qué hay un nodo de fin de día que no existe
+
+    OR-Tools está pensado para vehículos de reparto, que **vuelven al almacén**.
+    Si se le dice que el vehículo empieza y termina en el nodo 0, resuelve un
+    circuito cerrado: el regreso a la primera parada consume tiempo y dinero
+    del presupuesto.
+
+    Un día de turismo no es un circuito. El visitante termina donde termina y
+    se va a su alojamiento; no vuelve al primer museo. Modelarlo como circuito
+    cerrado tenía un efecto medible y grave: con la preferencia de prueba en
+    taxi, el optimizador entregaba **una sola parada** mientras la alternativa
+    por reglas encontraba tres dentro del mismo presupuesto. El optimizador
+    quedaba peor que su propia línea base, que es justo lo contrario de para lo
+    que existe.
+
+    La solución estándar es añadir un nodo ficticio de fin al que se llega
+    gratis desde cualquier sitio, y decirle al gestor que el vehículo termina
+    ahí. Así el recorrido queda abierto y el regreso deja de costar.
     """
     from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
-    tamano = len(candidatos)
+    reales = len(candidatos)
 
-    # Un solo vehículo (el visitante) que empieza en el índice 0. El índice 0
-    # es el primer candidato, no un depósito ficticio: el día empieza en el
-    # primer sitio al que se va, no en un almacén.
-    gestor = pywrapcp.RoutingIndexManager(tamano, 1, 0)
+    #: Índice del nodo ficticio de fin de día. No es un lugar: es «se acabó».
+    fin_del_dia = reales
+
+    def es_ficticio(nodo: int) -> bool:
+        return nodo >= reales
+
+    # El vehículo (el visitante) empieza en el candidato 0 y termina en el nodo
+    # ficticio. El candidato 0 no es un depósito: es el primer sitio al que va.
+    gestor = pywrapcp.RoutingIndexManager(reales + 1, 1, [0], [fin_del_dia])
     modelo = pywrapcp.RoutingModel(gestor)
+
+    def traslado_entre(i: int, j: int) -> CostoDeTraslado | None:
+        """El traslado de i a j, o ``None`` si alguno es el nodo ficticio."""
+        if es_ficticio(i) or es_ficticio(j):
+            return None
+        return matriz[i][j]
 
     # --- Costo del arco: minutos de viaje ---------------------------------
     def minutos_de_arco(indice_origen: int, indice_destino: int) -> int:
-        i = gestor.IndexToNode(indice_origen)
-        j = gestor.IndexToNode(indice_destino)
-        traslado = matriz[i][j]
+        traslado = traslado_entre(
+            gestor.IndexToNode(indice_origen), gestor.IndexToNode(indice_destino)
+        )
         return 0 if traslado is None else int(traslado.minutos)
 
     referencia_costo = modelo.RegisterTransitCallback(minutos_de_arco)
@@ -493,9 +528,16 @@ def resolver_con_ortools(
     def tiempo_transcurrido(indice_origen: int, indice_destino: int) -> int:
         i = gestor.IndexToNode(indice_origen)
         j = gestor.IndexToNode(indice_destino)
-        traslado = matriz[i][j]
+
+        if es_ficticio(i):
+            return 0
+
+        traslado = traslado_entre(i, j)
         viaje = 0 if traslado is None else int(traslado.minutos)
-        # La visita al ORIGEN se consume antes de salir hacia el destino.
+
+        # La visita al ORIGEN se consume antes de salir hacia el destino. Al ir
+        # hacia el fin del día, el viaje es cero pero la visita sigue contando:
+        # la última parada también dura lo que dura.
         return viaje + candidatos[i].duracion_visita_min
 
     referencia_tiempo = modelo.RegisterTransitCallback(tiempo_transcurrido)
@@ -516,17 +558,18 @@ def resolver_con_ortools(
         apertura, ultimo_inicio = _ventana_de_atencion(candidato, inicio_dia, fin_dia)
         dimension_tiempo.CumulVar(gestor.NodeToIndex(nodo)).SetRange(apertura, ultimo_inicio)
 
-    # El día arranca a la hora de inicio, no antes.
+    # El día arranca a la hora de inicio y termina como muy tarde a la de fin.
     dimension_tiempo.CumulVar(modelo.Start(0)).SetRange(inicio_dia, fin_dia)
+    dimension_tiempo.CumulVar(modelo.End(0)).SetRange(inicio_dia, fin_dia)
 
     # --- Dimensión de dinero: presupuesto de traslado ---------------------
     # OR-Tools trabaja con enteros, así que el dinero va en céntimos. Se usa el
     # precio MÁXIMO del rango: si el presupuesto solo alcanza con suerte, el
     # itinerario no es viable y no hay que proponerlo.
     def centimos_de_arco(indice_origen: int, indice_destino: int) -> int:
-        i = gestor.IndexToNode(indice_origen)
-        j = gestor.IndexToNode(indice_destino)
-        traslado = matriz[i][j]
+        traslado = traslado_entre(
+            gestor.IndexToNode(indice_origen), gestor.IndexToNode(indice_destino)
+        )
         return 0 if traslado is None else int(traslado.precio_max_soles * 100)
 
     referencia_dinero = modelo.RegisterTransitCallback(centimos_de_arco)
@@ -539,6 +582,9 @@ def resolver_con_ortools(
     )
 
     # --- Dimensión de conteo: tope de paradas por ritmo -------------------
+    # Cada arco recorrido suma uno. Con el nodo ficticio al final, el número de
+    # arcos coincide exactamente con el de paradas visitadas: el recorrido
+    # 0 -> 5 -> 15 -> fin tiene tres arcos y tres paradas.
     def una_parada(indice_origen: int, indice_destino: int) -> int:
         del indice_origen, indice_destino
         return 1
@@ -581,7 +627,10 @@ def resolver_con_ortools(
     indice = modelo.Start(0)
 
     while not modelo.IsEnd(indice):
-        orden.append(gestor.IndexToNode(indice))
+        nodo = gestor.IndexToNode(indice)
+        # El nodo ficticio no es una parada: no se devuelve.
+        if not es_ficticio(nodo):
+            orden.append(nodo)
         indice = solucion.Value(modelo.NextVar(indice))
 
     return orden
@@ -769,7 +818,8 @@ def armar_horario(
 
     if recortadas:
         avisos.append(
-            f"Se quitaron {recortadas} parada(s) al recalcular los traslados sobre "
+            f"Se quitaron {recortadas} "
+            f"{'parada' if recortadas == 1 else 'paradas'} al recalcular los traslados sobre "
             "la red vial real: con los tiempos exactos ya no cabían antes de las "
             f"{_a_hora(fin_dia).strftime('%H:%M')}."
         )
@@ -879,8 +929,78 @@ def construir_itinerario(
 
     _acumular_totales(resultado, inicio_dia)
     _agregar_avisos_de_calidad(resultado, sin_horario, len(candidatos))
+    _explicar_si_el_dia_quedo_corto(
+        resultado,
+        candidatos,
+        matriz,
+        orden,
+        paradas_maximas,
+        presupuesto_traslado,
+        preferencia,
+    )
 
     return resultado
+
+
+def _explicar_si_el_dia_quedo_corto(
+    resultado: ItinerarioCalculado,
+    candidatos: list[CandidatoARutear],
+    matriz: list[list[CostoDeTraslado | None]],
+    orden: list[int],
+    paradas_maximas: int,
+    presupuesto_traslado: Decimal,
+    preferencia: PreferenciaViaje,
+) -> None:
+    """Dice POR QUÉ el itinerario tiene menos paradas de las que cabrían.
+
+    Un itinerario de una sola parada, sin explicación, parece un fallo del
+    sistema. Casi siempre no lo es: es el presupuesto de traslado, que con
+    ``movilidad = taxi`` se agota en un solo trayecto largo. El visitante no
+    tiene forma de deducirlo, así que hay que decírselo, y decirle además qué
+    puede cambiar para que quepan más.
+
+    Solo se emite cuando el presupuesto es **de verdad** el que corta: se
+    comprueba que quede sitio en el día y que el traslado más barato que sale
+    de la última parada ya no cabe en lo que sobra del dinero.
+    """
+    if len(resultado.paradas) >= paradas_maximas:
+        return  # el día está lleno: no falta nada que explicar
+
+    if not orden or len(orden) >= len(candidatos):
+        return  # no quedan candidatos a los que ir
+
+    gastado = resultado.costo_max_soles
+    disponible = presupuesto_traslado - gastado
+
+    visitados = set(orden)
+    ultimo = orden[len(resultado.paradas) - 1] if resultado.paradas else orden[0]
+
+    precios_restantes = [
+        traslado.precio_max_soles
+        for destino, traslado in enumerate(matriz[ultimo])
+        if destino not in visitados and traslado is not None
+    ]
+
+    if not precios_restantes:
+        return
+
+    if min(precios_restantes) <= disponible:
+        return  # el dinero no es lo que corta; será el horario o el ritmo
+
+    cuantas = len(resultado.paradas)
+    plural = "parada" if cuantas == 1 else "paradas"
+
+    consejo = (
+        "Moverte en combi o colectivo en vez de en taxi abarataría mucho los traslados."
+        if preferencia.movilidad == "taxi"
+        else "Ampliar el presupuesto del viaje permitiría añadir más paradas."
+    )
+
+    resultado.avisos.append(
+        f"El itinerario tiene {cuantas} {plural} y no más porque se acabó el "
+        f"presupuesto de traslado del día: S/ {presupuesto_traslado:.2f}, que es la "
+        f"parte de tu presupuesto total reservada para transporte. {consejo}"
+    )
 
 
 def _presupuesto_de_traslado_del_dia(preferencia: PreferenciaViaje) -> Decimal:
@@ -1010,7 +1130,8 @@ def construir_itinerario_en_orden(
     descartados = len(recursos_en_orden) - len(elegidos)
     if descartados:
         resultado.avisos.append(
-            f"Se omitieron {descartados} parada(s) que ya no están entre las "
+            f"Se omitieron {descartados} "
+            f"{'parada' if descartados == 1 else 'paradas'} que ya no están entre las "
             "recomendaciones de esta preferencia."
         )
 

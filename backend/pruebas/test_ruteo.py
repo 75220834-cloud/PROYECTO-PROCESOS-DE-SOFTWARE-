@@ -376,6 +376,59 @@ def test_el_optimizador_recoge_al_menos_tanta_afinidad_como_las_reglas():
     assert 1 not in con_modelo
 
 
+def test_el_dia_no_obliga_a_volver_a_la_primera_parada():
+    """Regresion: el recorrido es abierto, no un circuito cerrado.
+
+    OR-Tools esta pensado para vehiculos de reparto, que vuelven al almacen. Si
+    se modela el dia como circuito cerrado, el regreso a la primera parada
+    consume presupuesto y tiempo, y el optimizador entrega menos paradas de las
+    que caben. Paso de verdad: con la preferencia de prueba en taxi, devolvia
+    UNA parada mientras el vecino mas cercano encontraba TRES con el mismo
+    dinero.
+
+    Aqui el presupuesto da exactamente para dos traslados de ida. Si el modelo
+    cobrara la vuelta, solo cabria uno.
+    """
+    candidatos = [candidato(i, 100 - i * 10) for i in range(4)]
+    matriz = matriz_uniforme(4, minutos=20, soles="10.00")
+
+    orden = resolver_con_ortools(
+        candidatos, matriz, INICIO_DIA, FIN_DIA, 4, Decimal("20.00"), SEGUNDOS_EN_PRUEBAS
+    )
+
+    assert orden is not None
+    assert len(orden) == 3, (
+        f"se esperaban 3 paradas (2 traslados de S/10 con S/20), y salieron {len(orden)}: "
+        "el modelo esta cobrando el regreso a la primera parada"
+    )
+
+
+def test_el_optimizador_nunca_entrega_menos_paradas_que_las_reglas_con_el_mismo_dinero():
+    """El optimizador no puede quedar por debajo de su propia linea base.
+
+    Si lo hace, no es un optimizador: es un rodeo caro para llegar a un
+    resultado peor. Esta prueba compara los dos caminos sobre el mismo problema
+    y el mismo presupuesto.
+    """
+    candidatos = [candidato(i, 100 - i * 5) for i in range(6)]
+    matriz = matriz_uniforme(6, minutos=25, soles="8.00")
+
+    presupuesto = Decimal("24.00")  # da para tres traslados
+
+    con_modelo = resolver_con_ortools(
+        candidatos, matriz, INICIO_DIA, FIN_DIA, 6, presupuesto, SEGUNDOS_EN_PRUEBAS
+    )
+    con_reglas = resolver_con_reglas(candidatos, matriz, INICIO_DIA, FIN_DIA, 6, presupuesto)
+
+    assert con_modelo is not None
+    assert len(con_modelo) >= len(con_reglas)
+
+    afinidad_modelo = sum(candidatos[i].puntaje_relativo for i in con_modelo)
+    afinidad_reglas = sum(candidatos[i].puntaje_relativo for i in con_reglas)
+
+    assert afinidad_modelo >= afinidad_reglas
+
+
 # ---------------------------------------------------------------------------
 # La alternativa por reglas, por sí misma
 # ---------------------------------------------------------------------------

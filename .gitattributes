@@ -1,0 +1,17 @@
+# ---------------------------------------------------------------------------
+# Normalizacion de fin de linea.
+#
+# Windows usa CRLF y Linux usa LF. Como el proyecto se desarrolla en Windows
+# pero corre dentro de contenedores Linux, forzamos LF en el repositorio para
+# que los scripts montados en Docker no se rompan.
+# ---------------------------------------------------------------------------
+* text=auto eol=lf
+
+# Archivos binarios: Git no debe tocarlos nunca.
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.pdf  binary
+*.csv  -text
+*.tif  binary
+*.gpkg binary

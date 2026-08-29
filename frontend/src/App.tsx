@@ -1,14 +1,15 @@
 /**
  * Componente raíz: define el esqueleto común (encabezado y pie) y las rutas.
  *
- * En la Fase 0 solo existe la página de inicio. El enrutador ya está montado
- * para que añadir /explorar, /preferencias o /itinerario en las siguientes
- * fases sea agregar una línea, no reestructurar la aplicación.
+ * Rutas existentes: inicio, catálogo (/explorar) y detalle de un recurso.
+ * Las de preferencias e itinerario llegan en las fases 2 y 4.
  */
 import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router-dom';
 
 import { Encabezado } from '@/componentes/Encabezado';
+import { Catalogo } from '@/paginas/Catalogo';
+import { DetalleRecurso } from '@/paginas/DetalleRecurso';
 import { Inicio } from '@/paginas/Inicio';
 
 function Pie() {
@@ -63,6 +64,8 @@ export function App() {
       <div className="flex-1">
         <Routes>
           <Route path="/" element={<Inicio />} />
+          <Route path="/explorar" element={<Catalogo />} />
+          <Route path="/recursos/:id" element={<DetalleRecurso />} />
         </Routes>
       </div>
 

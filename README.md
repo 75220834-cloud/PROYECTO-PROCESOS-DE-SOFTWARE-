@@ -8,8 +8,9 @@ con orden de visita, medio de transporte, tiempo y costo aproximado.
 Proyecto del curso **Procesos de Software (ASUC01702, NRC 30173)** —
 Universidad Continental, Huancayo. Ciclo 2026-20.
 
-> **Estado actual: Fase 0 completada.** El entorno está preparado y verificado.
-> El catálogo de recursos turísticos llega en la Fase 1.
+> **Estado actual: Fase 1 completada.** El catálogo tiene **295 recursos**
+> importados del inventario oficial del MINCETUR, con un **79,32 % validado**.
+> El registro de preferencias del visitante llega en la Fase 2.
 
 ---
 
@@ -114,7 +115,42 @@ uvicorn app.main:aplicacion --reload
 Abre <http://localhost:8000/docs> para ver la documentación interactiva de
 todos los endpoints, que FastAPI genera sola a partir del código.
 
-### 2.5 Preparar el frontend
+### 2.5 Cargar el catálogo
+
+Descarga el inventario del MINCETUR desde el navegador y colócalo en
+`backend/datos/crudos/`:
+
+```
+https://www.mincetur.gob.pe/Datos_abiertos/DGET/Inventario_recursos_turisticos.csv
+```
+
+Después, con el entorno virtual activado y la base de datos levantada, aplica
+las migraciones y carga los datos:
+
+```bash
+alembic upgrade head
+```
+
+```bash
+python -m app.utilidades.cargar_catalogo
+```
+
+El guion importa los recursos de las cuatro provincias de la ruta, ejecuta la
+validación y muestra el indicador del Incremento 1. Debe terminar con algo
+parecido a esto:
+
+```
+  Filas de las 4 provincias      : 295
+  Recursos insertados            : 295
+  Sin coordenadas en la fuente   : 61
+  Columnas lat/lon               : INTERCAMBIADAS en la fuente, corregidas
+  PORCENTAJE VALIDADO            : 79.32 %
+```
+
+Se puede ejecutar las veces que haga falta: identifica cada recurso por su
+código del MINCETUR, así que actualiza en vez de duplicar.
+
+### 2.6 Preparar el frontend
 
 En otra terminal:
 
@@ -173,6 +209,9 @@ ollama pull qwen2.5:7b-instruct
 | `pytest` | Ejecuta las pruebas y muestra la cobertura |
 | `ruff check app tests` | Revisa errores y estilo |
 | `black app tests` | Formatea el código |
+| `alembic upgrade head` | Aplica las migraciones pendientes a la base de datos |
+| `alembic revision --autogenerate -m "..."` | Genera una migración nueva a partir de los modelos |
+| `python -m app.utilidades.cargar_catalogo` | Importa el inventario del MINCETUR y valida el catálogo |
 
 ### Frontend — desde `frontend/`
 

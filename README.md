@@ -8,10 +8,11 @@ con orden de visita, medio de transporte, tiempo y costo aproximado.
 Proyecto del curso **Procesos de Software (ASUC01702, NRC 30173)** —
 Universidad Continental, Huancayo. Ciclo 2026-20.
 
-> **Estado actual: Fase 2 completada.** El catálogo tiene **295 recursos**
-> importados del inventario oficial del MINCETUR, con un **79,32 % validado**,
-> y el visitante ya puede registrar lo que quiere de su viaje —sin necesidad
-> de crear una cuenta. La recomendación inteligente llega en la Fase 3.
+> **Estado actual: Fase 3 completada.** El catálogo tiene **295 recursos**
+> importados del inventario oficial del MINCETUR, con un **79,32 % validado**;
+> el visitante registra lo que quiere de su viaje —sin necesidad de cuenta— y
+> recibe recomendaciones ordenadas que **explican por qué** se le proponen y
+> cuánta gente se espera cada día. El itinerario con mapa llega en la Fase 4.
 
 ---
 
@@ -172,7 +173,17 @@ python -m app.utilidades.usuarios_semilla
 cualquiera del equipo pueda levantar el proyecto y entrar. El guion se niega a
 ejecutarse si la variable `ENTORNO` del `.env` no dice `desarrollo`.
 
-### 2.7 Preparar el frontend
+### 2.7 Cargar el calendario festivo
+
+Vuelca en la base las fiestas del valle. Las móviles —Semana Santa, Carnavales
+y Corpus Christi— se **calculan** con el algoritmo de la Pascua, no se escriben
+a mano:
+
+```bash
+python -m app.utilidades.cargar_calendario --desde 2026 --hasta 2028
+```
+
+### 2.8 Preparar el frontend
 
 En otra terminal:
 
@@ -235,6 +246,8 @@ ollama pull qwen2.5:7b-instruct
 | `alembic revision --autogenerate -m "..."` | Genera una migración nueva a partir de los modelos |
 | `python -m app.utilidades.cargar_catalogo` | Importa el inventario del MINCETUR y valida el catálogo |
 | `python -m app.utilidades.usuarios_semilla` | Crea un usuario de demostración por cada rol |
+| `python -m app.utilidades.cargar_calendario` | Carga las festividades del valle en la base de datos |
+| `jupyter notebook notebooks/` | Abre los cuadernos de experimentación de los modelos |
 
 ### Frontend — desde `frontend/`
 
@@ -315,16 +328,41 @@ USAR_MODELO_SENTIMIENTO=false
 
 Es el mecanismo de control de riesgo declarado en el documento académico: si un
 modelo no supera su línea base en la etapa de pruebas, se entrega la
-alternativa por reglas y el modelo vuelve al backlog. Los itinerarios guardan
-en el campo `generado_por` si los produjo el modelo o las reglas.
+alternativa por reglas y el modelo vuelve al backlog.
 
-### 6.3 El asistente conversacional no inventa datos
+Estado real de cada modelo, tras los experimentos del Incremento 3:
+
+| Capa | Modelo | Estado | Motivo |
+|---|---|---|---|
+| Afinidad | TF-IDF + coseno | **Aceptado** | Las reglas dan 2-3 puntajes distintos y dejan decenas de empates; el modelo ordena de verdad |
+| Afluencia | LightGBM | **Descartado por ahora** | No hay datos históricos del valle; se entregan las reglas de calendario |
+| Sentimiento | pysentimiento | Pendiente (Fase 6) | — |
+
+Los detalles y los números están en
+[la nota de decisión](docs/decisiones/2026-08-29-por-que-se-acepto-tfidf-y-se-descarto-lightgbm.md)
+y en el cuaderno `backend/notebooks/01_incremento3_afinidad_y_afluencia.ipynb`,
+ejecutado y con sus salidas guardadas.
+
+Cada respuesta de la API lleva un campo `generado_por` que dice si la produjo
+el modelo o las reglas.
+
+### 6.3 Cada recomendación explica por qué
+
+Ninguna recomendación se muestra como un número a secas. Cada una indica qué
+intereses cubre, qué términos pesaron en su puntaje y cuánta gente se espera
+ese día, con el motivo. La respuesta de la API incluye además **lo que se
+descartó y por qué**, y si el cálculo salió del modelo o de las reglas.
+
+Es lo que cierra la brecha 2: *el análisis y la priorización recaían en el
+visitante, sin criterios explícitos*.
+
+### 6.4 El asistente conversacional no inventa datos
 
 El modelo de Ollama solo llama funciones del backend y redacta la respuesta con
 lo que esas funciones devuelven. Un lugar que no esté en el catálogo oficial no
 puede aparecer en la respuesta.
 
-### 6.4 No hace falta cuenta para usar la aplicación
+### 6.5 No hace falta cuenta para usar la aplicación
 
 El visitante completa el asistente de preferencias y obtiene su viaje **sin
 registrarse**. La cuenta se ofrece al final, solo para guardarlo, y entonces
@@ -334,7 +372,7 @@ la preferencia que hizo como anónimo se asocia sola a la cuenta nueva. Ver
 Las contraseñas se guardan con **argon2id** y su sal aleatoria. Nunca se
 almacenan ni se registran en claro.
 
-### 6.5 El diseño visual viene de Stitch
+### 6.6 El diseño visual viene de Stitch
 
 La paleta, las tipografías y las formas salen del sistema de diseño
 **«Mantaro Moderno»**, definido en Stitch junto con las 26 pantallas del
@@ -342,7 +380,7 @@ proyecto. El código copia esos valores; no los inventa. Cualquier cambio se
 hace primero en Stitch. Ver
 [la nota de decisión](docs/decisiones/2026-08-29-sistema-de-diseno-mantaro-moderno.md).
 
-### 6.6 Honestidad con los datos
+### 6.7 Honestidad con los datos
 
 Las tarifas de transporte de Huancayo cambian y no existe una tarifa oficial
 única. Se guardan siempre con precio mínimo, precio máximo, fecha de referencia

@@ -59,12 +59,16 @@ def sesion(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
     transaccion = conexion.begin()
     sesion_de_prueba = Session(bind=conexion, join_transaction_mode="create_savepoint")
 
-    # Se parte de un catálogo vacío para que las pruebas puedan afirmar
-    # totales exactos ("deben quedar 3 recursos") sin que los 295 recursos
-    # reales del inventario las estropeen. Este borrado también se deshace al
-    # terminar, así que los datos reales no corren ningún peligro.
+    # Se parte de una base vacía para que las pruebas puedan afirmar totales
+    # exactos ("deben quedar 3 recursos", "debe haber 1 usuario") sin que los
+    # 295 recursos reales ni los usuarios de demostración las estropeen. Este
+    # borrado también se deshace al terminar, así que los datos reales no
+    # corren ningún peligro.
     sesion_de_prueba.execute(
-        text("TRUNCATE recurso_turistico, horario_atencion, registro_validacion CASCADE")
+        text(
+            "TRUNCATE recurso_turistico, horario_atencion, registro_validacion,"
+            " usuario, preferencia_viaje CASCADE"
+        )
     )
 
     try:

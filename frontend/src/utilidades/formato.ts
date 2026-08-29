@@ -93,3 +93,31 @@ export function medirFuerza(contrasena: string): number {
 
   return Math.min(puntos, 4);
 }
+
+/** Convierte minutos en «1 h 20 min» o «45 min». */
+export function formatearDuracion(minutos: number): string {
+  if (minutos < 60) return `${minutos} min`;
+
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+
+  return resto === 0 ? `${horas} h` : `${horas} h ${resto} min`;
+}
+
+/**
+ * Muestra un precio como rango, siempre con «aprox.».
+ *
+ * Nunca se muestra un precio único aunque el rango sea degenerado: el contexto
+ * del proyecto dice que en el valle no hay tarifa oficial única, y enseñar
+ * «S/ 3,00» a secas afirmaría una precisión que no existe.
+ */
+export function formatearPrecio(minimo: string, maximo: string): string {
+  const min = Number(minimo);
+  const max = Number(maximo);
+
+  if (min === 0 && max === 0) return 'S/ 0';
+
+  return min === max
+    ? `aprox. S/ ${min.toFixed(2)}`
+    : `aprox. S/ ${min.toFixed(2)} – ${max.toFixed(2)}`;
+}

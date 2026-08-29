@@ -103,9 +103,7 @@ describe('TarjetaRecomendacion', () => {
 
   it('funciona sin distancia calculada', () => {
     /** Caso borde: sin origen georreferenciado no hay distancia. */
-    renderizar(
-      <TarjetaRecomendacion recomendacion={{ ...RECOMENDACION, distancia_km: null }} />,
-    );
+    renderizar(<TarjetaRecomendacion recomendacion={{ ...RECOMENDACION, distancia_km: null }} />);
 
     expect(screen.queryByText(/km/)).not.toBeInTheDocument();
   });

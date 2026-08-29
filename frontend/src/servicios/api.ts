@@ -453,3 +453,152 @@ export function obtenerCalendario(
 ): Promise<{ anio: number; total: number; festividades: FestividadPublica[] }> {
   return obtener(`/api/calendario/${anio}`);
 }
+
+// ---------------------------------------------------------------------------
+// Itinerario geoespacial (Incremento 4)
+// ---------------------------------------------------------------------------
+
+/** Cómo se cubre un traslado entre dos paradas. */
+export type ModoTransporte = 'caminando' | 'combi' | 'colectivo' | 'taxi';
+
+/**
+ * Cómo se calculó la distancia de un tramo.
+ *
+ * `red_vial` significa que se recorrió el grafo real de OpenStreetMap.
+ * `linea_recta` significa que no había red registrada cerca y la distancia es
+ * una estimación. La interfaz **tiene que distinguirlos**: el 26,1 % de los
+ * recursos del valle está fuera de la cobertura de OSM, y en esos casos el
+ * tiempo real puede ser bastante mayor que el mostrado.
+ */
+export type OrigenDelCalculo = 'red_vial' | 'linea_recta';
+
+/** El desplazamiento desde la parada anterior hasta esta. */
+export interface TrasladoPublico {
+  modo: ModoTransporte;
+  minutos: number;
+  distancia_km: number;
+  desnivel_m: number;
+  /** Rango, nunca un precio único: en el valle no hay tarifa oficial. */
+  precio_min_soles: string;
+  precio_max_soles: string;
+  /** `true` cuando el precio salió de una fórmula y no de una tarifa consultada. */
+  es_estimado: boolean;
+  fuente: string;
+  fecha_referencia: string;
+  origen_del_calculo: OrigenDelCalculo;
+  /** Coordenadas `[lat, lon]` del camino, para dibujarlo. Vacío si se estimó. */
+  trazado: [number, number][];
+}
+
+/** Una parada del itinerario, con su horario y cómo se llega a ella. */
+export interface ParadaItinerario {
+  orden: number;
+  recurso_id: number;
+  nombre: string;
+  distrito: string;
+  categoria: string | null;
+  latitud: number;
+  longitud: number;
+  altitud_msnm: number | null;
+  hora_llegada: string;
+  hora_salida: string;
+  duracion_visita_min: number;
+  puntaje_relativo: number;
+  /** `null` en la primera parada: no se llega a ella desde ningún sitio. */
+  traslado: TrasladoPublico | null;
+}
+
+/** El itinerario de un día, con sus totales y sus avisos. */
+export interface RespuestaItinerario {
+  itinerario_id: number | null;
+  preferencia_id: number;
+  fecha: string;
+  titulo: string;
+  /** `modelo` (OR-Tools) o `reglas` (vecino más cercano). */
+  generado_por: 'modelo' | 'reglas';
+  paradas: ParadaItinerario[];
+  tiempo_total_min: number;
+  costo_min_soles: string;
+  costo_max_soles: string;
+  distancia_total_km: number;
+  subida_total_m: number;
+  esfuerzo: 'suave' | 'moderado' | 'exigente';
+  hay_tramos_estimados: boolean;
+  avisos: string[];
+}
+
+/** Un itinerario guardado, tal como aparece en el listado. */
+export interface ItinerarioGuardado {
+  id: number;
+  titulo: string;
+  fecha: string;
+  estado: string;
+  generado_por: 'modelo' | 'reglas';
+  total_paradas: number;
+  tiempo_total_min: number;
+  costo_total_soles: string;
+  distancia_total_km: number;
+  desnivel_total_m: number;
+}
+
+/** Opciones para armar un itinerario. */
+export interface OpcionesItinerario {
+  fecha?: string;
+  horaInicio?: string;
+  horaFin?: string;
+  guardar?: boolean;
+  titulo?: string;
+}
+
+/** Arma el itinerario de un día para una preferencia ya guardada. */
+export function armarItinerario(
+  preferenciaId: number,
+  token: string | null,
+  opciones: OpcionesItinerario = {},
+): Promise<RespuestaItinerario> {
+  return enviar<RespuestaItinerario>(
+    '/api/itinerarios',
+    'POST',
+    {
+      preferencia_id: preferenciaId,
+      fecha: opciones.fecha,
+      hora_inicio: opciones.horaInicio,
+      hora_fin: opciones.horaFin,
+      guardar: opciones.guardar ?? false,
+      titulo: opciones.titulo,
+    },
+    token,
+  );
+}
+
+/**
+ * Recalcula el itinerario con el orden que eligió el visitante.
+ *
+ * No reoptimiza: respeta el orden pedido y recalcula sus consecuencias.
+ */
+export function reordenarItinerario(
+  preferenciaId: number,
+  recursosEnOrden: number[],
+  token: string | null,
+  opciones: OpcionesItinerario = {},
+): Promise<RespuestaItinerario> {
+  return enviar<RespuestaItinerario>(
+    '/api/itinerarios/reordenar',
+    'POST',
+    {
+      preferencia_id: preferenciaId,
+      recursos_en_orden: recursosEnOrden,
+      fecha: opciones.fecha,
+      hora_inicio: opciones.horaInicio,
+      hora_fin: opciones.horaFin,
+      guardar: opciones.guardar ?? false,
+      titulo: opciones.titulo,
+    },
+    token,
+  );
+}
+
+/** Lista los itinerarios guardados del usuario que ha iniciado sesión. */
+export function obtenerItinerariosGuardados(token: string | null): Promise<ItinerarioGuardado[]> {
+  return obtenerConToken<ItinerarioGuardado[]>('/api/itinerarios', token);
+}

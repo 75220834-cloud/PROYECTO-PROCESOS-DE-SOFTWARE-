@@ -255,5 +255,50 @@
     "ver": "Ver",
     "ocultar": "Ocultar",
     "proxima_fase": "El itinerario con mapa, horarios y costos de traslado llega en la siguiente fase del proyecto."
+  },
+  "itinerario": {
+    "titulo": "Tu itinerario",
+    "calculando": "Armando tu itinerario…",
+    "calculandoDetalle": "Estamos calculando las rutas sobre la red vial real del valle y el desnivel de cada tramo. Tarda unos segundos.",
+    "identificadorInvalido": "Ese identificador de preferencia no es válido.",
+    "errorGenerico": "No se pudo armar el itinerario.",
+    "volverAResultados": "Volver a las recomendaciones",
+    "elegirDia": "Elegir el día del viaje",
+    "dia": "Día {{numero}}",
+    "avisos": "Antes de salir, ten en cuenta",
+    "totales": "Totales del día",
+    "tiempoTotal": "Duración",
+    "costoTraslados": "Traslados",
+    "soloTraslados": "Solo el transporte, sin entradas ni comida",
+    "distancia": "Recorrido",
+    "esfuerzo": "Esfuerzo",
+    "subidaAcumulada": "{{metros}} m de subida acumulada",
+    "esfuerzoNivel": {
+      "suave": "Suave",
+      "moderado": "Moderado",
+      "exigente": "Exigente"
+    },
+    "barraEsfuerzoAccesible": "Esfuerzo {{nivel}}: {{metros}} metros de subida acumulada",
+    "generadoPorModelo": "Este orden lo calculó el optimizador de rutas (OR-Tools), buscando la combinación con mayor afinidad que cabe en el día y en tu presupuesto.",
+    "generadoPorReglas": "Este orden se armó con la alternativa por reglas (vecino más cercano), sin usar el optimizador.",
+    "tituloLinea": "El plan del día",
+    "sinParadas": "No se pudo armar ninguna parada con el tiempo y el presupuesto indicados. Prueba a ampliar el horario o el presupuesto.",
+    "mapaVacio": "Cuando haya paradas, aparecerán aquí sobre el mapa.",
+    "comoReordenar": "Arrastra una parada para cambiar el orden, o selecciónala y usa Alt + flecha arriba o abajo. Los horarios y los costos se recalculan solos.",
+    "arrastrar": "Arrastrar para reordenar",
+    "paradaAccesible": "Parada {{numero}} de {{total}}: {{nombre}}",
+    "recalculando": "Recalculando…",
+    "errorAlReordenar": "No se pudo recalcular con ese orden. Los horarios que ves son los del orden anterior.",
+    "tramoEstimado": "Tramo estimado: OpenStreetMap no tiene vías registradas cerca de estos puntos, así que la distancia se calculó en línea recta. El tiempo real puede ser mayor.",
+    "modo": {
+      "caminando": "A pie",
+      "combi": "En combi",
+      "colectivo": "En colectivo",
+      "taxi": "En taxi"
+    },
+    "verItinerario": "Armar mi itinerario",
+    "verItinerarioDetalle": "Ordena estas recomendaciones en un día real, con horarios y costos.",
+    "paradasContadas_one": "{{count}} parada",
+    "paradasContadas_other": "{{count}} paradas"
   }
 }

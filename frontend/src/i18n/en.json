@@ -255,5 +255,50 @@
     "ver": "Show",
     "ocultar": "Hide",
     "proxima_fase": "The itinerary with map, opening hours and transfer costs arrives in the next phase of the project."
+  },
+  "itinerario": {
+    "titulo": "Your itinerary",
+    "calculando": "Building your itinerary…",
+    "calculandoDetalle": "We are computing the routes over the valley's real road network and the elevation of each leg. This takes a few seconds.",
+    "identificadorInvalido": "That preference identifier is not valid.",
+    "errorGenerico": "The itinerary could not be built.",
+    "volverAResultados": "Back to the recommendations",
+    "elegirDia": "Choose the day of the trip",
+    "dia": "Day {{numero}}",
+    "avisos": "Before you set out",
+    "totales": "Totals for the day",
+    "tiempoTotal": "Duration",
+    "costoTraslados": "Transport",
+    "soloTraslados": "Transport only, no tickets or meals",
+    "distancia": "Distance",
+    "esfuerzo": "Effort",
+    "subidaAcumulada": "{{metros}} m of cumulative ascent",
+    "esfuerzoNivel": {
+      "suave": "Easy",
+      "moderado": "Moderate",
+      "exigente": "Demanding"
+    },
+    "barraEsfuerzoAccesible": "{{nivel}} effort: {{metros}} metres of cumulative ascent",
+    "generadoPorModelo": "This order was computed by the route optimiser (OR-Tools), looking for the highest-affinity combination that fits into the day and your budget.",
+    "generadoPorReglas": "This order was built with the rule-based alternative (nearest neighbour), without using the optimiser.",
+    "tituloLinea": "The day's plan",
+    "sinParadas": "No stops could be scheduled within the given time and budget. Try widening the hours or the budget.",
+    "mapaVacio": "Once there are stops, they will show up here on the map.",
+    "comoReordenar": "Drag a stop to change the order, or select it and use Alt + arrow up or down. Times and costs are recalculated automatically.",
+    "arrastrar": "Drag to reorder",
+    "paradaAccesible": "Stop {{numero}} of {{total}}: {{nombre}}",
+    "recalculando": "Recalculating…",
+    "errorAlReordenar": "That order could not be recalculated. The times you see are from the previous order.",
+    "tramoEstimado": "Estimated leg: OpenStreetMap has no roads mapped near these points, so the distance was computed as a straight line. The real time may be longer.",
+    "modo": {
+      "caminando": "On foot",
+      "combi": "By combi",
+      "colectivo": "By shared car",
+      "taxi": "By taxi"
+    },
+    "verItinerario": "Build my itinerary",
+    "verItinerarioDetalle": "Turn these recommendations into a real day, with times and costs.",
+    "paradasContadas_one": "{{count}} stop",
+    "paradasContadas_other": "{{count}} stops"
   }
 }

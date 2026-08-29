@@ -112,6 +112,26 @@ export function Resultados() {
         </section>
       )}
 
+      {/* El paso al Incremento 4. Va justo debajo del resumen y no al final
+          de la lista: es la acción principal de esta pantalla, y enterrarla
+          bajo veinte tarjetas obligaria a bajar hasta el fondo para encontrarla. */}
+      {resultado.total_recomendados > 0 && (
+        <section className="mt-6 rounded-lg border border-secundario bg-secundario-contenedor p-5">
+          <h2 className="font-titulo font-semibold text-sobre-secundario-contenedor">
+            {t('itinerario.verItinerario')}
+          </h2>
+          <p className="mt-1 text-sm text-sobre-secundario-contenedor">
+            {t('itinerario.verItinerarioDetalle')}
+          </p>
+          <Link
+            to={`/preferencias/${identificador}/itinerario`}
+            className="mt-3 inline-block rounded-full bg-primario px-5 py-2 text-sm font-semibold text-sobre-primario transition-transform hover:-translate-y-0.5"
+          >
+            {t('itinerario.verItinerario')}
+          </Link>
+        </section>
+      )}
+
       {/* Trazabilidad: cómo se calculó esto. */}
       <p className="mt-4 text-xs text-sobre-superficie-variante">
         {t(`resultados.generado_por_${resultado.generado_por}`)} ·{' '}

@@ -13,6 +13,7 @@ import { AsistentePreferencias } from '@/paginas/AsistentePreferencias';
 import { Catalogo } from '@/paginas/Catalogo';
 import { DetalleRecurso } from '@/paginas/DetalleRecurso';
 import { Inicio } from '@/paginas/Inicio';
+import { Itinerario } from '@/paginas/Itinerario';
 import { MisViajes } from '@/paginas/MisViajes';
 import { PreferenciaGuardada } from '@/paginas/PreferenciaGuardada';
 import { Resultados } from '@/paginas/Resultados';
@@ -74,6 +75,7 @@ export function App() {
           <Route path="/preferencias" element={<AsistentePreferencias />} />
           <Route path="/preferencias/:id" element={<PreferenciaGuardada />} />
           <Route path="/preferencias/:id/resultados" element={<Resultados />} />
+          <Route path="/preferencias/:id/itinerario" element={<Itinerario />} />
           <Route path="/acceso" element={<Acceso />} />
           <Route path="/mis-viajes" element={<MisViajes />} />
         </Routes>

@@ -3,7 +3,40 @@
 **Incremento:** 4 — Ruteo geoespacial multimodal
 **Brecha que mide:** 4 — *el proceso no incorporaba la distribución geográfica
 ni el tiempo y costo de desplazamiento*
-**Estado:** implementado
+**Estado:** implementado, **sustituyendo al indicador propuesto**
+
+---
+
+## Antes que nada: este no es el indicador que decía el plan
+
+`CONTEXTO_PROYECTO.md` propone para el Incremento 4:
+
+> «Error medio entre tiempo de traslado estimado y real»
+
+**Ese indicador no se puede medir hoy, y decir que sí sería mentir.** Calcularlo
+exige tiempos de traslado **reales observados**: alguien que haga los trayectos
+con un cronómetro, o una fuente que los publique. No existe ninguna de las dos
+cosas.
+
+Lo que se podría hacer para «cumplir» sin tener el dato:
+
+| Atajo | Por qué no se hizo |
+|---|---|
+| Comparar la estimación con otra estimación (Google Maps, OSRM) | Mediría el acuerdo entre dos modelos, no el error frente a la realidad. Y el nombre del indicador diría «real» |
+| Usar las cinco distancias verificadas de `CONTEXTO_PROYECTO.md` | Son **distancias**, no tiempos, y son cinco. Un «error medio» sobre cinco pares no es una media de nada |
+| Inventar un porcentaje creíble | Es exactamente lo que este proyecto se comprometió a no hacer |
+
+Sí se hizo el contraste que **sí** era posible, y está registrado: la ruta
+Ocopa → Concepción sobre la red vial da 6,50 km frente a los 5,50 km publicados
+(+18 %). Es un punto de comparación, no un indicador.
+
+Así que se mide otra cosa, se dice que es otra cosa, y se explica cuál. El
+indicador propuesto queda **pendiente** hasta que el Incremento 6 acumule
+experiencias reales: cuando un visitante confirme que hizo un itinerario, sus
+tiempos serán la primera verdad de campo que tenga el proyecto.
+
+Es la misma clase de decisión que se tomó con MLOps y con el indicador 3:
+**medir lo que se puede sostener, y declarar lo que no.**
 
 ---
 

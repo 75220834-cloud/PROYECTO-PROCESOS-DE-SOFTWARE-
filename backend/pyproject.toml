@@ -1,0 +1,119 @@
+# ---------------------------------------------------------------------------
+# RutaVivaMantaro - backend
+#
+# Un unico archivo declara las dependencias y la configuracion de las
+# herramientas de calidad (ruff, black, pytest, coverage). Es el estandar
+# actual de Python y evita tener cinco archivos de configuracion sueltos.
+# ---------------------------------------------------------------------------
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rutavivamantaro-backend"
+version = "0.1.0"
+description = "API de la plataforma de turismo inteligente para la Ruta del Valle del Mantaro"
+requires-python = ">=3.11"
+
+# --- Dependencias que se usan desde la Fase 0 ------------------------------
+dependencies = [
+    "fastapi>=0.115",           # framework de la API
+    "uvicorn[standard]>=0.32",  # servidor que ejecuta la API
+    "pydantic>=2.9",            # validacion de datos de entrada y salida
+    "pydantic-settings>=2.6",   # lee la configuracion desde el archivo .env
+    "sqlalchemy>=2.0",          # ORM: tablas de la base como clases de Python
+    "geoalchemy2>=0.15",        # anade los tipos geograficos de PostGIS al ORM
+    "alembic>=1.13",            # migraciones: control de versiones del esquema
+    "psycopg[binary]>=3.2",     # controlador de PostgreSQL
+    "httpx>=0.27",              # cliente HTTP: habla con Ollama y prueba la API
+    "python-dotenv>=1.0",       # carga el archivo .env
+]
+
+# --- Dependencias por fase -------------------------------------------------
+# Se instalan cuando su fase llega, para no descargar varios GB desde el
+# primer dia. Todas fueron verificadas como compatibles con Python 3.14.
+[project.optional-dependencies]
+
+# Fase 2 - autenticacion
+autenticacion = [
+    "passlib[argon2]>=1.7.4",
+    "python-jose[cryptography]>=3.3",
+    "python-multipart>=0.0.12",
+]
+
+# Fase 1 y 3 - datos y modelos de recomendacion y afluencia
+datos = [
+    "pandas>=2.2",
+    "scikit-learn>=1.5",
+    "lightgbm>=4.5",
+    "jupyter>=1.1",
+]
+
+# Fase 4 - ruteo geoespacial
+geo = [
+    "osmnx>=2.0",
+    "networkx>=3.3",
+    "ortools>=9.11",
+    "rasterio>=1.4",
+    "shapely>=2.0",
+]
+
+# Fase 6 - analisis de sentimiento
+sentimiento = [
+    "pysentimiento>=0.7",
+]
+
+# Herramientas de desarrollo y pruebas
+desarrollo = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+    "black>=24.10",
+]
+
+# ---------------------------------------------------------------------------
+# ruff: revisa el estilo y detecta errores comunes. Sustituye a flake8,
+# isort y varios plugins, y es mucho mas rapido.
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["alembic/versions", ".venv", "notebooks"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # errores de estilo (pycodestyle)
+    "F",   # errores reales detectados por pyflakes
+    "I",   # orden de los imports
+    "UP",  # sintaxis anticuada que se puede modernizar
+    "B",   # trampas frecuentes (flake8-bugbear)
+]
+
+# ---------------------------------------------------------------------------
+# black: formatea el codigo automaticamente. No opina, decide. Elimina las
+# discusiones de estilo del equipo.
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+exclude = '(\.venv|alembic/versions|notebooks)'
+
+# ---------------------------------------------------------------------------
+# pytest y cobertura. La meta declarada en el PROMPT_MAESTRO es 60 % desde
+# la Fase 2; aqui queda configurado el reporte para poder medirlo.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --cov=app --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/__init__.py", "*/tests/*"]
+
+# Le indica a setuptools que el codigo del backend es el paquete "app"
+# y todos sus subpaquetes (modelos, esquemas, rutas, servicios, ia...).
+[tool.setuptools.packages.find]
+include = ["app*"]

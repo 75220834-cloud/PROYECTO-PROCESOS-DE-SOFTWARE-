@@ -21,7 +21,7 @@ from decimal import Decimal
 
 from app.base_datos import FabricaDeSesiones
 from app.modelos.itinerario import OrigenDelCalculo
-from app.modelos.preferencias import PreferenciaViaje
+from app.modelos.preferencias import INTERESES_VALIDOS, PreferenciaViaje
 from app.servicios.recomendador import recomendar
 from app.servicios.ruteo import (
     PROPORCION_DE_TRASLADO,
@@ -63,7 +63,7 @@ PERFILES = [
     (
         "Jauja, todo, ritmo intenso",
         "JAUJA",
-        ["arqueologia", "naturaleza", "folclore"],
+        ["arqueologia", "naturaleza", "ferias_fiestas"],
         "combinado",
         "intenso",
         "800",
@@ -72,7 +72,21 @@ PERFILES = [
 
 
 def _preferencia(distrito, intereses, movilidad, ritmo, presupuesto) -> PreferenciaViaje:
-    """Una preferencia en memoria, sin guardarla: solo se necesita para calcular."""
+    """Una preferencia en memoria, sin guardarla: solo se necesita para calcular.
+
+    Se validan los intereses a mano porque aqui se construye el modelo de
+    SQLAlchemy directamente, saltandose la validacion de Pydantic que aplica el
+    endpoint. Sin esta comprobacion, un interes inexistente se colaria en
+    silencio y el script estaria midiendo con una entrada que la API rechazaria.
+    Paso: el perfil de Jauja usaba «folclore», que no esta en la lista.
+    """
+    invalidos = set(intereses) - set(INTERESES_VALIDOS)
+    if invalidos:
+        raise ValueError(
+            f"Intereses no reconocidos: {', '.join(sorted(invalidos))}. "
+            f"Los validos son: {', '.join(sorted(INTERESES_VALIDOS))}"
+        )
+
     hoy = date(2026, 9, 12)
 
     return PreferenciaViaje(

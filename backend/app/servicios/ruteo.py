@@ -1323,4 +1323,10 @@ def titulo_por_defecto(paradas: list[ParadaCalculada], fecha: date) -> str:
     if len(distritos) == 2:
         return f"{distritos[0]} y {distritos[1]}"
 
-    return f"{distritos[0]}, {distritos[1]} y {len(distritos) - 2} distrito(s) más"
+    if len(distritos) == 3:
+        return f"{distritos[0]}, {distritos[1]} y {distritos[2]}"
+
+    restantes = len(distritos) - 2
+    plural = "distrito" if restantes == 1 else "distritos"
+
+    return f"{distritos[0]}, {distritos[1]} y {restantes} {plural} más"

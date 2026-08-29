@@ -28,6 +28,7 @@ from app.configuracion import obtener_configuracion
 from app.modelos import (  # noqa: F401
     afluencia,
     catalogo,
+    coordinacion,
     itinerario,
     preferencias,
     transporte,

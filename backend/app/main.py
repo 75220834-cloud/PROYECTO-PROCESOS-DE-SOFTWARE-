@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.rutas import (
     autenticacion,
     catalogo,
+    coordinacion,
     itinerarios,
     preferencias,
     recomendaciones,
@@ -53,6 +54,7 @@ aplicacion.include_router(autenticacion.enrutador)
 aplicacion.include_router(preferencias.enrutador)
 aplicacion.include_router(recomendaciones.enrutador)
 aplicacion.include_router(itinerarios.enrutador)
+aplicacion.include_router(coordinacion.enrutador)
 
 
 @aplicacion.get("/", tags=["salud"], summary="Mensaje de bienvenida")

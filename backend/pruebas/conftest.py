@@ -66,8 +66,14 @@ def sesion(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
     # corren ningún peligro.
     sesion_de_prueba.execute(
         text(
+            # Se nombran todas las tablas aunque CASCADE arrastraria a varias
+            # por si sola: si manana alguien quita una clave ajena, el CASCADE
+            # dejaria datos vivos entre pruebas y los fallos serian de los que
+            # solo aparecen segun el orden de ejecucion.
             "TRUNCATE recurso_turistico, horario_atencion, registro_validacion,"
-            " usuario, preferencia_viaje CASCADE"
+            " usuario, preferencia_viaje, itinerario, parada_itinerario,"
+            " tarifa_transporte, proveedor, servicio, disponibilidad_servicio,"
+            " solicitud_coordinacion, cambio_de_estado CASCADE"
         )
     )
 

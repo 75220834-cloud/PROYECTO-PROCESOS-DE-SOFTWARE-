@@ -4,6 +4,14 @@
     "lema": "Smart tourism for the Mantaro Valley Route",
     "logotipo_alternativo": "RutaVivaMantaro logo"
   },
+  "navegacion": {
+    "inicio": "Home",
+    "explorar": "Explore",
+    "mis_viajes": "My trips",
+    "iniciar_sesion": "Sign in",
+    "abrir_menu": "Open menu",
+    "cerrar_menu": "Close menu"
+  },
   "encabezado": {
     "cambiar_a_oscuro": "Switch to dark theme",
     "cambiar_a_claro": "Switch to light theme",
@@ -12,9 +20,25 @@
     "ingles": "English"
   },
   "inicio": {
-    "titulo": "Discover the Mantaro Valley",
-    "descripcion": "A platform that brings together the official tourism offer of Huancayo, Concepción, Jauja and Chupaca, and builds your itinerary around your interests, your budget and the time you have.",
+    "etiqueta_region": "Mantaro Valley",
+    "titulo": "Discover the Mantaro Valley your way",
+    "subtitulo": "Build your route around your time, your budget and what you enjoy",
+    "planificar": "Plan my trip",
+    "como_funciona": "How it works",
+    "paso_1_titulo": "Tell us what you like",
+    "paso_1_texto": "Your dates, your budget, your interests and the pace you want to travel at.",
+    "paso_2_titulo": "Get your personalised route",
+    "paso_2_texto": "We suggest what to visit and in what order, with approximate times and costs.",
+    "paso_3_titulo": "Coordinate and enjoy",
+    "paso_3_texto": "Request lodging, transport and guides from a single place.",
+    "provincias_titulo": "The four provinces of the route",
     "en_construccion": "Work in progress — Phase 0: environment ready"
+  },
+  "provincias": {
+    "huancayo": "Huancayo",
+    "concepcion": "Concepción",
+    "jauja": "Jauja",
+    "chupaca": "Chupaca"
   },
   "estado": {
     "titulo": "Platform status",
@@ -26,5 +50,13 @@
     "api": "API",
     "base_datos": "Database",
     "asistente": "Assistant (Ollama)"
+  },
+  "pie": {
+    "derechos": "Heart of the Mantaro Valley",
+    "privacidad": "Privacy",
+    "terminos": "Terms",
+    "soporte": "Support",
+    "cultura": "Wanka Culture",
+    "curso": "Universidad Continental · Software Processes"
   }
 }

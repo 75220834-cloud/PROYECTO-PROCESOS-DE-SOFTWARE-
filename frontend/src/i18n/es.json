@@ -4,6 +4,14 @@
     "lema": "Turismo inteligente para la Ruta del Valle del Mantaro",
     "logotipo_alternativo": "Logotipo de RutaVivaMantaro"
   },
+  "navegacion": {
+    "inicio": "Inicio",
+    "explorar": "Explorar",
+    "mis_viajes": "Mis viajes",
+    "iniciar_sesion": "Iniciar sesión",
+    "abrir_menu": "Abrir el menú",
+    "cerrar_menu": "Cerrar el menú"
+  },
   "encabezado": {
     "cambiar_a_oscuro": "Cambiar a tema oscuro",
     "cambiar_a_claro": "Cambiar a tema claro",
@@ -12,9 +20,25 @@
     "ingles": "Inglés"
   },
   "inicio": {
-    "titulo": "Descubre el Valle del Mantaro",
-    "descripcion": "Una plataforma que reúne la oferta turística oficial de Huancayo, Concepción, Jauja y Chupaca, y arma tu itinerario según lo que te interesa, tu presupuesto y el tiempo que tienes.",
+    "etiqueta_region": "Valle del Mantaro",
+    "titulo": "Descubre el Valle del Mantaro a tu manera",
+    "subtitulo": "Arma tu recorrido según tu tiempo, tu presupuesto y lo que te gusta",
+    "planificar": "Planificar mi viaje",
+    "como_funciona": "Cómo funciona",
+    "paso_1_titulo": "Cuéntanos qué te gusta",
+    "paso_1_texto": "Tus fechas, tu presupuesto, tus intereses y a qué ritmo quieres viajar.",
+    "paso_2_titulo": "Recibe tu recorrido personalizado",
+    "paso_2_texto": "Te proponemos qué visitar y en qué orden, con tiempos y costos aproximados.",
+    "paso_3_titulo": "Coordina y disfruta",
+    "paso_3_texto": "Solicita hospedaje, transporte y guías desde un solo lugar.",
+    "provincias_titulo": "Las cuatro provincias de la ruta",
     "en_construccion": "Proyecto en construcción — Fase 0: entorno preparado"
+  },
+  "provincias": {
+    "huancayo": "Huancayo",
+    "concepcion": "Concepción",
+    "jauja": "Jauja",
+    "chupaca": "Chupaca"
   },
   "estado": {
     "titulo": "Estado de la plataforma",
@@ -26,5 +50,13 @@
     "api": "API",
     "base_datos": "Base de datos",
     "asistente": "Asistente (Ollama)"
+  },
+  "pie": {
+    "derechos": "Corazón del Valle del Mantaro",
+    "privacidad": "Privacidad",
+    "terminos": "Términos",
+    "soporte": "Soporte",
+    "cultura": "Cultura Wanka",
+    "curso": "Universidad Continental · Procesos de Software"
   }
 }

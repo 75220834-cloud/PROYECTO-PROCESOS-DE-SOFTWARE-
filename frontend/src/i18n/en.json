@@ -215,7 +215,8 @@
     "ver_catalogo": "Explore the catalogue",
     "no_encontrada": "That preference was not found.",
     "empezar_de_nuevo": "Start again",
-    "proxima_fase": "Personalised recommendations and the itinerary with a map arrive in the next phases of the project. For now you can explore the full catalogue."
+    "proxima_fase": "Personalised recommendations and the itinerary with a map arrive in the next phases of the project. For now you can explore the full catalogue.",
+    "ver_recomendaciones": "See what we suggest"
   },
   "misviajes": {
     "titulo": "My trips",
@@ -229,5 +230,30 @@
     "necesitas_cuenta": "Sign in to see your trips",
     "necesitas_cuenta_texto": "This is where the trips you chose to keep are stored. You can plan one without an account and sign up at the end.",
     "planificar_sin_cuenta": "Plan without an account"
+  },
+  "afluencia": {
+    "bajo": "Few people",
+    "medio": "Moderate crowds",
+    "alto": "Busy that day"
+  },
+  "resultados": {
+    "titulo": "What we suggest",
+    "subtitulo": "{{total}} resources ranked by what you told us.",
+    "calculando": "Working out your recommendations…",
+    "error": "The recommendations could not be calculated.",
+    "sin_resultados": "No resource matches what you asked for. Try ticking more interests or changing how you get around.",
+    "cambiar_preferencias": "Change my preferences",
+    "afinidad_ayuda": "How well this resource fits compared with the best match found. It is not an absolute percentage.",
+    "a_km": "{{km}} km away",
+    "porque": "Because you are interested in {{intereses}}",
+    "terminos": "Weighed most: {{terminos}}",
+    "evaluados": "{{total}} resources assessed",
+    "generado_por_modelo": "Calculated with the affinity model (TF-IDF and cosine similarity)",
+    "generado_por_reglas": "Calculated with the explicit rules, no model",
+    "descartados_titulo": "{{total}} resources ruled out",
+    "descartados_ayuda": "They are ruled out before anything is scored: without coordinates they cannot go into an itinerary, and out of your range you could not reach them.",
+    "ver": "Show",
+    "ocultar": "Hide",
+    "proxima_fase": "The itinerary with map, opening hours and transfer costs arrives in the next phase of the project."
   }
 }

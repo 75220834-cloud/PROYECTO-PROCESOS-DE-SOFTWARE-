@@ -215,7 +215,8 @@
     "ver_catalogo": "Explorar el catálogo",
     "no_encontrada": "No se encontró esa preferencia.",
     "empezar_de_nuevo": "Empezar de nuevo",
-    "proxima_fase": "La recomendación personalizada y el itinerario con mapa llegan en las siguientes fases del proyecto. Por ahora puedes explorar el catálogo completo."
+    "proxima_fase": "La recomendación personalizada y el itinerario con mapa llegan en las siguientes fases del proyecto. Por ahora puedes explorar el catálogo completo.",
+    "ver_recomendaciones": "Ver lo que te proponemos"
   },
   "misviajes": {
     "titulo": "Mis viajes",
@@ -229,5 +230,30 @@
     "necesitas_cuenta": "Inicia sesión para ver tus viajes",
     "necesitas_cuenta_texto": "Aquí se guardan los viajes que hayas decidido conservar. Puedes planificar uno sin cuenta y registrarte al final.",
     "planificar_sin_cuenta": "Planificar sin cuenta"
+  },
+  "afluencia": {
+    "bajo": "Poca gente",
+    "medio": "Afluencia media",
+    "alto": "Mucha gente ese día"
+  },
+  "resultados": {
+    "titulo": "Lo que te proponemos",
+    "subtitulo": "{{total}} recursos ordenados según lo que nos contaste.",
+    "calculando": "Calculando tus recomendaciones…",
+    "error": "No se pudieron calcular las recomendaciones.",
+    "sin_resultados": "Ningún recurso encaja con lo que pediste. Prueba a marcar más intereses o a cambiar cómo te mueves.",
+    "cambiar_preferencias": "Cambiar mis preferencias",
+    "afinidad_ayuda": "Cuánto encaja este recurso comparado con el que mejor encaja de los encontrados. No es un porcentaje absoluto.",
+    "a_km": "a {{km}} km",
+    "porque": "Porque te interesa {{intereses}}",
+    "terminos": "Pesaron: {{terminos}}",
+    "evaluados": "{{total}} recursos evaluados",
+    "generado_por_modelo": "Calculado con el modelo de afinidad (TF-IDF y similitud coseno)",
+    "generado_por_reglas": "Calculado con las reglas explícitas, sin modelo",
+    "descartados_titulo": "{{total}} recursos descartados",
+    "descartados_ayuda": "Se descartan antes de puntuar nada: sin coordenadas no pueden entrar en un itinerario, y fuera de tu alcance no podrías llegar.",
+    "ver": "Ver",
+    "ocultar": "Ocultar",
+    "proxima_fase": "El itinerario con mapa, horarios y costos de traslado llega en la siguiente fase del proyecto."
   }
 }

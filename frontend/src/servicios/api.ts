@@ -369,3 +369,87 @@ export function listarMisPreferencias(
 export function reclamarPreferencia(id: number, token: string): Promise<PreferenciaPublica> {
   return enviar<PreferenciaPublica>(`/api/preferencias/${id}/reclamar`, 'POST', undefined, token);
 }
+
+// ---------------------------------------------------------------------------
+// Recomendación inteligente (Incremento 3)
+// ---------------------------------------------------------------------------
+
+/** Cuánta gente se espera en un sitio, y por qué. */
+export interface AfluenciaEstimada {
+  nivel: 'bajo' | 'medio' | 'alto';
+  motivo: string;
+  festividades: string[];
+  calculado_por: 'modelo' | 'reglas';
+}
+
+/** Un recurso recomendado, con la explicación de por qué lo fue. */
+export interface RecomendacionPublica {
+  recurso_id: number;
+  nombre: string;
+  provincia: string;
+  distrito: string;
+  categoria: string | null;
+  latitud: number | null;
+  longitud: number | null;
+  distancia_km: number | null;
+  /** Similitud coseno en bruto. No se muestra: no significa nada por sí sola. */
+  puntaje_afinidad: number;
+  /** De 0 a 100, relativo al mejor resultado de esta misma búsqueda. */
+  puntaje_relativo: number;
+  terminos_decisivos: string[];
+  intereses_cubiertos: string[];
+  afluencia: AfluenciaEstimada;
+  generado_por: 'modelo' | 'reglas';
+}
+
+/** Un recurso que no pasó los filtros duros, con su motivo. */
+export interface RecursoDescartado {
+  recurso_id: number;
+  nombre: string;
+  motivo: string;
+}
+
+/** Respuesta completa de la recomendación. */
+export interface RespuestaRecomendacion {
+  preferencia_id: number;
+  fecha_de_referencia: string;
+  generado_por: 'modelo' | 'reglas';
+  total_evaluados: number;
+  total_recomendados: number;
+  total_descartados: number;
+  recomendaciones: RecomendacionPublica[];
+  descartados: RecursoDescartado[];
+  avisos: string[];
+}
+
+/** Una festividad del calendario del valle. */
+export interface FestividadPublica {
+  nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  tipo: string;
+  distritos: string[];
+  es_movil: boolean;
+  fuente: string;
+}
+
+/** Pide recomendaciones para una preferencia ya guardada. */
+export function obtenerRecomendaciones(
+  preferenciaId: number,
+  token: string | null,
+  limite = 20,
+): Promise<RespuestaRecomendacion> {
+  return enviar<RespuestaRecomendacion>(
+    '/api/recomendaciones',
+    'POST',
+    { preferencia_id: preferenciaId, limite },
+    token,
+  );
+}
+
+/** Devuelve las festividades del valle en un año. */
+export function obtenerCalendario(
+  anio: number,
+): Promise<{ anio: number; total: number; festividades: FestividadPublica[] }> {
+  return obtener(`/api/calendario/${anio}`);
+}

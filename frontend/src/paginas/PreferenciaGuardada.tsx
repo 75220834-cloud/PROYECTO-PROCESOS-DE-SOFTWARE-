@@ -111,18 +111,19 @@ export function PreferenciaGuardada() {
         </Link>
 
         <Link
-          to="/explorar"
+          to={`/preferencias/${preferencia.id}/resultados`}
           className="rounded-md bg-primario px-6 py-2.5 font-semibold text-sobre-primario shadow-suave transition-transform hover:-translate-y-0.5"
+        >
+          {t('preferencia.ver_recomendaciones')}
+        </Link>
+
+        <Link
+          to="/explorar"
+          className="rounded-md border border-contorno-variante px-5 py-2.5 font-semibold text-sobre-superficie transition-colors hover:border-primario hover:text-primario"
         >
           {t('preferencia.ver_catalogo')}
         </Link>
       </nav>
-
-      {/* Honestidad sobre el estado del proyecto: la recomendación llega en
-          la Fase 3. No se promete lo que todavía no existe. */}
-      <p className="mt-8 rounded-lg bg-superficie-contenedor p-4 text-sm text-sobre-superficie-variante">
-        {t('preferencia.proxima_fase')}
-      </p>
     </motion.main>
   );
 }

@@ -15,6 +15,7 @@ import { DetalleRecurso } from '@/paginas/DetalleRecurso';
 import { Inicio } from '@/paginas/Inicio';
 import { MisViajes } from '@/paginas/MisViajes';
 import { PreferenciaGuardada } from '@/paginas/PreferenciaGuardada';
+import { Resultados } from '@/paginas/Resultados';
 
 function Pie() {
   const { t } = useTranslation();
@@ -72,6 +73,7 @@ export function App() {
           <Route path="/recursos/:id" element={<DetalleRecurso />} />
           <Route path="/preferencias" element={<AsistentePreferencias />} />
           <Route path="/preferencias/:id" element={<PreferenciaGuardada />} />
+          <Route path="/preferencias/:id/resultados" element={<Resultados />} />
           <Route path="/acceso" element={<Acceso />} />
           <Route path="/mis-viajes" element={<MisViajes />} />
         </Routes>

@@ -164,9 +164,9 @@ def _medir_por_distrito(filas, grafo_proyectado) -> list[CoberturaDeDistrito]:
     crs_metrico = grafo_proyectado.graph["crs"]
 
     # Los recursos se proyectan al mismo sistema métrico que la red.
-    puntos = gpd.GeoSeries(
-        [Point(lon, lat) for _, _, lat, lon in filas], crs="EPSG:4326"
-    ).to_crs(crs_metrico)
+    puntos = gpd.GeoSeries([Point(lon, lat) for _, _, lat, lon in filas], crs="EPSG:4326").to_crs(
+        crs_metrico
+    )
 
     print("  Calculando distancias al nodo más cercano...")
     nodos, distancias = ox.nearest_nodes(
@@ -187,11 +187,7 @@ def _medir_por_distrito(filas, grafo_proyectado) -> list[CoberturaDeDistrito]:
 
     print("  Contando nodos y aristas alrededor de cada distrito...")
     for (provincia, distrito), distancias_del_distrito in sorted(por_distrito.items()):
-        indices = [
-            i
-            for i, (p, d, _, _) in enumerate(filas)
-            if p == provincia and d == distrito
-        ]
+        indices = [i for i, (p, d, _, _) in enumerate(filas) if p == provincia and d == distrito]
         puntos_del_distrito = puntos.iloc[indices]
 
         # Nodos dentro del radio de cualquiera de sus recursos.
@@ -274,8 +270,11 @@ def main() -> int:
                 "umbral_de_desconexion_m": UMBRAL_DE_DESCONEXION_M,
                 "radio_de_conteo_m": RADIO_DE_CONTEO_M,
                 "distritos": [
-                    {**asdict(c), "veredicto": c.veredicto,
-                     "porcentaje_conectado": c.porcentaje_conectado}
+                    {
+                        **asdict(c),
+                        "veredicto": c.veredicto,
+                        "porcentaje_conectado": c.porcentaje_conectado,
+                    }
                     for c in resultados
                 ],
             },

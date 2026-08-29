@@ -45,7 +45,12 @@ backend/datos/*.gpkg
 backend/datos/*.tif
 backend/modelos_entrenados/
 *.pkl
+*.pickle
 *.joblib
+
+# El grafo de la red vial con altitudes: 27 MB que se reconstruyen con
+# `python -m app.utilidades.preparar_red_vial`. No tiene sentido versionarlo.
+backend/datos/red_vial_valle.pickle
 
 # ---------------------------------------------------------------------------
 # Sistema operativo y editores

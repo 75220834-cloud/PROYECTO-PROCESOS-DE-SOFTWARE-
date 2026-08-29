@@ -1,0 +1,61 @@
+# ---------------------------------------------------------------------------
+# Secretos y configuracion local
+# Nunca debe entrar un .env real al historial. Solo se versiona .env.ejemplo.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.ejemplo
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# Node y frontend
+# ---------------------------------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+*.local
+
+# ---------------------------------------------------------------------------
+# Datos descargados pesados
+# Los CSV fuente y los modelos de elevacion se descargan aparte; el repositorio
+# guarda las instrucciones para obtenerlos, no los archivos.
+# ---------------------------------------------------------------------------
+backend/datos/crudos/
+backend/datos/derivados/
+backend/datos/*.gpkg
+backend/datos/*.tif
+backend/modelos_entrenados/
+*.pkl
+*.joblib
+
+# ---------------------------------------------------------------------------
+# Sistema operativo y editores
+# ---------------------------------------------------------------------------
+Thumbs.db
+desktop.ini
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ---------------------------------------------------------------------------
+# Docker y calidad
+# ---------------------------------------------------------------------------
+.scannerwork/

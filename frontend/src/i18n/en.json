@@ -1,0 +1,30 @@
+{
+  "aplicacion": {
+    "nombre": "RutaVivaMantaro",
+    "lema": "Smart tourism for the Mantaro Valley Route",
+    "logotipo_alternativo": "RutaVivaMantaro logo"
+  },
+  "encabezado": {
+    "cambiar_a_oscuro": "Switch to dark theme",
+    "cambiar_a_claro": "Switch to light theme",
+    "idioma": "Language",
+    "espanol": "Spanish",
+    "ingles": "English"
+  },
+  "inicio": {
+    "titulo": "Discover the Mantaro Valley",
+    "descripcion": "A platform that brings together the official tourism offer of Huancayo, Concepción, Jauja and Chupaca, and builds your itinerary around your interests, your budget and the time you have.",
+    "en_construccion": "Work in progress — Phase 0: environment ready"
+  },
+  "estado": {
+    "titulo": "Platform status",
+    "cargando": "Checking status…",
+    "error": "Could not reach the API",
+    "operativo": "Operational",
+    "no_disponible": "Unavailable",
+    "degradado": "Degraded",
+    "api": "API",
+    "base_datos": "Database",
+    "asistente": "Assistant (Ollama)"
+  }
+}

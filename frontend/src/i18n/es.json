@@ -1,0 +1,30 @@
+{
+  "aplicacion": {
+    "nombre": "RutaVivaMantaro",
+    "lema": "Turismo inteligente para la Ruta del Valle del Mantaro",
+    "logotipo_alternativo": "Logotipo de RutaVivaMantaro"
+  },
+  "encabezado": {
+    "cambiar_a_oscuro": "Cambiar a tema oscuro",
+    "cambiar_a_claro": "Cambiar a tema claro",
+    "idioma": "Idioma",
+    "espanol": "Español",
+    "ingles": "Inglés"
+  },
+  "inicio": {
+    "titulo": "Descubre el Valle del Mantaro",
+    "descripcion": "Una plataforma que reúne la oferta turística oficial de Huancayo, Concepción, Jauja y Chupaca, y arma tu itinerario según lo que te interesa, tu presupuesto y el tiempo que tienes.",
+    "en_construccion": "Proyecto en construcción — Fase 0: entorno preparado"
+  },
+  "estado": {
+    "titulo": "Estado de la plataforma",
+    "cargando": "Consultando el estado…",
+    "error": "No se pudo contactar con la API",
+    "operativo": "Operativo",
+    "no_disponible": "No disponible",
+    "degradado": "Degradado",
+    "api": "API",
+    "base_datos": "Base de datos",
+    "asistente": "Asistente (Ollama)"
+  }
+}

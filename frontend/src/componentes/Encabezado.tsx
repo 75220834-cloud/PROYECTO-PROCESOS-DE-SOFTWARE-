@@ -14,11 +14,13 @@ import { NavLink } from 'react-router-dom';
 
 import { InterruptorTema } from '@/componentes/InterruptorTema';
 import { SelectorIdioma } from '@/componentes/SelectorIdioma';
+import { useSesion } from '@/hooks/useSesion';
 
 /** Enlaces de la navegación principal. La clave es la que traduce i18n. */
 const ENLACES = [
   { ruta: '/', clave: 'navegacion.inicio' },
   { ruta: '/explorar', clave: 'navegacion.explorar' },
+  { ruta: '/preferencias', clave: 'navegacion.planificar' },
   { ruta: '/mis-viajes', clave: 'navegacion.mis_viajes' },
 ] as const;
 
@@ -33,6 +35,7 @@ function clasesDelEnlace({ isActive }: { isActive: boolean }): string {
 
 export function Encabezado() {
   const { t } = useTranslation();
+  const { usuario, cerrarSesion } = useSesion();
   const [menuAbierto, establecerMenuAbierto] = useState(false);
 
   return (
@@ -67,12 +70,30 @@ export function Encabezado() {
 
           <InterruptorTema />
 
-          <button
-            type="button"
-            className="hidden rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-primario shadow-suave transition-transform hover:-translate-y-0.5 sm:block"
-          >
-            {t('navegacion.iniciar_sesion')}
-          </button>
+          {usuario ? (
+            <div className="hidden items-center gap-2 sm:flex">
+              <span
+                title={`${usuario.correo} · ${t(`roles.${usuario.rol}`)}`}
+                className="max-w-40 truncate text-sm font-semibold text-sobre-superficie"
+              >
+                {usuario.nombre}
+              </span>
+              <button
+                type="button"
+                onClick={cerrarSesion}
+                className="rounded-md border border-contorno-variante px-3 py-1.5 text-sm font-semibold text-sobre-superficie-variante transition-colors hover:border-primario hover:text-primario"
+              >
+                {t('navegacion.cerrar_sesion')}
+              </button>
+            </div>
+          ) : (
+            <NavLink
+              to="/acceso"
+              className="hidden rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-primario shadow-suave transition-transform hover:-translate-y-0.5 sm:block"
+            >
+              {t('navegacion.iniciar_sesion')}
+            </NavLink>
+          )}
 
           {/* Botón de menú: solo en pantallas pequeñas. */}
           <button
@@ -122,12 +143,23 @@ export function Encabezado() {
 
           <div className="mt-3 flex items-center justify-between border-t border-contorno-variante pt-3 sm:hidden">
             <SelectorIdioma />
-            <button
-              type="button"
-              className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-primario"
-            >
-              {t('navegacion.iniciar_sesion')}
-            </button>
+            {usuario ? (
+              <button
+                type="button"
+                onClick={cerrarSesion}
+                className="rounded-md border border-contorno-variante px-4 py-2 text-sm font-semibold text-sobre-superficie-variante"
+              >
+                {t('navegacion.cerrar_sesion')}
+              </button>
+            ) : (
+              <NavLink
+                to="/acceso"
+                onClick={() => establecerMenuAbierto(false)}
+                className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-primario"
+              >
+                {t('navegacion.iniciar_sesion')}
+              </NavLink>
+            )}
           </div>
         </nav>
       )}

@@ -8,9 +8,10 @@ con orden de visita, medio de transporte, tiempo y costo aproximado.
 Proyecto del curso **Procesos de Software (ASUC01702, NRC 30173)** —
 Universidad Continental, Huancayo. Ciclo 2026-20.
 
-> **Estado actual: Fase 1 completada.** El catálogo tiene **295 recursos**
-> importados del inventario oficial del MINCETUR, con un **79,32 % validado**.
-> El registro de preferencias del visitante llega en la Fase 2.
+> **Estado actual: Fase 2 completada.** El catálogo tiene **295 recursos**
+> importados del inventario oficial del MINCETUR, con un **79,32 % validado**,
+> y el visitante ya puede registrar lo que quiere de su viaje —sin necesidad
+> de crear una cuenta. La recomendación inteligente llega en la Fase 3.
 
 ---
 
@@ -150,7 +151,28 @@ parecido a esto:
 Se puede ejecutar las veces que haga falta: identifica cada recurso por su
 código del MINCETUR, así que actualiza en vez de duplicar.
 
-### 2.6 Preparar el frontend
+### 2.6 Crear los usuarios de demostración
+
+Crea una cuenta por cada rol del proyecto, para poder probar la aplicación sin
+registrarlas a mano:
+
+```bash
+python -m app.utilidades.usuarios_semilla
+```
+
+| Correo | Rol | Contraseña |
+|---|---|---|
+| `visitante@rutavivamantaro.pe` | visitante | `RutaViva2026` |
+| `proveedor@rutavivamantaro.pe` | proveedor | `RutaViva2026` |
+| `operador@rutavivamantaro.pe` | operador | `RutaViva2026` |
+| `gestor@rutavivamantaro.pe` | gestor | `RutaViva2026` |
+| `administrador@rutavivamantaro.pe` | administrador | `RutaViva2026` |
+
+**Son credenciales de desarrollo.** Están escritas aquí a propósito, para que
+cualquiera del equipo pueda levantar el proyecto y entrar. El guion se niega a
+ejecutarse si la variable `ENTORNO` del `.env` no dice `desarrollo`.
+
+### 2.7 Preparar el frontend
 
 En otra terminal:
 
@@ -212,6 +234,7 @@ ollama pull qwen2.5:7b-instruct
 | `alembic upgrade head` | Aplica las migraciones pendientes a la base de datos |
 | `alembic revision --autogenerate -m "..."` | Genera una migración nueva a partir de los modelos |
 | `python -m app.utilidades.cargar_catalogo` | Importa el inventario del MINCETUR y valida el catálogo |
+| `python -m app.utilidades.usuarios_semilla` | Crea un usuario de demostración por cada rol |
 
 ### Frontend — desde `frontend/`
 
@@ -258,6 +281,7 @@ PROYECTO-PROCESOS-DE-SOFTWARE-/
 │       ├── paginas/           una por ruta
 │       ├── servicios/         llamadas a la API
 │       ├── hooks/             lógica de estado reutilizable
+│       ├── utilidades/        funciones puras de formato
 │       ├── i18n/              es.json y en.json
 │       └── estilos/
 ├── docs/
@@ -300,7 +324,17 @@ El modelo de Ollama solo llama funciones del backend y redacta la respuesta con
 lo que esas funciones devuelven. Un lugar que no esté en el catálogo oficial no
 puede aparecer en la respuesta.
 
-### 6.4 El diseño visual viene de Stitch
+### 6.4 No hace falta cuenta para usar la aplicación
+
+El visitante completa el asistente de preferencias y obtiene su viaje **sin
+registrarse**. La cuenta se ofrece al final, solo para guardarlo, y entonces
+la preferencia que hizo como anónimo se asocia sola a la cuenta nueva. Ver
+[la nota de decisión](docs/decisiones/2026-08-29-la-aplicacion-funciona-sin-cuenta.md).
+
+Las contraseñas se guardan con **argon2id** y su sal aleatoria. Nunca se
+almacenan ni se registran en claro.
+
+### 6.5 El diseño visual viene de Stitch
 
 La paleta, las tipografías y las formas salen del sistema de diseño
 **«Mantaro Moderno»**, definido en Stitch junto con las 26 pantallas del
@@ -308,7 +342,7 @@ proyecto. El código copia esos valores; no los inventa. Cualquier cambio se
 hace primero en Stitch. Ver
 [la nota de decisión](docs/decisiones/2026-08-29-sistema-de-diseno-mantaro-moderno.md).
 
-### 6.5 Honestidad con los datos
+### 6.6 Honestidad con los datos
 
 Las tarifas de transporte de Huancayo cambian y no existe una tarifa oficial
 única. Se guardan siempre con precio mínimo, precio máximo, fecha de referencia

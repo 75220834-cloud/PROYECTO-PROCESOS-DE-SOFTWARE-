@@ -1,71 +1,224 @@
 /* ---------------------------------------------------------------------------
  * Estilos globales de RutaVivaMantaro.
  *
- * Tailwind 4 se carga con una sola linea. A diferencia de Tailwind 3, ya no
- * existe el archivo tailwind.config.js: el tema y las variantes se declaran
- * aqui mismo, en CSS.
+ * La paleta y la tipografía NO son invención propia: salen del sistema de
+ * diseño «Mantaro Moderno», creado en Stitch para este proyecto. Cualquier
+ * cambio de color debe hacerse allí primero y copiarse aquí, no al revés.
+ *
+ * Estética declarada: andino contemporáneo. Terracota (la tierra y la
+ * cerámica local), verde valle (los campos del Mantaro), ocre (el sol y la
+ * textilería wanka), sobre una superficie crema cálida.
  * ------------------------------------------------------------------------- */
 @import 'tailwindcss';
+
+/* Tipografías autoalojadas: se empaquetan con la aplicación en vez de
+ * descargarse de Google Fonts. El proyecto declara la conectividad limitada
+ * como restricción, así que la interfaz no puede depender de internet para
+ * verse bien. */
+@import '@fontsource-variable/manrope';
+@import '@fontsource/be-vietnam-pro/400.css';
+@import '@fontsource/be-vietnam-pro/600.css';
 
 /* ---------------------------------------------------------------------------
  * Tema oscuro por clase.
  *
- * Esta linea es el equivalente en Tailwind 4 de  darkMode: 'class'  de la
- * version 3: la clase  dark:  se aplica cuando el elemento <html> (o alguno
- * de sus padres) lleva la clase "oscuro". Lo decide el usuario con el
- * interruptor del encabezado, no el sistema operativo, para que su eleccion
- * mande siempre.
+ * Equivalente en Tailwind 4 de  darkMode: 'class'  de la versión 3: la
+ * variante  dark:  se activa cuando el elemento <html> lleva la clase
+ * "oscuro". Lo decide el usuario con el interruptor del encabezado, para que
+ * su elección mande por encima de la preferencia del sistema operativo.
  * ------------------------------------------------------------------------- */
 @custom-variant dark (&:where(.oscuro, .oscuro *));
 
 /* ---------------------------------------------------------------------------
- * Paleta del proyecto.
+ * Tokens del tema — modo claro.
  *
- * Los colores se declaran como variables del tema de Tailwind, de modo que se
- * pueden usar como  bg-verde-valle  o  text-tierra-500  en cualquier
- * componente. La paleta evoca el Valle del Mantaro: verde de los campos,
- * ocre de la tierra y azul del cielo de altura.
+ * Equivalencia con los nombres del sistema de diseño de Stitch:
+ *
+ *   español (aquí)          Stitch / Material 3
+ *   ---------------------   ----------------------------
+ *   primario                primary          terracota
+ *   secundario              secondary        verde valle
+ *   terciario               tertiary         ocre
+ *   superficie              surface
+ *   superficie-contenedor   surface-container
+ *   sobre-superficie        on-surface
+ *   contorno                outline
  * ------------------------------------------------------------------------- */
 @theme {
-  --color-valle-50: #f0f9f1;
-  --color-valle-100: #dcf0de;
-  --color-valle-300: #8fd09a;
-  --color-valle-500: #3f9d54;
-  --color-valle-600: #2f7d42;
-  --color-valle-700: #266536;
-  --color-valle-900: #16341f;
+  /* Tipografía */
+  --font-titulo: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-cuerpo: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-cuerpo);
 
-  --color-tierra-100: #f6ecdd;
-  --color-tierra-300: #e0bd88;
-  --color-tierra-500: #c58a3d;
-  --color-tierra-700: #8a5c22;
+  /* Primario — terracota. Acciones principales y momentos de marca. */
+  --color-primario: #a23919;
+  --color-primario-contenedor: #c3502f;
+  --color-sobre-primario: #ffffff;
+  --color-sobre-primario-contenedor: #fffbff;
+  --color-primario-suave: #ffdbd1;
 
-  --color-cielo-100: #e2f0fb;
-  --color-cielo-500: #2f80c4;
-  --color-cielo-700: #1d5581;
+  /* Secundario — verde valle. Estados de éxito y categorías de naturaleza. */
+  --color-secundario: #27695c;
+  --color-secundario-contenedor: #abeddc;
+  --color-sobre-secundario: #ffffff;
+  --color-sobre-secundario-contenedor: #2c6d60;
 
-  --color-pizarra-50: #f7f8f9;
-  --color-pizarra-100: #eceff2;
-  --color-pizarra-300: #c3cbd5;
-  --color-pizarra-500: #5a6875;
-  --color-pizarra-700: #2c3e50;
-  --color-pizarra-800: #1f2933;
-  --color-pizarra-900: #141b22;
+  /* Terciario — ocre. Destacados y advertencias. */
+  --color-terciario: #745800;
+  --color-terciario-contenedor: #ffdf99;
+  --color-sobre-terciario: #ffffff;
+  --color-sobre-terciario-contenedor: #5a4300;
+
+  /* Azul cielo andino. Se usa con moderación: enlaces de alto contraste,
+   * clima y actividades de agua. */
+  --color-cielo: #2f6f9e;
+  --color-cielo-contenedor: #d3e7f7;
+
+  /* Superficies — del crema cálido al blanco puro. La jerarquía se construye
+   * con capas tonales, no con bordes fuertes. */
+  --color-superficie: #fff8f5;
+  --color-superficie-tenue: #e1d8d4;
+  --color-superficie-contenedor-minimo: #ffffff;
+  --color-superficie-contenedor-bajo: #fbf2ed;
+  --color-superficie-contenedor: #f5ece7;
+  --color-superficie-contenedor-alto: #efe6e2;
+  --color-superficie-contenedor-maximo: #e9e1dc;
+
+  --color-sobre-superficie: #1e1b18;
+  --color-sobre-superficie-variante: #57423c;
+
+  --color-contorno: #8b716a;
+  --color-contorno-variante: #dec0b8;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-error-contenedor: #ffdad6;
+  --color-sobre-error: #ffffff;
+  --color-sobre-error-contenedor: #93000a;
+
+  /* Sombra ambiental con un matiz de terracota, para conservar la calidez.
+   * Nunca sombras grises neutras. */
+  --shadow-suave: 0 1px 2px rgba(212, 93, 58, 0.06), 0 4px 16px rgba(212, 93, 58, 0.08);
+  --shadow-elevada: 0 2px 4px rgba(212, 93, 58, 0.08), 0 12px 32px rgba(212, 93, 58, 0.12);
+
+  /* Radios: el lenguaje de formas es redondeado, nunca esquinas
+   * institucionales cortantes. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Ancho máximo del contenido, según la retícula del sistema de diseño
+   * (1280 px). La familia --container-* genera la utilidad  max-w-contenido. */
+  --container-contenido: 80rem;
 }
 
-/* Transicion suave al cambiar de tema, para que el salto de colores no
- * resulte brusco. Se excluyen las transformaciones para no interferir con
- * las animaciones de framer-motion. */
+/* ---------------------------------------------------------------------------
+ * Tokens del tema — modo oscuro.
+ *
+ * El fondo se va a un marrón «chullpi» profundo, casi negro, para mantener la
+ * calidez: un gris neutro rompería la identidad andina. Los tonos tierra se
+ * desaturan para cumplir el contraste AA de accesibilidad.
+ * ------------------------------------------------------------------------- */
+.oscuro {
+  --color-primario: #ffb5a0;
+  --color-primario-contenedor: #852404;
+  --color-sobre-primario: #3b0900;
+  --color-sobre-primario-contenedor: #ffdbd1;
+  --color-primario-suave: #5f1a05;
+
+  --color-secundario: #93d3c3;
+  --color-secundario-contenedor: #035044;
+  --color-sobre-secundario: #00201a;
+  --color-sobre-secundario-contenedor: #aeefdf;
+
+  --color-terciario: #f3bf32;
+  --color-terciario-contenedor: #5a4300;
+  --color-sobre-terciario: #251a00;
+  --color-sobre-terciario-contenedor: #ffdf99;
+
+  --color-cielo: #9ccbf0;
+  --color-cielo-contenedor: #143853;
+
+  --color-superficie: #16110f;
+  --color-superficie-tenue: #16110f;
+  --color-superficie-contenedor-minimo: #100c0b;
+  --color-superficie-contenedor-bajo: #1e1917;
+  --color-superficie-contenedor: #221d1a;
+  --color-superficie-contenedor-alto: #2d2724;
+  --color-superficie-contenedor-maximo: #38312e;
+
+  --color-sobre-superficie: #f0e5e0;
+  --color-sobre-superficie-variante: #dec0b8;
+
+  --color-contorno: #a08d87;
+  --color-contorno-variante: #57423c;
+
+  --color-error: #ffb4ab;
+  --color-error-contenedor: #93000a;
+  --color-sobre-error: #690005;
+  --color-sobre-error-contenedor: #ffdad6;
+
+  /* En oscuro las sombras casi no se ven; la profundidad la da el escalón
+   * tonal entre superficies. */
+  --shadow-suave: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-elevada: 0 2px 4px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-pizarra-50 text-pizarra-800 transition-colors duration-300;
+    background-color: var(--color-superficie);
+    color: var(--color-sobre-superficie);
+    font-family: var(--font-cuerpo);
+    /* Interlineado generoso: el sistema de diseño pide sensación de espacio,
+     * nunca amontonado. */
+    line-height: 1.5;
+    transition:
+      background-color 300ms ease,
+      color 300ms ease;
   }
 
-  .oscuro body {
-    @apply bg-pizarra-900 text-pizarra-100;
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-titulo);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Patrón wanka: greca geométrica de rombos.
+ *
+ * Se usa como acento arquitectónico —bordes de sección, marcas de agua muy
+ * tenues en tarjetas—, nunca como fondo completo. El sistema de diseño es
+ * explícito: debe verse alegre y cálido, jamás recargado.
+ * ------------------------------------------------------------------------- */
+@utility greca-wanka {
+  background-image:
+    linear-gradient(135deg, var(--color-terciario) 25%, transparent 25%),
+    linear-gradient(225deg, var(--color-terciario) 25%, transparent 25%),
+    linear-gradient(315deg, var(--color-terciario) 25%, transparent 25%),
+    linear-gradient(45deg, var(--color-terciario) 25%, transparent 25%);
+  background-size: 16px 16px;
+  background-position: 0 0;
+  opacity: 0.18;
+}
+
+/* Respeta a quien pidió reducir el movimiento en su sistema operativo.
+ * Las animaciones de los animales del valle son decorativas: si alguien tiene
+ * sensibilidad vestibular, deben detenerse. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

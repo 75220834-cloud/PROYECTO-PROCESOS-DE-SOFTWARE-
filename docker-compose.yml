@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# RutaVivaMantaro - servicios de infraestructura para desarrollo local
+#
+# Levanta PostgreSQL 16 con la extension PostGIS 3.4, que es la que permite
+# guardar coordenadas como tipo geografico y hacer consultas espaciales
+# (distancias, radios, contenido en poligono). Sin PostGIS el nucleo
+# geoespacial del proyecto no existe.
+#
+#   Levantar:  docker compose up -d
+#   Apagar:    docker compose down          (los datos se conservan)
+#   Borrar:    docker compose down -v       (los datos se PIERDEN)
+# ---------------------------------------------------------------------------
+
+services:
+  base_datos:
+    image: postgis/postgis:16-3.4
+    container_name: rutaviva_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USUARIO:-rutaviva}
+      POSTGRES_PASSWORD: ${POSTGRES_CONTRASENA:-cambia_esta_contrasena}
+      POSTGRES_DB: ${POSTGRES_BASE:-rutavivamantaro}
+    ports:
+      - "${POSTGRES_PUERTO:-5432}:5432"
+    volumes:
+      # Volumen con nombre: los datos viven fuera del contenedor y sobreviven
+      # a que el contenedor se destruya y se vuelva a crear.
+      - datos_postgres:/var/lib/postgresql/data
+      # Se ejecuta una sola vez, cuando la base se crea por primera vez.
+      - ./backend/scripts_sql/01_extensiones.sql:/docker-entrypoint-initdb.d/01_extensiones.sql:ro
+    healthcheck:
+      # Docker marca el servicio como "healthy" solo cuando Postgres acepta
+      # conexiones de verdad, no cuando el proceso arranca.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USUARIO:-rutaviva} -d ${POSTGRES_BASE:-rutavivamantaro}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  datos_postgres:
+    name: rutaviva_datos_postgres

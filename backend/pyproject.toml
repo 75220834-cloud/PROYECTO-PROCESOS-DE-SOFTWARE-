@@ -38,6 +38,7 @@ dependencies = [
 # Fase 2 - autenticacion
 autenticacion = [
     "passlib[argon2]>=1.7.4",
+    "email-validator>=2.2",   # lo necesita el tipo EmailStr de Pydantic
     "python-jose[cryptography]>=3.3",
     "python-multipart>=0.0.12",
 ]

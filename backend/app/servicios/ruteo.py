@@ -59,7 +59,12 @@ from app.ia.tiempo_recorrido import (
     necesita_aviso_de_altitud,
 )
 from app.modelos.catalogo import HorarioAtencion, RecursoTuristico
-from app.modelos.itinerario import OrigenDelCalculo
+from app.modelos.itinerario import (
+    EstadoItinerario,
+    Itinerario,
+    OrigenDelCalculo,
+    ParadaItinerario,
+)
 from app.modelos.preferencias import PreferenciaViaje
 from app.servicios.costos import CostoDeTraslado, calcular_traslado
 
@@ -833,6 +838,11 @@ def construir_itinerario(
                 fin_dia,
                 paradas_maximas,
                 presupuesto_traslado,
+                # Se lee la constante del modulo en cada llamada, y no se deja
+                # como valor por defecto del parametro, para que las pruebas
+                # puedan bajarla. Un valor por defecto se fija al definir la
+                # funcion y ya no hay forma de cambiarlo.
+                SEGUNDOS_DE_BUSQUEDA,
             )
         except Exception as error:  # noqa: BLE001
             # Que el optimizador falle no puede dejar al visitante sin
@@ -949,3 +959,180 @@ def _agregar_avisos_de_calidad(
             "Para esos, el itinerario solo garantiza que la visita cabe dentro "
             "del día: confirma el horario antes de ir."
         )
+
+
+# ---------------------------------------------------------------------------
+# Reordenar a mano: el visitante arrastra las paradas
+# ---------------------------------------------------------------------------
+
+
+def construir_itinerario_en_orden(
+    sesion: Session,
+    preferencia: PreferenciaViaje,
+    recomendaciones: list,
+    fecha: date,
+    recursos_en_orden: list[int],
+    hora_inicio: time = HORA_INICIO_PREDETERMINADA,
+    hora_fin: time = HORA_FIN_PREDETERMINADA,
+) -> ItinerarioCalculado:
+    """Recalcula el itinerario respetando el orden que pidió el visitante.
+
+    Es lo que se ejecuta cuando alguien arrastra una parada a otro sitio. **No
+    reoptimiza**: si el visitante decidió ir primero a Jauja, va primero a
+    Jauja, aunque el optimizador prefiriera otra cosa. Reordenar por debajo lo
+    que la persona acaba de ordenar a mano sería lo más frustrante que podría
+    hacer esta pantalla.
+
+    Lo que sí hace es **recalcular las consecuencias**: horas, traslados,
+    costo, esfuerzo. Y si con el orden nuevo el día ya no cabe, lo recorta y lo
+    dice, igual que en el camino automático.
+    """
+    resultado = ItinerarioCalculado(generado_por="reglas")
+
+    inicio_dia = _a_minutos(hora_inicio)
+    fin_dia = _a_minutos(hora_fin)
+
+    candidatos = preparar_candidatos(sesion, recomendaciones, fecha)
+    por_recurso = {c.recurso_id: c for c in candidatos}
+
+    # Se respeta el orden pedido y se ignoran los identificadores que ya no
+    # están entre las recomendaciones, en vez de fallar: la pantalla puede
+    # haberse quedado con una lista vieja.
+    elegidos = [por_recurso[i] for i in recursos_en_orden if i in por_recurso]
+
+    if not elegidos:
+        resultado.avisos.append(
+            "Ninguno de los recursos indicados sigue estando entre las "
+            "recomendaciones de esta preferencia."
+        )
+        return resultado
+
+    descartados = len(recursos_en_orden) - len(elegidos)
+    if descartados:
+        resultado.avisos.append(
+            f"Se omitieron {descartados} parada(s) que ya no están entre las "
+            "recomendaciones de esta preferencia."
+        )
+
+    orden = list(range(len(elegidos)))
+
+    traslados = refinar_traslados(sesion, elegidos, orden, preferencia.movilidad, fecha)
+
+    resultado.paradas, avisos_de_horario = armar_horario(
+        elegidos, orden, traslados, inicio_dia, fin_dia
+    )
+    resultado.avisos.extend(avisos_de_horario)
+
+    _acumular_totales(resultado, inicio_dia)
+
+    sin_horario = sum(1 for c in elegidos if not c.tiene_horario_conocido)
+    _agregar_avisos_de_calidad(resultado, sin_horario, len(elegidos))
+
+    _avisar_si_se_paso_del_presupuesto(resultado, preferencia)
+
+    return resultado
+
+
+def _avisar_si_se_paso_del_presupuesto(
+    resultado: ItinerarioCalculado, preferencia: PreferenciaViaje
+) -> None:
+    """Avisa si el orden que eligió el visitante se sale del presupuesto.
+
+    En el camino automático el presupuesto es una restricción dura y no se
+    puede incumplir. Aquí manda el visitante, así que no se le impide: se le
+    dice. Bloquear un orden que la persona ha pedido a propósito sería
+    tratarla como si no supiera lo que hace.
+    """
+    presupuesto = _presupuesto_de_traslado_del_dia(preferencia)
+
+    if resultado.costo_max_soles > presupuesto:
+        resultado.avisos.append(
+            f"Con este orden, los traslados pueden costar hasta "
+            f"S/ {resultado.costo_max_soles:.2f}, por encima de los "
+            f"S/ {presupuesto:.2f} que corresponden a un día con tu presupuesto."
+        )
+
+
+# ---------------------------------------------------------------------------
+# Guardar el itinerario
+# ---------------------------------------------------------------------------
+
+
+def guardar_itinerario(
+    sesion: Session,
+    preferencia: PreferenciaViaje,
+    calculado: ItinerarioCalculado,
+    fecha: date,
+    titulo: str,
+    usuario_id: int | None = None,
+) -> Itinerario:
+    """Persiste un itinerario calculado y devuelve la fila creada.
+
+    No hace ``commit``: eso lo decide quien llama, para que la operación entera
+    del endpoint sea una sola transacción.
+    """
+    itinerario = Itinerario(
+        preferencia_id=preferencia.id,
+        usuario_id=usuario_id,
+        titulo=titulo,
+        fecha=fecha,
+        tiempo_total_min=calculado.tiempo_total_min,
+        # Se guarda el máximo del rango, no el medio: para un total que sirva
+        # de presupuesto, el número útil es el peor caso.
+        costo_total_soles=calculado.costo_max_soles,
+        distancia_total_km=calculado.distancia_total_km,
+        desnivel_total_m=calculado.subida_total_m,
+        estado=EstadoItinerario.GUARDADO,
+        generado_por=calculado.generado_por,
+        avisos="\n".join(calculado.avisos) if calculado.avisos else None,
+    )
+
+    for parada in calculado.paradas:
+        traslado = parada.traslado
+
+        itinerario.paradas.append(
+            ParadaItinerario(
+                recurso_id=parada.candidato.recurso_id,
+                orden=parada.orden,
+                hora_llegada=parada.hora_llegada,
+                hora_salida=parada.hora_salida,
+                modo_traslado=traslado.modo if traslado else None,
+                tiempo_traslado_min=traslado.minutos if traslado else 0,
+                distancia_traslado_km=traslado.distancia_km if traslado else 0,
+                desnivel_traslado_m=traslado.desnivel_m if traslado else 0,
+                costo_traslado_min_soles=traslado.precio_min_soles if traslado else 0,
+                costo_traslado_max_soles=traslado.precio_max_soles if traslado else 0,
+                origen_del_calculo=(
+                    traslado.origen_del_calculo if traslado else OrigenDelCalculo.RED_VIAL
+                ),
+            )
+        )
+
+    sesion.add(itinerario)
+    sesion.flush()  # para que el itinerario tenga id antes de responder
+
+    return itinerario
+
+
+def titulo_por_defecto(paradas: list[ParadaCalculada], fecha: date) -> str:
+    """Un título legible para un itinerario que el visitante no ha nombrado.
+
+    Se usan los distritos y no la fecha sola porque «Huancayo y Chupaca» dice
+    de qué fue el día, y «12 de setiembre» no.
+    """
+    if not paradas:
+        return f"Itinerario del {fecha.strftime('%d/%m/%Y')}"
+
+    distritos: list[str] = []
+    for parada in paradas:
+        distrito = parada.candidato.distrito.title()
+        if distrito not in distritos:
+            distritos.append(distrito)
+
+    if len(distritos) == 1:
+        return f"Un día en {distritos[0]}"
+
+    if len(distritos) == 2:
+        return f"{distritos[0]} y {distritos[1]}"
+
+    return f"{distritos[0]}, {distritos[1]} y {len(distritos) - 2} distrito(s) más"

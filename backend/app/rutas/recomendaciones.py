@@ -163,7 +163,7 @@ def consultar_calendario(anio: int) -> CalendarioPublico:
     """
     if not 2000 <= anio <= 2100:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="El año debe estar entre 2000 y 2100",
         )
 

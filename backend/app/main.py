@@ -11,7 +11,14 @@ de Pydantic, sin escribirla a mano).
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.rutas import autenticacion, catalogo, preferencias, recomendaciones, salud
+from app.rutas import (
+    autenticacion,
+    catalogo,
+    itinerarios,
+    preferencias,
+    recomendaciones,
+    salud,
+)
 
 aplicacion = FastAPI(
     title="RutaVivaMantaro",
@@ -45,6 +52,7 @@ aplicacion.include_router(catalogo.enrutador)
 aplicacion.include_router(autenticacion.enrutador)
 aplicacion.include_router(preferencias.enrutador)
 aplicacion.include_router(recomendaciones.enrutador)
+aplicacion.include_router(itinerarios.enrutador)
 
 
 @aplicacion.get("/", tags=["salud"], summary="Mensaje de bienvenida")

@@ -272,6 +272,19 @@ function mensajeDeError(cuerpo: unknown, estado: number): string {
       const primero = detalle[0] as { msg?: string };
       if (primero.msg) return primero.msg.replace(/^Value error,\s*/, '');
     }
+
+    // Cuando un servicio no está disponible, la API devuelve el motivo (o los
+    // motivos) dentro de un objeto. Sin este caso se perdían y el visitante
+    // veía «La API respondió 409», que no le dice cómo arreglarlo.
+    if (typeof detalle === 'object' && detalle !== null) {
+      const conMotivos = detalle as { mensaje?: string; motivos?: unknown };
+
+      if (Array.isArray(conMotivos.motivos) && conMotivos.motivos.length > 0) {
+        return conMotivos.motivos.filter((m) => typeof m === 'string').join(' ');
+      }
+
+      if (typeof conMotivos.mensaje === 'string') return conMotivos.mensaje;
+    }
   }
 
   return `La API respondió ${estado}`;
@@ -601,4 +614,231 @@ export function reordenarItinerario(
 /** Lista los itinerarios guardados del usuario que ha iniciado sesión. */
 export function obtenerItinerariosGuardados(token: string | null): Promise<ItinerarioGuardado[]> {
   return obtenerConToken<ItinerarioGuardado[]>('/api/itinerarios', token);
+}
+
+// ---------------------------------------------------------------------------
+// Canal único de coordinación (Incremento 5)
+// ---------------------------------------------------------------------------
+
+/** Qué clase de servicio ofrece un proveedor. */
+export type TipoServicio =
+  'transporte' | 'alimentacion' | 'hospedaje' | 'guiado' | 'taller' | 'artesania';
+
+/** Por dónde va una solicitud de coordinación. */
+export type EstadoSolicitud =
+  'enviada' | 'en_revision' | 'contrapropuesta' | 'confirmada' | 'rechazada' | 'cancelada';
+
+/** Qué incluye el precio publicado. */
+export type UnidadPrecio = 'por_persona' | 'por_grupo' | 'por_noche' | 'por_hora';
+
+/** Quién ofrece el servicio. */
+export interface ProveedorPublico {
+  id: number;
+  nombre: string;
+  distrito: string;
+  telefono: string | null;
+  correo: string | null;
+  descripcion: string | null;
+  /**
+   * `true` cuando el proveedor está inventado para poder enseñar el flujo.
+   *
+   * La interfaz **tiene que mostrarlo**: nadie debe llamar a un teléfono de
+   * demostración creyendo que va a contestar alguien.
+   */
+  es_demostracion: boolean;
+}
+
+/** Un tramo horario en el que el servicio atiende. */
+export interface TramoDisponible {
+  /** 0 es lunes y 6 es domingo. */
+  dia_semana: number;
+  hora_inicio: string;
+  hora_fin: string;
+  cupo: number;
+}
+
+/** Un servicio publicado, con lo que hace falta para decidir si sirve. */
+export interface ServicioPublico {
+  id: number;
+  nombre: string;
+  tipo: TipoServicio;
+  descripcion: string | null;
+  proveedor: ProveedorPublico;
+  recurso_id: number | null;
+  capacidad_maxima: number;
+  duracion_min: number | null;
+  antelacion_minima_horas: number;
+  precio_min_soles: string;
+  precio_max_soles: string;
+  unidad_precio: UnidadPrecio;
+  fecha_referencia: string;
+  idiomas: string | null;
+  es_accesible: boolean;
+  disponibilidad: TramoDisponible[];
+}
+
+/** Si el servicio se puede pedir así, y si no, todos los motivos. */
+export interface RespuestaDisponibilidad {
+  servicio_id: number;
+  fecha: string;
+  numero_personas: number;
+  hay_disponibilidad: boolean;
+  motivos: string[];
+  plazas_libres: number | null;
+}
+
+/** Un movimiento de la solicitud: es el registro que pide la brecha 6. */
+export interface CambioDeEstado {
+  estado_anterior: string | null;
+  estado_nuevo: string;
+  rol_de_quien_cambio: string | null;
+  nota: string | null;
+  ocurrido_en: string;
+}
+
+/** Una solicitud con todo lo acordado y todo lo ocurrido. */
+export interface SolicitudPublica {
+  id: number;
+  servicio_id: number;
+  servicio_nombre: string;
+  proveedor_nombre: string;
+  proveedor_telefono: string | null;
+  proveedor_es_demostracion: boolean;
+  itinerario_id: number | null;
+  fecha_servicio: string;
+  hora_servicio: string | null;
+  numero_personas: number;
+  nombre_contacto: string;
+  telefono_contacto: string | null;
+  correo_contacto: string | null;
+  mensaje: string | null;
+  estado: EstadoSolicitud;
+  precio_acordado_soles: string | null;
+  respuesta_proveedor: string | null;
+  precio_min_soles: string;
+  precio_max_soles: string;
+  creado_en: string;
+  actualizado_en: string;
+  /** Cuántos movimientos hubo. Es el indicador del Incremento 5. */
+  interacciones: number;
+  historial: CambioDeEstado[];
+}
+
+/** El indicador del Incremento 5, calculado sobre lo registrado. */
+export interface ResumenDeCoordinacion {
+  total_solicitudes: number;
+  confirmadas: number;
+  rechazadas: number;
+  pendientes: number;
+  /** `null` si todavía no hay ninguna confirmada: cero casos no es cero. */
+  interacciones_medias_hasta_confirmar: number | null;
+  horas_medias_hasta_confirmar: number | null;
+  canales_para_confirmar: number;
+}
+
+/** Lo que el visitante manda al proveedor. */
+export interface SolicitudNueva {
+  servicio_id: number;
+  fecha_servicio: string;
+  hora_servicio?: string | null;
+  numero_personas: number;
+  nombre_contacto: string;
+  telefono_contacto?: string | null;
+  correo_contacto?: string | null;
+  mensaje?: string | null;
+  itinerario_id?: number | null;
+}
+
+/** Filtros del catálogo de servicios. */
+export interface FiltrosDeServicios {
+  tipo?: TipoServicio;
+  distrito?: string;
+  recursoId?: number;
+}
+
+/** Devuelve los servicios publicados por los proveedores. */
+export function obtenerServicios(filtros: FiltrosDeServicios = {}): Promise<ServicioPublico[]> {
+  return obtener<ServicioPublico[]>('/api/servicios', {
+    tipo: filtros.tipo,
+    distrito: filtros.distrito,
+    recurso_id: filtros.recursoId,
+  });
+}
+
+/** Ficha de un servicio concreto. */
+export function obtenerServicio(servicioId: number): Promise<ServicioPublico> {
+  return obtener<ServicioPublico>(`/api/servicios/${servicioId}`);
+}
+
+/** Pregunta si un servicio se puede pedir para esa fecha y esas personas. */
+export function comprobarDisponibilidad(
+  servicioId: number,
+  fecha: string,
+  numeroPersonas: number,
+  hora?: string | null,
+): Promise<RespuestaDisponibilidad> {
+  return enviar<RespuestaDisponibilidad>(`/api/servicios/${servicioId}/disponibilidad`, 'POST', {
+    fecha,
+    numero_personas: numeroPersonas,
+    hora: hora ?? null,
+  });
+}
+
+/** Envía una solicitud a un proveedor. Funciona sin cuenta. */
+export function crearSolicitud(
+  datos: SolicitudNueva,
+  token: string | null,
+): Promise<SolicitudPublica> {
+  return enviar<SolicitudPublica>('/api/solicitudes', 'POST', datos, token);
+}
+
+/** Las solicitudes que el usuario actual puede ver, según su rol. */
+export function obtenerSolicitudes(
+  token: string | null,
+  estado?: EstadoSolicitud,
+): Promise<SolicitudPublica[]> {
+  const consulta = estado ? `?estado=${estado}` : '';
+  return obtenerConToken<SolicitudPublica[]>(`/api/solicitudes${consulta}`, token);
+}
+
+/** Una solicitud con su historial. Las anónimas se recuperan por identificador. */
+export function obtenerSolicitud(
+  solicitudId: number,
+  token: string | null,
+): Promise<SolicitudPublica> {
+  return obtenerConToken<SolicitudPublica>(`/api/solicitudes/${solicitudId}`, token);
+}
+
+/** Mueve una solicitud de estado. Las reglas las aplica el backend. */
+export function cambiarEstadoDeSolicitud(
+  solicitudId: number,
+  nuevoEstado: EstadoSolicitud,
+  token: string | null,
+  opciones: { nota?: string; precioAcordado?: string } = {},
+): Promise<SolicitudPublica> {
+  return enviar<SolicitudPublica>(
+    `/api/solicitudes/${solicitudId}/estado`,
+    'POST',
+    {
+      nuevo_estado: nuevoEstado,
+      nota: opciones.nota ?? null,
+      precio_acordado_soles: opciones.precioAcordado ?? null,
+    },
+    token,
+  );
+}
+
+/** La ficha de proveedor de quien ha iniciado sesión. */
+export function obtenerMiProveedor(token: string | null): Promise<ProveedorPublico> {
+  return obtenerConToken<ProveedorPublico>('/api/proveedores/mio', token);
+}
+
+/** Los servicios del proveedor actual, incluidos los no publicados. */
+export function obtenerMisServicios(token: string | null): Promise<ServicioPublico[]> {
+  return obtenerConToken<ServicioPublico[]>('/api/proveedores/mio/servicios', token);
+}
+
+/** El indicador del Incremento 5. */
+export function obtenerIndicadorDeCoordinacion(): Promise<ResumenDeCoordinacion> {
+  return obtener<ResumenDeCoordinacion>('/api/indicadores/coordinacion');
 }

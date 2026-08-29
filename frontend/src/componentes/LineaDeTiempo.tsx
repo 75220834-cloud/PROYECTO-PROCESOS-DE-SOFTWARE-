@@ -40,8 +40,12 @@ function Traslado({ traslado }: { traslado: TrasladoPublico }) {
 
   const esEstimado = traslado.origen_del_calculo === 'linea_recta';
 
+  // Va en un <div> y no en un <li>: este bloque se pinta DENTRO del <li> de la
+  // parada a la que se llega, y un <li> dentro de otro <li> es HTML invalido.
+  // React lo avisa por consola, y los lectores de pantalla anuncian una lista
+  // anidada que no existe.
   return (
-    <li className="relative ml-4 border-l-2 border-dashed border-contorno-variante py-3 pl-8">
+    <div className="relative ml-4 border-l-2 border-dashed border-contorno-variante py-3 pl-8">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sobre-superficie-variante">
         <span aria-hidden="true">{ICONO_DE_MODO[traslado.modo] ?? '→'}</span>
         <span className="font-medium">{t(`itinerario.modo.${traslado.modo}`)}</span>
@@ -63,7 +67,7 @@ function Traslado({ traslado }: { traslado: TrasladoPublico }) {
           <span>{t('itinerario.tramoEstimado')}</span>
         </p>
       )}
-    </li>
+    </div>
   );
 }
 

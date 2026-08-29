@@ -258,6 +258,26 @@ export function Itinerario() {
         <TotalesDelDia itinerario={itinerario} />
       </div>
 
+      {/* El paso al Incremento 5. Se lleva el identificador y la fecha para que
+          pedir un almuerzo para el dia ya planificado no obligue a volver a
+          escribirla. */}
+      {itinerario.paradas.length > 0 && (
+        <section className="mt-6 rounded-lg border border-secundario bg-secundario-contenedor p-5">
+          <h2 className="font-titulo font-semibold text-sobre-secundario-contenedor">
+            {t('itinerario.coordinarTitulo')}
+          </h2>
+          <p className="mt-1 text-sm text-sobre-secundario-contenedor">
+            {t('itinerario.coordinarDetalle')}
+          </p>
+          <Link
+            to={`/coordinar?itinerario=${identificador}&fecha=${itinerario.fecha}`}
+            className="mt-3 inline-block rounded-full bg-primario px-5 py-2 text-sm font-semibold text-sobre-primario transition-transform hover:-translate-y-0.5"
+          >
+            {t('itinerario.coordinarBoton')}
+          </Link>
+        </section>
+      )}
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <section aria-label={t('itinerario.tituloLinea')}>
           <div className="mb-3 flex items-baseline justify-between gap-3">

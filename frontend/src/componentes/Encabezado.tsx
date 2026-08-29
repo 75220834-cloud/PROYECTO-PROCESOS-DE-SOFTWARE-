@@ -21,8 +21,18 @@ const ENLACES = [
   { ruta: '/', clave: 'navegacion.inicio' },
   { ruta: '/explorar', clave: 'navegacion.explorar' },
   { ruta: '/preferencias', clave: 'navegacion.planificar' },
+  { ruta: '/coordinar', clave: 'navegacion.coordinar' },
   { ruta: '/mis-viajes', clave: 'navegacion.mis_viajes' },
 ] as const;
+
+/**
+ * Roles que ven el enlace al panel de gestión.
+ *
+ * Ocultarlo al resto es **comodidad, no seguridad**: quien escriba la
+ * dirección llega igual, y la protección de verdad está en el backend. Esto
+ * solo evita ofrecerle a un visitante una pantalla que le va a decir que no.
+ */
+const ROLES_CON_PANEL = ['proveedor', 'operador', 'gestor', 'administrador'];
 
 function clasesDelEnlace({ isActive }: { isActive: boolean }): string {
   const base = 'rounded-md px-3 py-2 text-sm font-semibold transition-colors';
@@ -60,6 +70,12 @@ export function Encabezado() {
               {t(enlace.clave)}
             </NavLink>
           ))}
+
+          {usuario && ROLES_CON_PANEL.includes(usuario.rol) && (
+            <NavLink to="/panel" className={clasesDelEnlace} end>
+              {t('navegacion.panel')}
+            </NavLink>
+          )}
         </nav>
 
         {/* Controles de la derecha */}

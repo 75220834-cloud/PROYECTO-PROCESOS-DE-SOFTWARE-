@@ -11,10 +11,12 @@ import { Encabezado } from '@/componentes/Encabezado';
 import { Acceso } from '@/paginas/Acceso';
 import { AsistentePreferencias } from '@/paginas/AsistentePreferencias';
 import { Catalogo } from '@/paginas/Catalogo';
+import { Coordinacion } from '@/paginas/Coordinacion';
 import { DetalleRecurso } from '@/paginas/DetalleRecurso';
 import { Inicio } from '@/paginas/Inicio';
 import { Itinerario } from '@/paginas/Itinerario';
 import { MisViajes } from '@/paginas/MisViajes';
+import { Panel } from '@/paginas/Panel';
 import { PreferenciaGuardada } from '@/paginas/PreferenciaGuardada';
 import { Resultados } from '@/paginas/Resultados';
 
@@ -78,6 +80,8 @@ export function App() {
           <Route path="/preferencias/:id/itinerario" element={<Itinerario />} />
           <Route path="/acceso" element={<Acceso />} />
           <Route path="/mis-viajes" element={<MisViajes />} />
+          <Route path="/coordinar" element={<Coordinacion />} />
+          <Route path="/panel" element={<Panel />} />
         </Routes>
       </div>
 

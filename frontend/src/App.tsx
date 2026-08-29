@@ -1,14 +1,59 @@
 /**
- * Componente raiz: define el esqueleto comun (encabezado y pie) y las rutas.
+ * Componente raíz: define el esqueleto común (encabezado y pie) y las rutas.
  *
- * En la Fase 0 solo existe la pagina de inicio. El enrutador ya esta montado
- * para que anadir /catalogo, /preferencias o /itinerario en las siguientes
- * fases sea agregar una linea, no reestructurar la aplicacion.
+ * En la Fase 0 solo existe la página de inicio. El enrutador ya está montado
+ * para que añadir /explorar, /preferencias o /itinerario en las siguientes
+ * fases sea agregar una línea, no reestructurar la aplicación.
  */
+import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router-dom';
 
 import { Encabezado } from '@/componentes/Encabezado';
 import { Inicio } from '@/paginas/Inicio';
+
+function Pie() {
+  const { t } = useTranslation();
+
+  const enlaces = ['pie.privacidad', 'pie.terminos', 'pie.soporte', 'pie.cultura'] as const;
+
+  return (
+    <footer className="mt-auto bg-superficie-contenedor-maximo">
+      {/* Greca wanka como borde superior del pie: el sistema de diseño la
+          propone justamente como divisor de sección. */}
+      <div className="greca-wanka h-1.5 w-full" aria-hidden="true" />
+
+      <div className="mx-auto flex max-w-contenido flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/logo_rutavivamantaro.png"
+              alt=""
+              aria-hidden="true"
+              className="h-8 w-8 rounded-md object-contain"
+            />
+            <span className="font-titulo font-extrabold text-secundario">
+              {t('aplicacion.nombre')}
+            </span>
+          </div>
+
+          <p className="mt-3 max-w-xs text-sm text-sobre-superficie-variante">
+            {t('pie.derechos')}
+          </p>
+
+          <p className="mt-1 text-xs text-sobre-superficie-variante">{t('pie.curso')}</p>
+        </div>
+
+        <ul className="flex flex-wrap gap-x-6 gap-y-2">
+          {enlaces.map((clave) => (
+            <li key={clave}>
+              <span className="text-sm text-sobre-superficie-variante">{t(clave)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </footer>
+  );
+}
 
 export function App() {
   return (
@@ -21,9 +66,7 @@ export function App() {
         </Routes>
       </div>
 
-      <footer className="border-t border-pizarra-100 px-4 py-6 text-center text-xs text-pizarra-500 dark:border-pizarra-800 dark:text-pizarra-300">
-        RutaVivaMantaro · Universidad Continental · Procesos de Software
-      </footer>
+      <Pie />
     </div>
   );
 }

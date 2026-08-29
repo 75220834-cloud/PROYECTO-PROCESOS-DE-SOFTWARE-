@@ -1,9 +1,9 @@
 /**
- * Boton que alterna entre tema claro y oscuro.
+ * Botón que alterna entre tema claro y oscuro.
  *
- * Detalle de accesibilidad: el boton no lleva texto visible, solo un icono,
- * asi que necesita aria-label y title para que un lector de pantalla y el
- * texto emergente del raton digan que hace. Ese texto pasa por i18n.
+ * Detalle de accesibilidad: el botón no lleva texto visible, solo un icono,
+ * así que necesita aria-label y title para que un lector de pantalla y el
+ * texto emergente del ratón digan qué hace. Ese texto pasa por i18n.
  */
 import { useTranslation } from 'react-i18next';
 
@@ -22,10 +22,10 @@ export function InterruptorTema() {
       onClick={alternarTema}
       aria-label={etiqueta}
       title={etiqueta}
-      className="rounded-lg border border-pizarra-300 p-2 text-pizarra-700 transition-colors hover:bg-pizarra-100 dark:border-pizarra-700 dark:text-pizarra-100 dark:hover:bg-pizarra-800"
+      className="rounded-md p-2 text-sobre-superficie-variante transition-colors hover:bg-superficie-contenedor-alto hover:text-primario"
     >
-      {/* Iconos dibujados a mano con SVG: no anaden ninguna dependencia y
-          heredan el color del texto gracias a stroke="currentColor". */}
+      {/* Iconos dibujados con SVG: no añaden ninguna dependencia y heredan el
+          color del texto gracias a stroke="currentColor". */}
       {esOscuro ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"

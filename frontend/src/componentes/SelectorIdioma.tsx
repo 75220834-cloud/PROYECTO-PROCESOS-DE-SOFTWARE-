@@ -1,8 +1,8 @@
 /**
- * Selector de idioma (espanol / ingles).
+ * Selector de idioma (español / inglés).
  *
  * Al cambiar, i18next recarga todos los textos de la interfaz al vuelo y
- * guarda la eleccion en localStorage, de modo que la proxima visita ya abre
+ * guarda la elección en el navegador, de modo que la próxima visita ya abra
  * en el idioma elegido.
  */
 import { useTranslation } from 'react-i18next';
@@ -22,16 +22,31 @@ export function SelectorIdioma() {
   };
 
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="flex items-center gap-1.5 text-sm text-sobre-superficie-variante">
+      {/* Icono de globo terráqueo, como en el diseño de Stitch. */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-4 w-4 shrink-0"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z" />
+      </svg>
+
       <span className="sr-only">{t('encabezado.idioma')}</span>
+
       <select
         value={idiomaActual}
         onChange={(evento) => void i18n.changeLanguage(evento.target.value)}
         aria-label={t('encabezado.idioma')}
-        className="rounded-lg border border-pizarra-300 bg-transparent px-2 py-1.5 text-pizarra-700 transition-colors hover:bg-pizarra-100 dark:border-pizarra-700 dark:text-pizarra-100 dark:hover:bg-pizarra-800"
+        className="cursor-pointer rounded-md bg-transparent py-1 pr-1 font-medium transition-colors hover:text-primario focus:outline-2 focus:outline-offset-2 focus:outline-primario"
       >
         {IDIOMAS_DISPONIBLES.map((idioma) => (
-          <option key={idioma} value={idioma} className="text-pizarra-800">
+          <option key={idioma} value={idioma} className="bg-superficie text-sobre-superficie">
             {nombreDelIdioma[idioma]}
           </option>
         ))}

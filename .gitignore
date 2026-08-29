@@ -39,6 +39,8 @@ coverage/
 # ---------------------------------------------------------------------------
 backend/datos/crudos/
 backend/datos/derivados/
+backend/datos/cache_osm/
+backend/datos/dem/
 backend/datos/*.gpkg
 backend/datos/*.tif
 backend/modelos_entrenados/

@@ -1,16 +1,20 @@
 /**
  * Componente raíz: define el esqueleto común (encabezado y pie) y las rutas.
  *
- * Rutas existentes: inicio, catálogo (/explorar) y detalle de un recurso.
- * Las de preferencias e itinerario llegan en las fases 2 y 4.
+ * Rutas existentes: inicio, catálogo, detalle de recurso, asistente de
+ * preferencias, acceso y «Mis viajes». El itinerario llega en la Fase 4.
  */
 import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router-dom';
 
 import { Encabezado } from '@/componentes/Encabezado';
+import { Acceso } from '@/paginas/Acceso';
+import { AsistentePreferencias } from '@/paginas/AsistentePreferencias';
 import { Catalogo } from '@/paginas/Catalogo';
 import { DetalleRecurso } from '@/paginas/DetalleRecurso';
 import { Inicio } from '@/paginas/Inicio';
+import { MisViajes } from '@/paginas/MisViajes';
+import { PreferenciaGuardada } from '@/paginas/PreferenciaGuardada';
 
 function Pie() {
   const { t } = useTranslation();
@@ -66,6 +70,10 @@ export function App() {
           <Route path="/" element={<Inicio />} />
           <Route path="/explorar" element={<Catalogo />} />
           <Route path="/recursos/:id" element={<DetalleRecurso />} />
+          <Route path="/preferencias" element={<AsistentePreferencias />} />
+          <Route path="/preferencias/:id" element={<PreferenciaGuardada />} />
+          <Route path="/acceso" element={<Acceso />} />
+          <Route path="/mis-viajes" element={<MisViajes />} />
         </Routes>
       </div>
 

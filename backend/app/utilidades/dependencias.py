@@ -21,11 +21,18 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.base_datos import obtener_sesion
+from app.configuracion import Configuracion, obtener_configuracion
 from app.modelos.usuario import RolUsuario, Usuario
 from app.servicios.seguridad import leer_token_de_acceso
 from app.servicios.usuarios import obtener_por_id
 
 SesionBD = Annotated[Session, Depends(obtener_sesion)]
+
+#: La configuracion del proyecto, inyectada como dependencia. Se pide asi y no
+#: llamando a obtener_configuracion() dentro del endpoint para que las pruebas
+#: puedan sustituirla y comprobar el comportamiento con los interruptores de
+#: modelo apagados.
+ConfiguracionInyectada = Annotated[Configuracion, Depends(obtener_configuracion)]
 
 #: auto_error=False hace que, si no viene cabecera de autorización, FastAPI
 #: entregue None en vez de responder 403 por su cuenta. Es lo que permite

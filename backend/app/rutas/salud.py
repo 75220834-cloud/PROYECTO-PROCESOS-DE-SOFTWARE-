@@ -27,7 +27,7 @@ VERSION_APLICACION = "0.1.0"
 # Es mas legible que repetir Depends(...) en cada endpoint y evita el problema
 # de poner una llamada a funcion como valor por defecto de un parametro.
 SesionBD = Annotated[Session, Depends(obtener_sesion)]
-ConfiguracionInyectada = Annotated[Configuracion, Depends(obtener_configuracion)]
+ConfiguracionInyectada = Annotated[Configuracion, Depends(obtener_configuracion)]  # noqa: F811
 
 
 def _revisar_base_datos(sesion: Session) -> SaludComponente:

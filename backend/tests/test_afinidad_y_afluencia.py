@@ -22,6 +22,7 @@ from app.ia.afinidad import (
     calcular_afinidad_con_modelo,
     calcular_afinidad_con_reglas,
     construir_consulta_del_visitante,
+    contiene_termino,
     normalizar,
 )
 from app.ia.afluencia import (
@@ -83,6 +84,55 @@ class TestNormalizacion:
     def test_tolera_valores_vacios(self):
         assert normalizar(None) == ""
         assert normalizar("") == ""
+
+
+class TestCoincidenciaDeTerminos:
+    """Los términos deben coincidir como palabra completa, no como subcadena."""
+
+    def test_coincide_una_palabra_completa(self):
+        assert contiene_termino("laguna de paca", "laguna") is True
+        assert contiene_termino("sitios arqueologicos", "sitios arqueologicos") is True
+
+    def test_no_coincide_dentro_de_otra_palabra(self):
+        """El fallo que motivó esta función.
+
+        «rio» coincidía dentro de «santuario», así que el Santuario
+        Arqueológico de Wariwillka se clasificaba como naturaleza. Con
+        límites de palabra ya no ocurre.
+        """
+        assert contiene_termino("santuario arqueologico", "rio") is False
+        assert contiene_termino("martes de carnaval", "arte") is False
+        assert contiene_termino("incapaz", "inca") is False
+
+    def test_un_santuario_arqueologico_no_es_naturaleza(self):
+        """La comprobación de extremo a extremo del mismo fallo."""
+        santuario = RecursoParaPuntuar(
+            id=99,
+            nombre="Santuario Arqueológico de Wariwillka",
+            categoria="2. MANIFESTACIONES CULTURALES",
+            tipo="Sitios Arqueológicos",
+            subtipo="Santuarios",
+            distrito="HUANCAN",
+        )
+
+        resultados = calcular_afinidad_con_reglas([santuario], ["naturaleza", "arqueologia"])
+
+        assert resultados[0].intereses_cubiertos == ["arqueologia"]
+
+    def test_un_museo_de_sitio_es_arqueologia_no_una_iglesia(self):
+        """Otro error de clasificación que salió al probar en el navegador."""
+        museo = RecursoParaPuntuar(
+            id=98,
+            nombre="Museo de Sitio Wariwillka",
+            categoria="2. MANIFESTACIONES CULTURALES",
+            tipo="Museos y otros",
+            subtipo="Museos de sitio",
+            distrito="HUANCAN",
+        )
+
+        resultados = calcular_afinidad_con_reglas([museo], ["iglesias_conventos", "arqueologia"])
+
+        assert resultados[0].intereses_cubiertos == ["arqueologia"]
 
 
 class TestConsultaDelVisitante:

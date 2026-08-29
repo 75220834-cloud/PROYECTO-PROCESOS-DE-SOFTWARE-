@@ -21,6 +21,7 @@ justamente de que *el análisis recae en el visitante sin criterios explícitos*
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass, field
 
@@ -82,6 +83,16 @@ TERMINOS_POR_INTERES: dict[str, tuple[str, ...]] = {
         "prehispanico",
         "wanka",
         "inca",
+        # Un «museo de sitio» es el museo de una zona arqueológica, no un
+        # edificio religioso. Estuvo mal clasificado bajo iglesias y hacía que
+        # el Museo de Sitio Wariwillka encabezara las búsquedas de quien pedía
+        # «iglesias y conventos».
+        "museo de sitio",
+        "museos de sitio",
+        # En este inventario, «santuario» aparece casi siempre en «Santuario
+        # Arqueológico». Va aquí y no en iglesias por eso.
+        "santuario",
+        "santuarios",
     ),
     Interes.IGLESIAS_CONVENTOS: (
         "iglesia",
@@ -90,10 +101,12 @@ TERMINOS_POR_INTERES: dict[str, tuple[str, ...]] = {
         "capilla",
         "templo",
         "catedral",
-        "santuario",
         "arquitectura religiosa",
-        "museo de sitio",
         "religiosa",
+        "monasterio",
+        "parroquia",
+        "virgen",
+        "cruz",
     ),
     Interes.ARTESANIA: (
         "artesania",
@@ -181,6 +194,23 @@ def normalizar(texto: str | None) -> str:
 
     descompuesto = unicodedata.normalize("NFD", texto.lower())
     return "".join(c for c in descompuesto if unicodedata.category(c) != "Mn")
+
+
+def contiene_termino(texto: str, termino: str) -> bool:
+    """Comprueba si un texto contiene un término **como palabra completa**.
+
+    POR QUÉ NO BASTA CON ``termino in texto``. La comparación por subcadena
+    produce falsos positivos silenciosos y difíciles de detectar:
+
+    - «rio» coincide dentro de «santua**rio**», y un santuario se clasificaba
+      como naturaleza.
+    - «inca» coincide dentro de «**inca**paz» o «vert**inca**».
+    - «arte» coincidiría dentro de «m**arte**s».
+
+    Con ``\\b`` (límite de palabra) solo coinciden palabras enteras. Se usa
+    ``re.escape`` porque algunos términos llevan espacios y puntos.
+    """
+    return re.search(rf"\b{re.escape(termino)}\b", texto) is not None
 
 
 @dataclass
@@ -361,7 +391,7 @@ def calcular_afinidad_con_reglas(
             coincidencias = [
                 termino
                 for termino in TERMINOS_POR_INTERES.get(interes, (interes,))
-                if normalizar(termino) in texto
+                if contiene_termino(texto, normalizar(termino))
             ]
 
             if coincidencias:
@@ -403,7 +433,7 @@ def _intereses_que_cubre(recurso: RecursoParaPuntuar, intereses: list[str]) -> l
         interes
         for interes in intereses
         if any(
-            normalizar(termino) in texto
+            contiene_termino(texto, normalizar(termino))
             for termino in TERMINOS_POR_INTERES.get(interes, (interes,))
         )
     ]

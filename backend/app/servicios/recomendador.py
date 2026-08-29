@@ -197,7 +197,9 @@ def aplicar_filtros_duros(
                     recurso.id,
                     recurso.nombre,
                     (
-                        f"a {distancia_km:.0f} km, fuera del alcance de "
+                        # Un decimal, no cero: redondeando, "a 8 km, fuera del
+                        # alcance de 8 km" se lee como una contradiccion.
+                        f"a {distancia_km:.1f} km, fuera del alcance de "
                         f"{alcance_km:.0f} km para «{preferencia.movilidad}»"
                     ),
                 )

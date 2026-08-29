@@ -15,13 +15,17 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Encabezado } from '@/componentes/Encabezado';
+import { ProveedorSesion } from '@/componentes/ProveedorSesion';
 import { ProveedorTema } from '@/componentes/ProveedorTema';
 import i18n, { CLAVE_IDIOMA } from '@/i18n';
 
 function renderizarConEnrutador(elemento: ReactNode) {
   return render(
     <ProveedorTema>
-      <MemoryRouter initialEntries={['/']}>{elemento}</MemoryRouter>
+      <MemoryRouter initialEntries={['/']}>
+        {/* El encabezado consulta la sesión, así que necesita su proveedor. */}
+        <ProveedorSesion>{elemento}</ProveedorSesion>
+      </MemoryRouter>
     </ProveedorTema>,
   );
 }

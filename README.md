@@ -22,6 +22,27 @@ Universidad Continental, Huancayo. Ciclo 2026-20.
 
 ---
 
+## 0. Documentación
+
+Este README explica **cómo montar y usar** el proyecto. Todo lo demás —cómo
+está construido, por qué se decidió cada cosa, qué mide cada indicador y qué
+falló por el camino— está en **[`docs/referencia/`](docs/referencia/00-INDICE.md)**,
+17 documentos con su índice y sus rutas de lectura según para qué lo necesites.
+
+| Si quieres… | Empieza por |
+|---|---|
+| Entender de qué va esto | [01 — Visión y contexto](docs/referencia/01-vision-y-contexto.md) |
+| Saber cómo está construido | [02 — Arquitectura](docs/referencia/02-arquitectura.md) |
+| Redactar un documento académico | [09 — Los seis incrementos](docs/referencia/09-los-seis-incrementos.md) |
+| Prepararte para defenderlo | [14 — Guion de defensa](docs/referencia/14-guion-de-defensa.md) |
+| Añadir algo sin romper nada | [16 — Pendientes y limitaciones](docs/referencia/16-pendientes-y-limitaciones.md) |
+
+Y además: **[`docs/decisiones/`](docs/decisiones/)** con 14 notas, una por
+decisión de proceso, y **[`docs/indicadores/`](docs/indicadores/)** con una
+por indicador.
+
+---
+
 ## 1. Qué necesitas instalado
 
 | Herramienta | Versión mínima | Para qué |

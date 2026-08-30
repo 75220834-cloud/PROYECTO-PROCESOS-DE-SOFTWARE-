@@ -103,7 +103,7 @@ export function Inicio() {
               quedaria al costado del boton, porque ambos son inline-block. */}
           <div className="mt-8">
             <p className="inline-block rounded-full bg-superficie-contenedor-alto px-3 py-1 text-xs text-sobre-superficie-variante">
-              {t('inicio.en_construccion')}
+              {t('inicio.aviso_datos')}
             </p>
           </div>
         </motion.div>

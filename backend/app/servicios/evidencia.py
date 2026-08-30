@@ -400,28 +400,38 @@ def _agregar_avisos(resumen: ResumenDeEvidencia, valorados: list[RecursoValorado
     Un tablero que no dice cuándo sus números son frágiles invita a decidir
     sobre nada.
     """
+    # Los plurales se concuerdan a mano, como en `ruteo`. Escribir
+    # «valoración(es)» es cómodo de programar y desagradable de leer, y este
+    # tablero lo va a leer un gestor municipal, no un programador.
     if resumen.total_valoraciones < MINIMO_PARA_FIARSE:
+        cuantas = resumen.total_valoraciones
         resumen.avisos.append(
-            f"Solo hay {resumen.total_valoraciones} valoración(es). Las medias de "
-            "este tablero son orientativas hasta que haya al menos "
+            f"Solo hay {cuantas} {'valoración' if cuantas == 1 else 'valoraciones'}. "
+            "Las medias de este tablero son orientativas hasta que haya al menos "
             f"{MINIMO_PARA_FIARSE}."
         )
 
     poco_fiables = sum(1 for recurso in valorados if not recurso.es_fiable)
 
     if poco_fiables:
+        # «1 de los 1 recursos valorados tienen» era lo que salía antes.
+        de_cuantos = (
+            f"de {len(valorados)} recurso valorado tiene"
+            if len(valorados) == 1
+            else f"de los {len(valorados)} recursos valorados tienen"
+        )
         resumen.avisos.append(
-            f"{poco_fiables} de los {len(valorados)} recursos valorados tienen "
-            f"menos de {MINIMO_PARA_FIARSE} valoraciones. Su media se mueve mucho "
-            "con cada opinión nueva."
+            f"{poco_fiables} {de_cuantos} menos de {MINIMO_PARA_FIARSE} "
+            "valoraciones. Su media se mueve mucho con cada opinión nueva."
         )
 
     sin_comentario = resumen.total_valoraciones - resumen.con_comentario
 
     if sin_comentario:
         resumen.avisos.append(
-            f"{sin_comentario} valoración(es) no traen comentario. De esas solo se "
-            "conoce la puntuación, no de qué hablan."
+            f"{sin_comentario} "
+            f"{'valoración no trae' if sin_comentario == 1 else 'valoraciones no traen'} "
+            "comentario. De esas solo se conoce la puntuación, no de qué hablan."
         )
 
     if resumen.analizadas_por_reglas and not resumen.analizadas_por_modelo:

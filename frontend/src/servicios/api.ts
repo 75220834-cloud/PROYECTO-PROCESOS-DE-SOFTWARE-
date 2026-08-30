@@ -995,3 +995,69 @@ export function obtenerEvidencia(): Promise<ResumenDeEvidencia> {
 export function obtenerTableroDeIndicadores(): Promise<TableroDeIndicadores> {
   return obtener<TableroDeIndicadores>('/api/indicadores/tablero');
 }
+
+// ---------------------------------------------------------------------------
+// Asistente conversacional (Fase 7)
+// ---------------------------------------------------------------------------
+
+/**
+ * Un turno de la conversación.
+ *
+ * Los roles van en inglés («user», «assistant») porque son los que entiende
+ * Ollama y viajan sin traducir hasta el modelo. Es la excepción de nombres en
+ * inglés que ya se aplica a las bibliotecas de terceros.
+ */
+export interface MensajeDeConversacion {
+  rol: 'user' | 'assistant';
+  contenido: string;
+}
+
+/** Qué función del backend se ejecutó, y con qué. */
+export interface FuncionUsada {
+  nombre: string;
+  argumentos: Record<string, unknown>;
+}
+
+/** Lo que contesta el asistente. */
+export interface RespuestaDelAsistente {
+  mensaje: string;
+  funciones_usadas: FuncionUsada[];
+  preferencia_id: number | null;
+  esta_disponible: boolean;
+  aviso: string | null;
+}
+
+/** Si el asistente se puede usar, y si no, por qué. */
+export interface EstadoDelAsistente {
+  disponible: boolean;
+  modelo: string;
+  motivo: string | null;
+}
+
+/**
+ * Pregunta si el asistente está disponible.
+ *
+ * Se consulta antes de enseñar el botón. Un asistente que no responde y no
+ * explica por qué es peor que uno que directamente no está: el visitante se
+ * queda esperando sin saber que espera en vano.
+ */
+export function consultarEstadoDelAsistente(): Promise<EstadoDelAsistente> {
+  return obtener<EstadoDelAsistente>('/api/asistente/estado');
+}
+
+/**
+ * Envía la conversación entera y devuelve la respuesta.
+ *
+ * Se manda completa en cada petición porque el asistente no guarda memoria en
+ * el servidor: la conversación es de quien la tiene.
+ */
+export function enviarMensajeAlAsistente(
+  mensajes: MensajeDeConversacion[],
+  idioma: string,
+): Promise<RespuestaDelAsistente> {
+  return enviar<RespuestaDelAsistente>('/api/asistente/mensaje', 'POST', {
+    mensajes,
+    // El backend solo acepta «es» o «en»; i18next puede dar «es-PE».
+    idioma: idioma.startsWith('en') ? 'en' : 'es',
+  });
+}

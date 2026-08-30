@@ -2,12 +2,17 @@
  * Componente raíz: define el esqueleto común (encabezado y pie) y las rutas.
  *
  * Rutas existentes: inicio, catálogo, detalle de recurso, asistente de
- * preferencias, acceso y «Mis viajes». El itinerario llega en la Fase 4.
+ * preferencias, resultados, itinerario, valoración, acceso, «Mis viajes»,
+ * coordinación y panel del gestor.
+ *
+ * El asistente conversacional cuelga fuera del enrutador porque está
+ * disponible en todas las pantallas.
  */
 import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router-dom';
 
 import { Encabezado } from '@/componentes/Encabezado';
+import { PanelConversacion } from '@/componentes/PanelConversacion';
 import { Acceso } from '@/paginas/Acceso';
 import { AsistentePreferencias } from '@/paginas/AsistentePreferencias';
 import { Catalogo } from '@/paginas/Catalogo';
@@ -88,6 +93,11 @@ export function App() {
       </div>
 
       <Pie />
+
+      {/* Fuera del enrutador a propósito: el asistente acompaña al visitante
+          en cualquier pantalla. Es capa de interacción sobre lo que ya hacen
+          los Incrementos 2, 3 y 4, no una pantalla más. */}
+      <PanelConversacion />
     </div>
   );
 }

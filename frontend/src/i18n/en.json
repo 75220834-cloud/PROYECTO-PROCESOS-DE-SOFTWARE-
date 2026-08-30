@@ -37,7 +37,7 @@
     "paso_3_titulo": "Coordinate and enjoy",
     "paso_3_texto": "Request lodging, transport and guides from a single place.",
     "provincias_titulo": "The four provinces of the route",
-    "en_construccion": "Work in progress — Phase 0: environment ready"
+    "aviso_datos": "Academic project — catalogue data from MINCETUR; fares are estimates"
   },
   "provincias": {
     "huancayo": "Huancayo",
@@ -507,5 +507,29 @@
     "sinDato": "No data yet",
     "loQueNoDice": "What this indicator does not say",
     "generadoEn": "Generated on {{fecha}}"
+  },
+  "conversacion": {
+    "titulo": "Assistant",
+    "subtitulo": "Ask anything about the valley.",
+    "abrir": "Open the assistant",
+    "escribe": "Type your question…",
+    "enviar": "Send",
+    "pensando": "Thinking…",
+    "error": "Could not reach the assistant. Please try again.",
+    "bienvenida": "I can search the catalogue, recommend places and build you a one-day itinerary. Try:",
+    "ejemplo1": "What can I visit in Concepción?",
+    "ejemplo2": "Find the Ocopa Convent",
+    "ejemplo3": "I have one day in Huancayo and I am interested in handicrafts",
+    "advertencia": "I only talk about what is in MINCETUR's National Inventory of Tourism Resources. Prices are estimates, not official fares.",
+    "noDisponible": "The assistant is not available right now.",
+    "usarFormulario": "Plan your trip with the form",
+    "funcionesAria": "To answer, it consulted:",
+    "funcion": {
+      "buscar_recursos": "searched the catalogue",
+      "crear_preferencia": "saved your preferences",
+      "generar_recomendaciones": "computed recommendations",
+      "construir_itinerario": "built the itinerary",
+      "consultar_afluencia": "checked expected crowding"
+    }
   }
 }

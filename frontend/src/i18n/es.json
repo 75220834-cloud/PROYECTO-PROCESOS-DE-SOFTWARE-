@@ -37,7 +37,7 @@
     "paso_3_titulo": "Coordina y disfruta",
     "paso_3_texto": "Solicita hospedaje, transporte y guías desde un solo lugar.",
     "provincias_titulo": "Las cuatro provincias de la ruta",
-    "en_construccion": "Proyecto en construcción — Fase 0: entorno preparado"
+    "aviso_datos": "Proyecto académico — los datos del catálogo son del MINCETUR; las tarifas son estimaciones"
   },
   "provincias": {
     "huancayo": "Huancayo",
@@ -507,5 +507,29 @@
     "sinDato": "Sin dato todavía",
     "loQueNoDice": "Lo que este indicador no dice",
     "generadoEn": "Generado el {{fecha}}"
+  },
+  "conversacion": {
+    "titulo": "Asistente",
+    "subtitulo": "Pregunta lo que quieras del valle.",
+    "abrir": "Abrir el asistente",
+    "escribe": "Escribe tu pregunta…",
+    "enviar": "Enviar",
+    "pensando": "Pensando…",
+    "error": "No se pudo contactar con el asistente. Inténtalo otra vez.",
+    "bienvenida": "Puedo buscar en el catálogo, recomendarte sitios y armarte el itinerario de un día. Prueba con:",
+    "ejemplo1": "¿Qué puedo visitar en Concepción?",
+    "ejemplo2": "Busca el Convento de Ocopa",
+    "ejemplo3": "Tengo un día en Huancayo y me interesa la artesanía",
+    "advertencia": "Solo hablo de lo que está en el Inventario Nacional de Recursos Turísticos del MINCETUR. Los precios son estimaciones, no tarifas oficiales.",
+    "noDisponible": "El asistente no está disponible ahora mismo.",
+    "usarFormulario": "Planifica tu viaje con el formulario",
+    "funcionesAria": "Para responder se consultó:",
+    "funcion": {
+      "buscar_recursos": "consultó el catálogo",
+      "crear_preferencia": "guardó tus preferencias",
+      "generar_recomendaciones": "calculó recomendaciones",
+      "construir_itinerario": "armó el itinerario",
+      "consultar_afluencia": "consultó la afluencia esperada"
+    }
   }
 }

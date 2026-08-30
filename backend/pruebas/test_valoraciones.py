@@ -423,7 +423,10 @@ class TestTableroDeEvidencia:
 
         cuerpo = cliente.get("/api/indicadores/evidencia").json()
 
-        assert any("no traen comentario" in a for a in cuerpo["avisos"])
+        # Es una sola, así que va en singular. Esta prueba fijaba antes la forma
+        # plural —«no traen»— con una sola valoración, es decir, fijaba una
+        # falta de concordancia. Se corrigió el mensaje y con él la prueba.
+        assert any("no trae comentario" in a for a in cuerpo["avisos"])
 
     def test_calcula_la_evolucion_en_el_tiempo(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
@@ -556,3 +559,61 @@ class TestElRanquinNoSeSolapa:
             cuerpo["mejor_valorados"][0]["puntuacion_media"]
             > cuerpo["peor_valorados"][0]["puntuacion_media"]
         )
+
+
+# ---------------------------------------------------------------------------
+# Los avisos se leen; los plurales importan
+# ---------------------------------------------------------------------------
+
+
+class TestLosAvisosConcuerdanEnNumero:
+    """«Solo hay 1 valoración(es)» lo lee un gestor municipal, no un programador.
+
+    El paréntesis es cómodo de programar y desagradable de leer. Estas pruebas
+    fijan las tres frases donde aparecía, en singular y en plural, porque es el
+    tipo de detalle que se arregla una vez y vuelve a colarse en la siguiente
+    frase que alguien escriba con prisa.
+    """
+
+    def test_una_sola_valoracion_va_en_singular(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ) -> None:
+        valorar(cliente, itinerario.id, puntuacion=4)
+
+        avisos = cliente.get("/api/indicadores/evidencia").json()["avisos"]
+
+        assert any("hay 1 valoración." in aviso for aviso in avisos)
+        assert not any("(es)" in aviso for aviso in avisos)
+
+    def test_varias_valoraciones_van_en_plural(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ) -> None:
+        # Cada recurso admite una sola valoración por itinerario, así que para
+        # tener dos hay que valorar dos recursos distintos.
+        for recurso in recursos[:2]:
+            valorar(cliente, itinerario.id, puntuacion=4, recurso_id=recurso.id)
+
+        avisos = cliente.get("/api/indicadores/evidencia").json()["avisos"]
+
+        assert any("hay 2 valoraciones." in aviso for aviso in avisos)
+
+    def test_un_solo_recurso_poco_fiable_va_en_singular(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ) -> None:
+        """Antes salía «1 de los 1 recursos valorados tienen»."""
+        valorar(cliente, itinerario.id, puntuacion=4, recurso_id=recursos[0].id)
+
+        avisos = cliente.get("/api/indicadores/evidencia").json()["avisos"]
+
+        assert any("1 de 1 recurso valorado tiene" in aviso for aviso in avisos)
+
+    def test_ningun_aviso_lleva_el_parentesis_del_plural(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ) -> None:
+        """Guarda contra la próxima frase que se escriba con prisa."""
+        valorar(cliente, itinerario.id, puntuacion=3, comentario=None)
+
+        cuerpo = cliente.get("/api/indicadores/evidencia").json()
+
+        for aviso in cuerpo["avisos"]:
+            assert "(es)" not in aviso and "(s)" not in aviso, aviso

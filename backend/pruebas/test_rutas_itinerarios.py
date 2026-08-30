@@ -31,6 +31,7 @@ from app.modelos.catalogo import HorarioAtencion, RecursoTuristico
 from app.modelos.itinerario import Itinerario
 from app.modelos.preferencias import PreferenciaViaje
 from app.servicios import ruteo
+from pruebas.conftest import codigos, parametros_de
 
 #: Un sábado, para que el día de la semana sea estable en las pruebas de
 #: horarios. No se usa ``date.today()`` porque el día de la semana cambiaría
@@ -261,7 +262,7 @@ class TestArmarItinerario:
     ):
         avisos = armar(cliente, preferencia.id)["avisos"]
 
-        assert any("altitud" in a.lower() or "aclimat" in a.lower() for a in avisos)
+        assert "altitud" in codigos(avisos)
 
     def test_avisa_de_que_no_se_conocen_los_horarios(
         self, cliente: TestClient, preferencia: PreferenciaViaje
@@ -269,7 +270,13 @@ class TestArmarItinerario:
         """La limitación del inventario del MINCETUR, dicha en voz alta."""
         avisos = armar(cliente, preferencia.id)["avisos"]
 
-        assert any("horario" in a.lower() for a in avisos)
+        # Cualquiera de los tres avisos de horario vale: lo que se comprueba
+        # es que el itinerario no calla que no conoce los horarios.
+        assert codigos(avisos) & {
+            "sin_horario_ninguno",
+            "sin_horario_algunos",
+            "sin_horario_el_unico",
+        }
 
     def test_no_guarda_nada_si_no_se_le_pide(
         self, cliente: TestClient, preferencia: PreferenciaViaje, catalogo_del_valle: Session
@@ -373,7 +380,7 @@ class TestReordenar:
         )
 
         assert respuesta.status_code == 200
-        assert any("omitieron" in a for a in respuesta.json()["avisos"])
+        assert "paradas_omitidas_al_reordenar" in codigos(respuesta.json()["avisos"])
 
     def test_una_lista_vacia_da_422(self, cliente: TestClient, preferencia: PreferenciaViaje):
         respuesta = cliente.post(
@@ -537,9 +544,10 @@ class TestElSistemaExplicaPorQueElDiaQuedoCorto:
         cuerpo = armar(cliente, pobre.id)
 
         assert len(cuerpo["paradas"]) == 1
-        assert any(
-            "presupuesto de traslado" in a for a in cuerpo["avisos"]
-        ), "el itinerario se quedo en una parada sin decir por que"
+        assert codigos(cuerpo["avisos"]) & {
+            "corto_por_presupuesto_agotado",
+            "corto_por_presupuesto_insuficiente",
+        }, "el itinerario se quedo en una parada sin decir por que"
 
     def test_avisa_cuando_solo_hay_un_recurso_al_alcance(
         self, cliente: TestClient, catalogo_del_valle: Session
@@ -566,7 +574,7 @@ class TestElSistemaExplicaPorQueElDiaQuedoCorto:
         if len(cuerpo["paradas"]) > 1:
             pytest.skip("con estos datos si hay mas de un recurso al alcance")
 
-        assert any("no hay recorrido que armar" in a for a in cuerpo["avisos"])
+        assert "un_solo_recurso_al_alcance" in codigos(cuerpo["avisos"])
 
     def test_no_avisa_de_presupuesto_cuando_el_dia_se_lleno(
         self, cliente: TestClient, preferencia: PreferenciaViaje
@@ -577,18 +585,31 @@ class TestElSistemaExplicaPorQueElDiaQuedoCorto:
         if len(cuerpo["paradas"]) < 5:
             pytest.skip("el dia no se lleno con estos datos")
 
-        assert not any("presupuesto de traslado" in a for a in cuerpo["avisos"])
+        assert not codigos(cuerpo["avisos"]) & {
+            "corto_por_presupuesto_agotado",
+            "corto_por_presupuesto_insuficiente",
+        }
 
     def test_el_aviso_de_horarios_concuerda_en_numero(
         self, cliente: TestClient, preferencia: PreferenciaViaje
     ):
-        """Nada de «1 de los 1 recursos considerados no tienen horario»."""
+        """Nada de «1 de los 1 recursos considerados no tienen horario».
+
+        Desde la Fase 7 la concordancia la resuelve i18next en la interfaz, así
+        que aquí se comprueba lo que decide el backend: **qué código emite**.
+        Con un solo recurso tiene que ser el del singular, no el del plural con
+        un uno dentro.
+        """
         cuerpo = armar(cliente, preferencia.id)
+        emitidos = codigos(cuerpo["avisos"])
 
-        aviso = next(a for a in cuerpo["avisos"] if "horario de atención" in a)
+        if "sin_horario_el_unico" in emitidos:
+            return  # es el caso del singular, que es justo el correcto
 
-        assert "de los 1 recursos" not in aviso
-        assert "1 de los 1" not in aviso
+        if "sin_horario_ninguno" in emitidos:
+            assert parametros_de(cuerpo["avisos"], "sin_horario_ninguno")["total"] > 1
+        else:
+            assert parametros_de(cuerpo["avisos"], "sin_horario_algunos")["total"] > 1
 
 
 class TestGuardarEsIdempotente:

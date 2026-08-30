@@ -34,6 +34,7 @@ from app.ia.afluencia import (
     predecir_afluencia,
     predecir_afluencia_con_reglas,
 )
+from app.servicios.avisos import CODIGOS_CONOCIDOS
 
 # Recursos reales del catálogo, con sus categorías tal como vienen del MINCETUR.
 CATALOGO_DE_PRUEBA = [
@@ -349,21 +350,24 @@ class TestAfluenciaConReglas:
         prediccion = predecir_afluencia_con_reglas(date(2026, 5, 10), "HUANCAYO")
 
         assert prediccion.nivel == NivelAfluencia.ALTO
-        assert "Feria Dominical" in prediccion.motivo
+        assert prediccion.motivo.codigo == "afluencia_feria_dominical"
 
     def test_una_festividad_da_afluencia_alta(self):
         # Semana Santa 2026.
         prediccion = predecir_afluencia_con_reglas(date(2026, 4, 1), "HUANCAYO")
 
         assert prediccion.nivel == NivelAfluencia.ALTO
-        assert "Semana Santa" in prediccion.motivo
+        assert prediccion.motivo.codigo == "afluencia_festividad"
+        # El nombre de la fiesta viaja como parámetro: es un nombre propio y no
+        # se traduce, pero la frase que lo envuelve sí.
+        assert "Semana Santa" in prediccion.motivo.parametros["fiestas"]
 
     def test_un_sabado_corriente_da_afluencia_media(self):
         # 16 de mayo de 2026 es sábado, sin fiestas cerca.
         prediccion = predecir_afluencia_con_reglas(date(2026, 5, 16), "JAUJA")
 
         assert prediccion.nivel == NivelAfluencia.MEDIO
-        assert "fin de semana" in prediccion.motivo
+        assert prediccion.motivo.codigo == "afluencia_fin_de_semana"
 
     def test_un_martes_de_temporada_baja_da_afluencia_baja(self):
         prediccion = predecir_afluencia_con_reglas(date(2026, 5, 12), "JAUJA")
@@ -374,7 +378,8 @@ class TestAfluenciaConReglas:
         """«Mucha gente» sin decir por qué obliga al visitante a creérselo."""
         for dia in (date(2026, 4, 1), date(2026, 5, 10), date(2026, 5, 12)):
             prediccion = predecir_afluencia_con_reglas(dia, "HUANCAYO")
-            assert prediccion.motivo.strip()
+            # Un código sin declarar saldría en pantalla como texto crudo.
+            assert prediccion.motivo.codigo in CODIGOS_CONOCIDOS
 
     def test_la_feria_dominical_solo_afecta_a_huancayo(self):
         domingo = date(2026, 5, 10)

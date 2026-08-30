@@ -66,6 +66,7 @@ from app.modelos.itinerario import (
     ParadaItinerario,
 )
 from app.modelos.preferencias import PreferenciaViaje
+from app.servicios.avisos import Aviso, aviso
 from app.servicios.costos import CostoDeTraslado, calcular_traslado
 
 registro = logging.getLogger(__name__)
@@ -229,7 +230,7 @@ class ItinerarioCalculado:
 
     paradas: list[ParadaCalculada] = field(default_factory=list)
     generado_por: str = "modelo"
-    avisos: list[str] = field(default_factory=list)
+    avisos: list[Aviso] = field(default_factory=list)
 
     tiempo_total_min: int = 0
     costo_min_soles: Decimal = Decimal("0.00")
@@ -803,7 +804,7 @@ def armar_horario(
     se entrega un horario que ya se sabe que no cuadra.
     """
     paradas: list[ParadaCalculada] = []
-    avisos: list[str] = []
+    avisos: list[Aviso] = []
 
     momento = inicio_dia
     recortadas = 0
@@ -839,10 +840,11 @@ def armar_horario(
 
     if recortadas:
         avisos.append(
-            f"Se quitaron {recortadas} "
-            f"{'parada' if recortadas == 1 else 'paradas'} al recalcular los traslados sobre "
-            "la red vial real: con los tiempos exactos ya no cabían antes de las "
-            f"{_a_hora(fin_dia).strftime('%H:%M')}."
+            aviso(
+                "paradas_recortadas",
+                cuantas=recortadas,
+                hora=_a_hora(fin_dia).strftime("%H:%M"),
+            )
         )
 
     return paradas, avisos
@@ -877,11 +879,7 @@ def construir_itinerario(
     candidatos = preparar_candidatos(sesion, recomendaciones, fecha)
 
     if not candidatos:
-        resultado.avisos.append(
-            "Ninguna de las recomendaciones tiene coordenadas, así que no se "
-            "puede armar una ruta. El inventario del MINCETUR no georreferencia "
-            "todos sus recursos."
-        )
+        resultado.avisos.append(aviso("sin_coordenadas"))
         return resultado
 
     # Se limita el número de candidatos que entran al optimizador: la matriz
@@ -923,11 +921,7 @@ def construir_itinerario(
 
         if orden is None:
             resultado.generado_por = "reglas"
-            resultado.avisos.append(
-                "El optimizador no encontró una solución con estas restricciones, "
-                "así que el itinerario se armó con la alternativa por reglas "
-                "(vecino más cercano)."
-            )
+            resultado.avisos.append(aviso("resuelto_por_reglas"))
 
     if orden is None:
         orden = resolver_con_reglas(
@@ -935,9 +929,7 @@ def construir_itinerario(
         )
 
     if not orden:
-        resultado.avisos.append(
-            "No se pudo armar ningún itinerario con el tiempo y el presupuesto " "indicados."
-        )
+        resultado.avisos.append(aviso("sin_itinerario_posible"))
         return resultado
 
     # --- Segunda pasada: tramos reales y horario definitivo ---------------
@@ -992,16 +984,18 @@ def _explicar_si_el_dia_quedo_corto(
     # `movilidad = caminando`, cuyo alcance son 8 km, en distritos con poca
     # oferta cercana.
     if len(candidatos) < 2:
-        moverse = (
-            "moverte en transporte en vez de a pie"
-            if preferencia.movilidad == "caminando"
-            else "ampliar la zona"
-        )
+        # El consejo se manda como código, no como frase: la interfaz lo
+        # redacta anidando la traducción. Mandarlo escrito habría dejado media
+        # frase en español dentro de un aviso ya traducido.
+        moverse = "usar_transporte" if preferencia.movilidad == "caminando" else "ampliar_la_zona"
         resultado.avisos.append(
-            f"Desde {preferencia.distrito_origen.title()} solo hay un recurso al "
-            "alcance con los intereses y la forma de moverte que indicaste, así que "
-            f"no hay recorrido que armar. Añadir intereses, o {moverse}, abriría "
-            "muchas más opciones."
+            aviso(
+                "un_solo_recurso_al_alcance",
+                origen=preferencia.distrito_origen.title(),
+                # El consejo depende de cómo se mueva: se manda cuál aplica,
+                # no la frase, para que la interfaz elija la suya.
+                consejo=moverse,
+            )
         )
         return
 
@@ -1029,33 +1023,33 @@ def _explicar_si_el_dia_quedo_corto(
     if min(precios_restantes) <= disponible:
         return  # el dinero no es lo que corta; será el horario o el ritmo
 
-    cuantas = len(resultado.paradas)
-    plural = "parada" if cuantas == 1 else "paradas"
-
-    consejo = (
-        "Moverte en combi o colectivo en vez de en taxi abarataría mucho los traslados."
-        if preferencia.movilidad == "taxi"
-        else "Ampliar el presupuesto del viaje permitiría añadir más paradas."
-    )
+    # El consejo depende de cómo se mueva. Se manda cuál aplica —«taxi» o
+    # «presupuesto»— y no la frase, para que la interfaz la redacte.
+    consejo = "cambiar_de_taxi" if preferencia.movilidad == "taxi" else "ampliar_presupuesto"
 
     # «Se acabó el presupuesto» sería falso cuando no se ha gastado nada: lo
-    # que pasa entonces es que no alcanza ni para el primer traslado.
+    # que pasa entonces es que no alcanza ni para el primer traslado. Son dos
+    # códigos porque son dos situaciones distintas, no dos formas de decir una.
     if gastado == 0:
-        motivo = (
-            f"el traslado más barato desde ahí cuesta hasta "
-            f"S/ {min(precios_restantes):.2f} y el presupuesto de traslado del día "
-            f"es de S/ {presupuesto_traslado:.2f}"
+        resultado.avisos.append(
+            aviso(
+                "corto_por_presupuesto_insuficiente",
+                cuantas=len(resultado.paradas),
+                mas_barato=f"{min(precios_restantes):.2f}",
+                presupuesto=f"{presupuesto_traslado:.2f}",
+                consejo=consejo,
+            )
         )
     else:
-        motivo = (
-            f"se agotó el presupuesto de traslado del día: S/ {presupuesto_traslado:.2f}, "
-            f"de los que ya se usan hasta S/ {gastado:.2f}"
+        resultado.avisos.append(
+            aviso(
+                "corto_por_presupuesto_agotado",
+                cuantas=len(resultado.paradas),
+                presupuesto=f"{presupuesto_traslado:.2f}",
+                gastado=f"{gastado:.2f}",
+                consejo=consejo,
+            )
         )
-
-    resultado.avisos.append(
-        f"El itinerario tiene {cuantas} {plural} y no más porque {motivo}. Esa cifra "
-        f"es la parte de tu presupuesto total reservada para transporte. {consejo}"
-    )
 
 
 def _presupuesto_de_traslado_del_dia(preferencia: PreferenciaViaje) -> Decimal:
@@ -1106,46 +1100,38 @@ def _agregar_avisos_de_calidad(
             if p.traslado is not None
             and p.traslado.origen_del_calculo == OrigenDelCalculo.LINEA_RECTA
         )
-        resultado.avisos.append(
-            f"{estimados} de los traslados son una estimación: no hay red vial "
-            "registrada en OpenStreetMap cerca de esos puntos, así que la "
-            "distancia se calculó en línea recta corregida. El tiempo real puede "
-            "ser bastante mayor."
-        )
+        resultado.avisos.append(aviso("tramos_estimados", cuantos=estimados))
 
     altitudes = [p.candidato.altitud_m for p in resultado.paradas if p.candidato.altitud_m]
 
     if altitudes and necesita_aviso_de_altitud(max(altitudes)):
-        resultado.avisos.append(
-            f"El punto más alto del día está a {max(altitudes):.0f} m s.n.m. Si "
-            "vienes de la costa, dedica el primer día a aclimatarte, bebe agua y "
-            "no subas deprisa."
-        )
+        resultado.avisos.append(aviso("altitud", metros=round(max(altitudes))))
 
     if resultado.esfuerzo != "suave":
         resultado.avisos.append(
-            f"Día {resultado.esfuerzo}: {resultado.subida_total_m:.0f} m de subida " "acumulada."
+            aviso(
+                "esfuerzo_del_dia",
+                esfuerzo=resultado.esfuerzo,
+                subida=round(resultado.subida_total_m),
+            )
         )
 
     if sin_horario:
         # Se redacta distinto cuando solo hay un recurso: «1 de los 1 recursos
         # considerados no tienen horario» es la clase de frase que delata que
         # nadie leyó el mensaje que escribió.
+        # Tres códigos y no uno con parámetros porque las tres frases cambian
+        # de sujeto, no solo de número: «el único», «ninguno de los N», «N de
+        # los M». Intentar cubrirlas con una sola plantilla parametrizada da
+        # frases forzadas en español y peores en inglés.
         if total_candidatos == 1:
-            cuenta = "El único recurso considerado no tiene"
-            alcance = "Para él"
+            resultado.avisos.append(aviso("sin_horario_el_unico"))
         elif sin_horario == total_candidatos:
-            cuenta = f"Ninguno de los {total_candidatos} recursos considerados tiene"
-            alcance = "Para ellos"
+            resultado.avisos.append(aviso("sin_horario_ninguno", total=total_candidatos))
         else:
-            cuenta = f"{sin_horario} de los {total_candidatos} recursos considerados no tienen"
-            alcance = "Para esos"
-
-        resultado.avisos.append(
-            f"{cuenta} horario de atención publicado en el inventario del "
-            f"MINCETUR. {alcance}, el itinerario solo garantiza que la visita cabe "
-            "dentro del día: confirma el horario antes de ir."
-        )
+            resultado.avisos.append(
+                aviso("sin_horario_algunos", cuantos=sin_horario, total=total_candidatos)
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -1188,19 +1174,12 @@ def construir_itinerario_en_orden(
     elegidos = [por_recurso[i] for i in recursos_en_orden if i in por_recurso]
 
     if not elegidos:
-        resultado.avisos.append(
-            "Ninguno de los recursos indicados sigue estando entre las "
-            "recomendaciones de esta preferencia."
-        )
+        resultado.avisos.append(aviso("ninguna_sigue_recomendada"))
         return resultado
 
     descartados = len(recursos_en_orden) - len(elegidos)
     if descartados:
-        resultado.avisos.append(
-            f"Se omitieron {descartados} "
-            f"{'parada' if descartados == 1 else 'paradas'} que ya no están entre las "
-            "recomendaciones de esta preferencia."
-        )
+        resultado.avisos.append(aviso("paradas_omitidas_al_reordenar", cuantas=descartados))
 
     orden = list(range(len(elegidos)))
 
@@ -1235,9 +1214,11 @@ def _avisar_si_se_paso_del_presupuesto(
 
     if resultado.costo_max_soles > presupuesto:
         resultado.avisos.append(
-            f"Con este orden, los traslados pueden costar hasta "
-            f"S/ {resultado.costo_max_soles:.2f}, por encima de los "
-            f"S/ {presupuesto:.2f} que corresponden a un día con tu presupuesto."
+            aviso(
+                "por_encima_del_presupuesto",
+                costo=f"{resultado.costo_max_soles:.2f}",
+                presupuesto=f"{presupuesto:.2f}",
+            )
         )
 
 
@@ -1296,7 +1277,11 @@ def guardar_itinerario(
         desnivel_total_m=calculado.subida_total_m,
         estado=EstadoItinerario.GUARDADO,
         generado_por=calculado.generado_por,
-        avisos="\n".join(calculado.avisos) if calculado.avisos else None,
+        # La columna es JSONB desde la Fase 7: los avisos se guardan como lo
+        # que son —una lista de códigos con sus datos— en vez de concatenados
+        # con saltos de línea. Así se puede preguntar a la base cuántos
+        # itinerarios avisaron de altitud sin buscar subcadenas.
+        avisos=[a.a_diccionario() for a in calculado.avisos],
     )
 
     sesion.add(itinerario)
@@ -1331,7 +1316,7 @@ def _actualizar_itinerario(
     itinerario.distancia_total_km = calculado.distancia_total_km
     itinerario.desnivel_total_m = calculado.subida_total_m
     itinerario.generado_por = calculado.generado_por
-    itinerario.avisos = "\n".join(calculado.avisos) if calculado.avisos else None
+    itinerario.avisos = [a.a_diccionario() for a in calculado.avisos]
 
     itinerario.paradas.clear()
     sesion.flush()

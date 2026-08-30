@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { RecursoValorado, ResumenDeEvidencia, TemaAgregado } from '@/servicios/api';
 import { formatearNombrePropio } from '@/utilidades/formato';
+import { redactarAviso } from '@/utilidades/avisos';
 
 /** Color de cada porción de la barra de sentimiento. */
 const COLOR_DE_SENTIMIENTO: Record<string, string> = {
@@ -57,11 +58,11 @@ export default function TableroDeEvidencia({ resumen }: { resumen: ResumenDeEvid
           <ul className="mt-2 space-y-1">
             {resumen.avisos.map((aviso) => (
               <li
-                key={aviso}
+                key={aviso.codigo}
                 className="flex items-start gap-2 text-sm text-sobre-terciario-contenedor"
               >
                 <span aria-hidden="true">•</span>
-                <span>{aviso}</span>
+                <span>{redactarAviso(t, aviso)}</span>
               </li>
             ))}
           </ul>

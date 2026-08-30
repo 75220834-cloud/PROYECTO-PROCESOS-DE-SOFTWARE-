@@ -59,7 +59,7 @@ def obtener_recomendaciones(
     if preferencia is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una preferencia con ese identificador",
+            detail={"codigo": "sin_preferencia"},
         )
 
     # Misma regla de acceso que en el resto de preferencias: las que tienen
@@ -70,7 +70,7 @@ def obtener_recomendaciones(
     ):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una preferencia con ese identificador",
+            detail={"codigo": "sin_preferencia"},
         )
 
     resultado = recomendar(
@@ -164,7 +164,7 @@ def consultar_calendario(anio: int) -> CalendarioPublico:
     if not 2000 <= anio <= 2100:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="El año debe estar entre 2000 y 2100",
+            detail={"codigo": "ano_fuera_de_rango"},
         )
 
     festividades = calendario_del_anio(anio)

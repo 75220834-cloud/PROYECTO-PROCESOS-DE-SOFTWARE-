@@ -68,7 +68,7 @@ def _comprobar_acceso(preferencia: PreferenciaViaje, usuario: Usuario | None) ->
     if usuario is None or preferencia.usuario_id != usuario.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una preferencia con ese identificador",
+            detail={"codigo": "sin_preferencia"},
         )
 
 
@@ -78,7 +78,7 @@ def _obtener_o_404(sesion, id_preferencia: int) -> PreferenciaViaje:
     if preferencia is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una preferencia con ese identificador",
+            detail={"codigo": "sin_preferencia"},
         )
 
     return preferencia
@@ -231,7 +231,7 @@ def reclamar_preferencia(
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una preferencia con ese identificador",
+            detail={"codigo": "sin_preferencia"},
         )
 
     preferencia.usuario_id = usuario.id

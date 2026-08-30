@@ -62,7 +62,7 @@ def registrar(solicitud: SolicitudRegistro, sesion: SesionBD) -> RespuestaSesion
     except CorreoYaRegistrado as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Ya existe una cuenta con ese correo",
+            detail={"codigo": "correo_ya_registrado"},
         ) from error
 
     return _construir_respuesta(usuario)
@@ -79,7 +79,7 @@ def iniciar_sesion(solicitud: SolicitudInicioSesion, sesion: SesionBD) -> Respue
         # registrados probándolos uno a uno.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo o contraseña incorrectos",
+            detail={"codigo": "credenciales_incorrectas"},
             headers={"WWW-Authenticate": "Bearer"},
         )
 

@@ -143,7 +143,7 @@ class TestDetalleDeRecurso:
         respuesta = cliente.get("/api/recursos/99999999")
 
         assert respuesta.status_code == 404
-        assert "No existe" in respuesta.json()["detail"]
+        assert respuesta.json()["detail"]["codigo"] == "sin_recurso"
 
 
 class TestFiltrosDisponibles:
@@ -171,4 +171,6 @@ class TestIndicadorDelCatalogo:
         respuesta = cliente.get("/api/indicadores/catalogo")
 
         assert respuesta.status_code == 404
-        assert "cargar_catalogo" in respuesta.json()["detail"]
+        # El mensaje con el comando que hay que ejecutar vive en los archivos
+        # de idioma; aquí se fija el código, que es lo que decide el backend.
+        assert respuesta.json()["detail"]["codigo"] == "catalogo_sin_validar"

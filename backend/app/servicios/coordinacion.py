@@ -35,6 +35,7 @@ from app.modelos.coordinacion import (
     SolicitudCoordinacion,
 )
 from app.modelos.usuario import RolUsuario, Usuario
+from app.servicios.avisos import Aviso, aviso
 
 
 class ErrorDeCoordinacion(Exception):
@@ -295,7 +296,7 @@ def revisar_disponibilidad(
     personas: int,
     hora: time | None = None,
     ahora: datetime | None = None,
-) -> list[str]:
+) -> list[Aviso]:
     """Devuelve los motivos por los que este servicio NO se puede pedir así.
 
     Lista vacía significa que se puede. Se devuelven **todos** los motivos y no
@@ -306,15 +307,20 @@ def revisar_disponibilidad(
     Es la comprobación que cierra la brecha 5: *la capacidad y condiciones del
     proveedor no son verificables al decidir*. Ahora lo son, antes de enviar.
     """
-    motivos: list[str] = []
+    motivos: list[Aviso] = []
 
     if not servicio.esta_publicado:
-        motivos.append("Este servicio no está publicado.")
+        motivos.append(aviso("servicio_no_publicado"))
 
     if personas > servicio.capacidad_maxima:
+        # «persona(s)» era lo que salía antes. Ahora el plural lo resuelve
+        # i18next, que además acierta en inglés sin escribir dos frases.
         motivos.append(
-            f"El servicio atiende como máximo a {servicio.capacidad_maxima} "
-            f"persona(s) y se pidieron {personas}."
+            aviso(
+                "supera_la_capacidad",
+                capacidad=servicio.capacidad_maxima,
+                pedidas=personas,
+            )
         )
 
     # --- Antelación -------------------------------------------------------
@@ -327,19 +333,18 @@ def revisar_disponibilidad(
     antelacion = momento_servicio - ahora
 
     if antelacion < timedelta(hours=servicio.antelacion_minima_horas):
-        motivos.append(
-            f"Este servicio pide al menos {servicio.antelacion_minima_horas} horas "
-            "de antelación."
-        )
+        motivos.append(aviso("falta_antelacion", horas=servicio.antelacion_minima_horas))
 
     # --- Día de atención --------------------------------------------------
     tramos = tramos_del_dia(sesion, servicio.id, fecha)
 
     if not tramos:
-        motivos.append(f"El proveedor no atiende los {_nombre_del_dia(fecha.weekday())}.")
+        # Se manda el número del día, no su nombre: «martes» no se traduce
+        # solo, y la interfaz ya sabe nombrar los días en los dos idiomas.
+        motivos.append(aviso("no_atiende_ese_dia", dia=fecha.weekday()))
     elif hora is not None and not any(t.hora_inicio <= hora <= t.hora_fin for t in tramos):
         horarios = ", ".join(f"{t.hora_inicio:%H:%M}–{t.hora_fin:%H:%M}" for t in tramos)
-        motivos.append(f"A esa hora no atiende. Ese día atiende de {horarios}.")
+        motivos.append(aviso("no_atiende_a_esa_hora", horarios=horarios))
 
     # --- Cupo -------------------------------------------------------------
     if tramos:
@@ -348,8 +353,14 @@ def revisar_disponibilidad(
 
         if comprometidas + personas > cupo_del_dia:
             libres = max(0, cupo_del_dia - comprometidas)
+            # «plaza(s)», igual que arriba.
             motivos.append(
-                f"Ese día quedan {libres} plaza(s) de {cupo_del_dia} y se pidieron " f"{personas}."
+                aviso(
+                    "sin_plazas_suficientes",
+                    libres=libres,
+                    cupo=cupo_del_dia,
+                    pedidas=personas,
+                )
             )
 
     return motivos

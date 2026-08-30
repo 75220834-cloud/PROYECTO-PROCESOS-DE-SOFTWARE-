@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { useSesion } from '@/hooks/useSesion';
 import { medirFuerza } from '@/utilidades/formato';
+import { traducirError } from '@/utilidades/avisos';
 
 type Pestana = 'entrar' | 'crear';
 
@@ -56,7 +57,7 @@ export function Acceso() {
       }
       navegar('/mis-viajes');
     } catch (fallo) {
-      establecerError((fallo as Error).message);
+      establecerError(traducirError(t, fallo, t('acceso.error')));
     } finally {
       establecerEnviando(false);
     }

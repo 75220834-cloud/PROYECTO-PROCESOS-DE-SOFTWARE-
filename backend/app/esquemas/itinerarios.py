@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.esquemas.avisos import AvisoPublico
+
 
 class SolicitudItinerario(BaseModel):
     """Petición para armar el itinerario de un día."""
@@ -115,7 +117,7 @@ class RespuestaItinerario(BaseModel):
 
     #: Avisos que el visitante tiene que leer: tramos estimados, altitud,
     #: esfuerzo del día, horarios desconocidos.
-    avisos: list[str] = Field(default_factory=list)
+    avisos: list[AvisoPublico] = Field(default_factory=list)
 
 
 class SolicitudReordenar(SolicitudItinerario):

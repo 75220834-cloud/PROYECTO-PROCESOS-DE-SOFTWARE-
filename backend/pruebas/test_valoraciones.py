@@ -30,6 +30,7 @@ from app.modelos.catalogo import RecursoTuristico
 from app.modelos.itinerario import Itinerario
 from app.modelos.preferencias import PreferenciaViaje
 from app.modelos.valoracion import Valoracion
+from app.servicios.avisos import CODIGOS_CONOCIDOS
 from app.servicios.evidencia import (
     MINIMO_PARA_FIARSE,
     calcular_cobertura,
@@ -37,6 +38,7 @@ from app.servicios.evidencia import (
     obtener_instantaneas,
     resumir_evidencia,
 )
+from pruebas.conftest import codigos, parametros_de
 
 HOY = date(2026, 9, 12)
 
@@ -236,7 +238,7 @@ class TestValidacionDeEntrada:
         )
 
         assert respuesta.status_code == 409
-        assert "Ya valoraste" in respuesta.json()["detail"]
+        assert respuesta.json()["detail"]["codigo"] == "ya_valoraste"
 
     def test_si_se_puede_valorar_dos_recursos_distintos(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
@@ -309,7 +311,7 @@ class TestTableroDeEvidencia:
         cuerpo = cliente.get("/api/indicadores/evidencia").json()
 
         assert cuerpo["total_valoraciones"] == 0
-        assert any("Todavía no hay" in a for a in cuerpo["avisos"])
+        assert "sin_valoraciones" in codigos(cuerpo["avisos"])
 
     def test_agrega_la_distribucion_de_sentimiento(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
@@ -404,7 +406,9 @@ class TestTableroDeEvidencia:
         cuerpo = cliente.get("/api/indicadores/evidencia").json()
 
         assert cuerpo["mejor_valorados"][0]["es_fiable"] is False
-        assert any(str(MINIMO_PARA_FIARSE) in a for a in cuerpo["avisos"])
+        assert (
+            parametros_de(cuerpo["avisos"], "recursos_poco_fiables")["minimo"] == MINIMO_PARA_FIARSE
+        )
 
     def test_declara_cuantas_analizo_cada_via(self, cliente: TestClient, itinerario: Itinerario):
         """La trazabilidad de la regla de oro, agregada."""
@@ -414,7 +418,7 @@ class TestTableroDeEvidencia:
 
         assert cuerpo["analizadas_por_reglas"] == 1
         assert cuerpo["analizadas_por_modelo"] == 0
-        assert any("alternativa por reglas" in a for a in cuerpo["avisos"])
+        assert "todo_por_reglas" in codigos(cuerpo["avisos"])
 
     def test_avisa_de_las_valoraciones_sin_comentario(
         self, cliente: TestClient, itinerario: Itinerario
@@ -426,7 +430,7 @@ class TestTableroDeEvidencia:
         # Es una sola, así que va en singular. Esta prueba fijaba antes la forma
         # plural —«no traen»— con una sola valoración, es decir, fijaba una
         # falta de concordancia. Se corrigió el mensaje y con él la prueba.
-        assert any("no trae comentario" in a for a in cuerpo["avisos"])
+        assert "valoraciones_sin_comentario" in codigos(cuerpo["avisos"])
 
     def test_calcula_la_evolucion_en_el_tiempo(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
@@ -452,18 +456,37 @@ class TestTableroDeIndicadores:
         assert len(cuerpo["indicadores"]) == 6
         assert [i["incremento"] for i in cuerpo["indicadores"]] == [1, 2, 3, 4, 5, 6]
 
-    def test_cada_indicador_dice_que_brecha_cierra(self, cliente: TestClient):
-        for indicador in cliente.get("/api/indicadores/tablero").json()["indicadores"]:
-            assert indicador[
-                "brecha"
-            ], f"al incremento {indicador['incremento']} le falta la brecha"
+    def test_cada_indicador_dice_de_donde_sale_su_texto(self, cliente: TestClient):
+        """El nombre, la brecha y la salvedad ya no viajan por el API.
 
-    def test_cada_indicador_lleva_su_salvedad(self, cliente: TestClient):
-        """Un número sin decir qué NO dice es peor que no tenerlo."""
+        Son constantes por indicador —el nombre del 1 es siempre el mismo— y
+        desde la Fase 7 viven en los archivos de idioma, bajo
+        ``indicadores.{numero}``. Mandarlas en cada respuesta era mandar una
+        constante en español que luego no se podía traducir.
+
+        Lo que sí tiene que llegar es el número del incremento, que es la
+        llave. Que las tres frases existan en los dos idiomas lo comprueba
+        `frontend/src/utilidades/__pruebas__/avisos.prueba.ts`.
+        """
         for indicador in cliente.get("/api/indicadores/tablero").json()["indicadores"]:
-            assert indicador[
-                "salvedad"
-            ], f"el indicador {indicador['incremento']} no declara sus límites"
+            assert indicador["incremento"] in (1, 2, 3, 4, 5, 6)
+            assert "nombre" not in indicador
+            assert "salvedad" not in indicador
+
+    def test_el_detalle_viaja_como_codigo_y_parametros(self, cliente: TestClient):
+        """Es la única parte de la tarjeta que cambia con los datos."""
+        for indicador in cliente.get("/api/indicadores/tablero").json()["indicadores"]:
+            if indicador["detalle"] is not None:
+                assert (
+                    indicador["detalle"]["codigo"] == f"detalle_indicador_{indicador['incremento']}"
+                )
+
+    def test_cuando_no_hay_dato_se_explica_por_que(self, cliente: TestClient):
+        """Un «—» sin explicación deja al gestor pensando que algo se rompió."""
+        for indicador in cliente.get("/api/indicadores/tablero").json()["indicadores"]:
+            if not indicador["hay_dato"]:
+                assert indicador["sin_dato_porque"] is not None
+                assert indicador["sin_dato_porque"]["codigo"] in CODIGOS_CONOCIDOS
 
     def test_distingue_no_hay_dato_de_cero(self, cliente: TestClient):
         """Cero es una medición; la ausencia de una no es cero."""
@@ -566,26 +589,32 @@ class TestElRanquinNoSeSolapa:
 # ---------------------------------------------------------------------------
 
 
-class TestLosAvisosConcuerdanEnNumero:
-    """«Solo hay 1 valoración(es)» lo lee un gestor municipal, no un programador.
+class TestLosAvisosLlevanElNumeroQueHaceFalta:
+    """El backend decide QUÉ avisar y con qué números; la interfaz redacta.
 
-    El paréntesis es cómodo de programar y desagradable de leer. Estas pruebas
-    fijan las tres frases donde aparecía, en singular y en plural, porque es el
-    tipo de detalle que se arregla una vez y vuelve a colarse en la siguiente
-    frase que alguien escriba con prisa.
+    Antes esta clase comprobaba la concordancia —«1 valoración» y no «1
+    valoración(es)»—, porque el backend escribía la frase. Desde la Fase 7 la
+    frase la elige i18next, que además acierta en idiomas cuyas reglas de
+    plural no son las del español.
+
+    Lo que sigue siendo del backend, y se comprueba aquí, es que el aviso
+    llegue **con el número correcto**: sin él, la interfaz no puede elegir
+    entre singular y plural aunque quiera.
+
+    La concordancia en sí se prueba en
+    `frontend/src/utilidades/__pruebas__/avisos.prueba.ts`.
     """
 
-    def test_una_sola_valoracion_va_en_singular(
+    def test_una_sola_valoracion_manda_un_uno(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
     ) -> None:
         valorar(cliente, itinerario.id, puntuacion=4)
 
         avisos = cliente.get("/api/indicadores/evidencia").json()["avisos"]
 
-        assert any("hay 1 valoración." in aviso for aviso in avisos)
-        assert not any("(es)" in aviso for aviso in avisos)
+        assert parametros_de(avisos, "pocas_valoraciones")["cuantas"] == 1
 
-    def test_varias_valoraciones_van_en_plural(
+    def test_varias_valoraciones_mandan_su_cuenta(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
     ) -> None:
         # Cada recurso admite una sola valoración por itinerario, así que para
@@ -595,25 +624,38 @@ class TestLosAvisosConcuerdanEnNumero:
 
         avisos = cliente.get("/api/indicadores/evidencia").json()["avisos"]
 
-        assert any("hay 2 valoraciones." in aviso for aviso in avisos)
+        assert parametros_de(avisos, "pocas_valoraciones")["cuantas"] == 2
 
-    def test_un_solo_recurso_poco_fiable_va_en_singular(
+    def test_distingue_cuantos_de_cuantos(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
     ) -> None:
-        """Antes salía «1 de los 1 recursos valorados tienen»."""
+        """«1 de 1» y «1 de 3» son frases distintas: hacen falta los dos números.
+
+        Antes salía «1 de los 1 recursos valorados tienen», que era la falta de
+        concordancia más visible del tablero.
+        """
         valorar(cliente, itinerario.id, puntuacion=4, recurso_id=recursos[0].id)
 
         avisos = cliente.get("/api/indicadores/evidencia").json()["avisos"]
+        parametros = parametros_de(avisos, "recursos_poco_fiables")
 
-        assert any("1 de 1 recurso valorado tiene" in aviso for aviso in avisos)
+        assert parametros["cuantos"] == 1
+        assert parametros["total"] == 1
 
-    def test_ningun_aviso_lleva_el_parentesis_del_plural(
+    def test_ningun_aviso_manda_una_frase(
         self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
     ) -> None:
-        """Guarda contra la próxima frase que se escriba con prisa."""
+        """Guarda contra volver atrás sin darse cuenta.
+
+        Si alguien añade un aviso con la frase dentro, esta prueba lo caza: los
+        parámetros llevan datos, no texto redactado.
+        """
         valorar(cliente, itinerario.id, puntuacion=3, comentario=None)
 
-        cuerpo = cliente.get("/api/indicadores/evidencia").json()
+        for aviso in cliente.get("/api/indicadores/evidencia").json()["avisos"]:
+            assert aviso["codigo"] in CODIGOS_CONOCIDOS
 
-        for aviso in cuerpo["avisos"]:
-            assert "(es)" not in aviso and "(s)" not in aviso, aviso
+            for valor in aviso["parametros"].values():
+                assert not (
+                    isinstance(valor, str) and " " in valor
+                ), f"«{valor}» parece una frase, y los parámetros son datos"

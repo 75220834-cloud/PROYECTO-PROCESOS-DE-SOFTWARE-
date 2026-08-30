@@ -240,7 +240,7 @@ def obtener_recurso(id_recurso: int, sesion: SesionBD) -> RecursoDetalle:
     ).first()
 
     if fila is None:
-        raise HTTPException(status_code=404, detail="No existe un recurso con ese identificador")
+        raise HTTPException(status_code=404, detail={"codigo": "sin_recurso"})
 
     recurso, latitud, longitud = fila
 
@@ -273,10 +273,7 @@ def obtener_indicador_del_catalogo(sesion: SesionBD) -> IndicadorCatalogo:
     if registro is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Todavía no se ha ejecutado ninguna validación. "
-                "Ejecuta: python -m app.utilidades.cargar_catalogo"
-            ),
+            detail={"codigo": "catalogo_sin_validar"},
         )
 
     total = registro.total_recursos or 1  # evita dividir entre cero

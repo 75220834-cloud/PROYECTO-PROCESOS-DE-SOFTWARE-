@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.esquemas.avisos import AvisoPublico
 from app.modelos.valoracion import PUNTUACION_MAXIMA, PUNTUACION_MINIMA
 
 SentimientoLiteral = Literal["positivo", "neutro", "negativo"]
@@ -140,7 +141,7 @@ class ResumenDeEvidenciaPublico(BaseModel):
 
     #: Avisos sobre la fiabilidad de lo que se está mostrando. Un tablero que no
     #: dice cuándo sus números son frágiles invita a decidir sobre nada.
-    avisos: list[str] = Field(default_factory=list)
+    avisos: list[AvisoPublico] = Field(default_factory=list)
 
 
 class IndicadorDelIncremento(BaseModel):
@@ -152,19 +153,29 @@ class IndicadorDelIncremento(BaseModel):
     todos a `float` obligaría a la interfaz a saber cuál es cuál.
     """
 
+    #: Qué incremento mide. **De aquí salen el nombre, la brecha y la
+    #: salvedad**, que la interfaz busca en sus archivos de idioma.
+    #:
+    #: No viajan como texto porque no cambian nunca: el nombre del indicador 1
+    #: es siempre el mismo, y mandarlo en cada respuesta era mandar una
+    #: constante en español que luego no se podía traducir.
     incremento: int
-    nombre: str
-    #: Qué brecha del análisis cierra.
-    brecha: str
-    valor: str
-    #: Contexto para entender el valor. Por ejemplo «234 de 295 recursos».
-    detalle: str | None = None
+    #: El valor medido. Casi siempre es una cifra con símbolo —«79.32 %»— que
+    #: se lee igual en cualquier idioma; cuando es una frase, viaja en
+    #: `valor_traducible` y este campo queda vacío.
+    valor: str = ""
+    #: Para los indicadores cuyo valor es una frase y no una cifra.
+    valor_traducible: AvisoPublico | None = None
+    #: Contexto para entender el valor —«234 de 295 recursos»—, como código y
+    #: parámetros. Es la única parte de la tarjeta que cambia con los datos.
+    detalle: AvisoPublico | None = None
     #: `null` cuando el indicador todavía no se puede medir. Se distingue de
     #: cero: cero es una medición, `null` es la ausencia de una.
     hay_dato: bool = True
-    #: Lo que este indicador NO dice. Va en el propio dato para que no se pueda
-    #: leer el número sin su salvedad.
-    salvedad: str | None = None
+    #: Por qué no hay dato todavía, cuando `hay_dato` es falso. La salvedad
+    #: normal sale del número del incremento; esta es distinta y depende del
+    #: estado, así que sí viaja.
+    sin_dato_porque: AvisoPublico | None = None
 
 
 class TableroDeIndicadores(BaseModel):

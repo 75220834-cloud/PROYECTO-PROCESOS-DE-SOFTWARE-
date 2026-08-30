@@ -29,6 +29,7 @@ from app.ia.afinidad import RecursoParaPuntuar, calcular_afinidad
 from app.ia.afluencia import PrediccionAfluencia, predecir_afluencia
 from app.modelos.catalogo import RecursoTuristico
 from app.modelos.preferencias import PreferenciaViaje
+from app.servicios.avisos import Aviso, aviso
 
 # ---------------------------------------------------------------------------
 # Capa 0 — filtros duros
@@ -58,7 +59,8 @@ class RecursoDescartado:
 
     recurso_id: int
     nombre: str
-    motivo: str
+    #: Por qué quedó fuera, como código y parámetros: la interfaz lo redacta.
+    motivo: Aviso
 
 
 @dataclass
@@ -97,7 +99,7 @@ class ResultadoRecomendacion:
     total_evaluados: int = 0
     #: 'modelo' o 'reglas'. Trazabilidad de la regla de oro de la IA.
     generado_por: str = "modelo"
-    avisos: list[str] = field(default_factory=list)
+    avisos: list[Aviso] = field(default_factory=list)
 
 
 def _coordenadas_del_distrito(sesion: Session, distrito: str) -> tuple[float, float] | None:
@@ -149,7 +151,7 @@ def aplicar_filtros_duros(
     """
     aceptados = []
     descartados: list[RecursoDescartado] = []
-    avisos: list[str] = []
+    avisos: list[Aviso] = []
 
     alcance_km = ALCANCE_POR_MOVILIDAD_KM.get(preferencia.movilidad, 60.0)
 
@@ -162,32 +164,32 @@ def aplicar_filtros_duros(
 
     if visitas_costeables == 0:
         avisos.append(
-            f"Con un presupuesto de S/ {presupuesto:.0f} no alcanza para el coste "
-            f"mínimo estimado de una visita (S/ {COSTE_MINIMO_POR_RECURSO_SOLES:.0f}, "
-            "entrada y traslado local aproximados). Se muestran los recursos de "
-            "acceso libre y cercanos."
+            aviso(
+                "presupuesto_no_alcanza",
+                presupuesto=f"{presupuesto:.0f}",
+                minimo=f"{COSTE_MINIMO_POR_RECURSO_SOLES:.0f}",
+            )
         )
     else:
         avisos.append(
-            f"Con S/ {presupuesto:.0f} alcanzaría para unas {visitas_costeables} visitas, "
-            f"a un coste mínimo estimado de S/ {COSTE_MINIMO_POR_RECURSO_SOLES:.0f} cada una. "
-            "Es una estimación del equipo, no una tarifa oficial."
+            aviso(
+                "presupuesto_alcanza",
+                presupuesto=f"{presupuesto:.0f}",
+                visitas=visitas_costeables,
+                minimo=f"{COSTE_MINIMO_POR_RECURSO_SOLES:.0f}",
+            )
         )
 
     for recurso, latitud, longitud, distancia_km in recursos:
         if latitud is None or longitud is None:
             descartados.append(
-                RecursoDescartado(
-                    recurso.id,
-                    recurso.nombre,
-                    "sin coordenadas: no puede entrar en un itinerario",
-                )
+                RecursoDescartado(recurso.id, recurso.nombre, aviso("descarte_sin_coordenadas"))
             )
             continue
 
         if not recurso.esta_validado:
             descartados.append(
-                RecursoDescartado(recurso.id, recurso.nombre, "no pasó la validación del catálogo")
+                RecursoDescartado(recurso.id, recurso.nombre, aviso("descarte_sin_validar"))
             )
             continue
 
@@ -196,11 +198,13 @@ def aplicar_filtros_duros(
                 RecursoDescartado(
                     recurso.id,
                     recurso.nombre,
-                    (
-                        # Un decimal, no cero: redondeando, "a 8 km, fuera del
-                        # alcance de 8 km" se lee como una contradiccion.
-                        f"a {distancia_km:.1f} km, fuera del alcance de "
-                        f"{alcance_km:.0f} km para «{preferencia.movilidad}»"
+                    aviso(
+                        "descarte_fuera_de_alcance",
+                        # Un decimal, no cero: redondeando, «a 8 km, fuera del
+                        # alcance de 8 km» se lee como una contradicción.
+                        distancia=f"{distancia_km:.1f}",
+                        alcance=f"{alcance_km:.0f}",
+                        movilidad=preferencia.movilidad,
                     ),
                 )
             )
@@ -236,8 +240,7 @@ def recomendar(
 
     if origen is None:
         resultado.avisos.append(
-            f"No hay recursos georreferenciados en {preferencia.distrito_origen}, "
-            "así que no se puede filtrar por distancia. Se evalúa todo el valle."
+            aviso("origen_sin_coordenadas", distrito=preferencia.distrito_origen)
         )
 
     punto = cast(RecursoTuristico.ubicacion, Geometry)
@@ -284,10 +287,7 @@ def recomendar(
     resultado.avisos.extend(avisos_de_filtros)
 
     if not aceptados:
-        resultado.avisos.append(
-            "Ningún recurso del catálogo cumple las restricciones indicadas. "
-            "Prueba a ampliar el alcance cambiando cómo te mueves."
-        )
+        resultado.avisos.append(aviso("ninguno_cumple_restricciones"))
         return resultado
 
     # --- Capa 1 -----------------------------------------------------------
@@ -364,10 +364,7 @@ def recomendar(
     con_afinidad = [r for r in recomendaciones if r.puntaje_afinidad > 0]
 
     if not con_afinidad:
-        resultado.avisos.append(
-            "Ningún recurso coincide con los intereses marcados. Se muestran los "
-            "más cercanos para que puedas explorar."
-        )
+        resultado.avisos.append(aviso("ninguno_coincide_con_intereses"))
         con_afinidad = recomendaciones
 
     seleccionadas = con_afinidad[:limite]

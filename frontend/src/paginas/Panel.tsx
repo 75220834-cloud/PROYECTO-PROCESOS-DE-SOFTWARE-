@@ -29,6 +29,7 @@ import TableroDeEvidencia from '@/componentes/TableroDeEvidencia';
 import TarjetaServicio from '@/componentes/TarjetaServicio';
 import TarjetaSolicitud from '@/componentes/TarjetaSolicitud';
 import { useSesion } from '@/hooks/useSesion';
+import { traducirError } from '@/utilidades/avisos';
 import {
   cambiarEstadoDeSolicitud,
   obtenerIndicadorDeCoordinacion,
@@ -266,9 +267,7 @@ function AccionesDeProveedor({
 
       {cambio.isError && (
         <p className="mt-2 text-sm text-sobre-error-contenedor" role="alert">
-          {cambio.error instanceof Error
-            ? cambio.error.message
-            : t('coordinacion.errorAlResponder')}
+          {traducirError(t, cambio.error, t('coordinacion.errorAlResponder'))}
         </p>
       )}
     </div>

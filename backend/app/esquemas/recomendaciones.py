@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.esquemas.avisos import AvisoPublico
+
 
 class SolicitudRecomendacion(BaseModel):
     """Petición de recomendaciones para una preferencia ya guardada."""
@@ -23,7 +25,8 @@ class AfluenciaEstimada(BaseModel):
     """
 
     nivel: Literal["bajo", "medio", "alto"]
-    motivo: str
+    #: Por qué, como código y parámetros: la interfaz lo redacta.
+    motivo: AvisoPublico
     festividades: list[str] = Field(default_factory=list)
     calculado_por: Literal["modelo", "reglas"]
 
@@ -69,7 +72,7 @@ class RecursoDescartadoPublico(BaseModel):
 
     recurso_id: int
     nombre: str
-    motivo: str
+    motivo: AvisoPublico
 
 
 class RespuestaRecomendacion(BaseModel):
@@ -94,7 +97,7 @@ class RespuestaRecomendacion(BaseModel):
     #: un resumen. El conteo completo va en total_descartados.
     descartados: list[RecursoDescartadoPublico] = Field(default_factory=list)
 
-    avisos: list[str] = Field(default_factory=list)
+    avisos: list[AvisoPublico] = Field(default_factory=list)
 
 
 class FestividadPublica(BaseModel):

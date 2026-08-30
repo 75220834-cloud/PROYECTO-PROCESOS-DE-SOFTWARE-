@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 
 import type { RecomendacionPublica } from '@/servicios/api';
 import { formatearCategoria, formatearNombrePropio } from '@/utilidades/formato';
+import { redactarAviso } from '@/utilidades/avisos';
 
 /** Colores de la etiqueta de afluencia. Verde tranquilo, ámbar, rojo. */
 const ESTILO_DE_AFLUENCIA: Record<string, string> = {
@@ -105,7 +106,7 @@ export function TarjetaRecomendacion({
         </span>
 
         <p className="mt-1.5 text-xs text-sobre-superficie-variante">
-          {recomendacion.afluencia.motivo}
+          {redactarAviso(t, recomendacion.afluencia.motivo)}
         </p>
       </div>
     </motion.li>

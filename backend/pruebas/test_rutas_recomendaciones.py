@@ -12,9 +12,11 @@ from app.base_datos import obtener_sesion
 from app.configuracion import Configuracion, obtener_configuracion
 from app.main import aplicacion
 from app.modelos.preferencias import PreferenciaViaje
+from app.servicios.avisos import CODIGOS_CONOCIDOS
 from app.servicios.catalogo import importar_inventario
 from app.servicios.recomendador import ALCANCE_POR_MOVILIDAD_KM, recomendar
 from app.servicios.validacion_catalogo import validar_catalogo
+from pruebas.conftest import codigos, parametros_de
 
 HOY = date.today()
 
@@ -69,8 +71,7 @@ class TestFiltrosDuros:
 
         resultado = recomendar(catalogo, preferencia)
 
-        motivos = [d.motivo for d in resultado.descartados]
-        assert any("sin coordenadas" in motivo for motivo in motivos)
+        assert "descarte_sin_coordenadas" in codigos([d.motivo for d in resultado.descartados])
 
     def test_cada_descarte_dice_su_motivo(self, catalogo):
         """Es lo que permite explicar por qué no aparece un sitio esperado."""
@@ -78,7 +79,9 @@ class TestFiltrosDuros:
 
         resultado = recomendar(catalogo, preferencia)
 
-        assert all(d.motivo.strip() for d in resultado.descartados)
+        # Cada motivo tiene que ser un código conocido: uno inventado saldría
+        # en pantalla como texto crudo, sin traducir.
+        assert all(d.motivo.codigo in CODIGOS_CONOCIDOS for d in resultado.descartados)
 
     def test_caminando_alcanza_menos_que_en_taxi(self, catalogo):
         """La movilidad declarada limita de verdad lo que se recomienda."""
@@ -93,14 +96,16 @@ class TestFiltrosDuros:
 
         resultado = recomendar(catalogo, preferencia)
 
-        assert any("no alcanza" in aviso for aviso in resultado.avisos)
+        assert "presupuesto_no_alcanza" in codigos(resultado.avisos)
 
     def test_informa_de_cuantas_visitas_cubre_el_presupuesto(self, catalogo):
         preferencia = crear_preferencia(catalogo, presupuesto_soles=Decimal("80.00"))
 
         resultado = recomendar(catalogo, preferencia)
 
-        assert any("visitas" in aviso for aviso in resultado.avisos)
+        assert "presupuesto_alcanza" in codigos(resultado.avisos)
+        # Y dice para cuántas: sin ese número el aviso no informa de nada.
+        assert parametros_de(resultado.avisos, "presupuesto_alcanza")["visitas"] > 0
 
 
 class TestRecomendacion:
@@ -128,7 +133,7 @@ class TestRecomendacion:
 
         for recomendacion in resultado.recomendaciones:
             assert recomendacion.afluencia.nivel in ("bajo", "medio", "alto")
-            assert recomendacion.afluencia.motivo.strip()
+            assert recomendacion.afluencia.motivo.codigo in CODIGOS_CONOCIDOS
 
     def test_el_mejor_resultado_tiene_puntaje_relativo_cien(self, catalogo):
         preferencia = crear_preferencia(catalogo)
@@ -268,7 +273,10 @@ class TestEndpointDeCalendario:
         cuerpo = cliente.get("/api/calendario/dia/2026-04-01").json()
 
         assert cuerpo["afluencia"]["nivel"] == "alto"
-        assert "Semana Santa" in cuerpo["afluencia"]["motivo"]
+        # El nombre de la fiesta viaja como parámetro: es un nombre propio y
+        # no se traduce, pero la frase que lo envuelve sí.
+        assert cuerpo["afluencia"]["motivo"]["codigo"] == "afluencia_festividad"
+        assert "Semana Santa" in cuerpo["afluencia"]["motivo"]["parametros"]["fiestas"]
 
     def test_la_feria_dominical_aparece_en_huancayo(self, cliente):
         # 10 de mayo de 2026 es domingo.
@@ -277,4 +285,4 @@ class TestEndpointDeCalendario:
         ).json()
 
         assert cuerpo["afluencia"]["nivel"] == "alto"
-        assert "Feria Dominical" in cuerpo["afluencia"]["motivo"]
+        assert cuerpo["afluencia"]["motivo"]["codigo"] == "afluencia_feria_dominical"

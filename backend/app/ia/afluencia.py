@@ -32,6 +32,7 @@ from app.ia.calendario import (
     hay_feria_dominical,
     temporada_de,
 )
+from app.servicios.avisos import Aviso, aviso
 
 
 class NivelAfluencia(StrEnum):
@@ -122,8 +123,9 @@ class PrediccionAfluencia:
     """Nivel esperado de gente, con el motivo que lo justifica."""
 
     nivel: NivelAfluencia
-    #: Explicación en lenguaje llano, para mostrar al visitante.
-    motivo: str
+    #: Por qué se espera ese nivel, como código y parámetros. La interfaz lo
+    #: redacta en el idioma del visitante.
+    motivo: Aviso
     #: Nombres de las fiestas activas ese día, si las hay.
     festividades: list[str] = field(default_factory=list)
     #: Cómo se calculó: 'modelo' o 'reglas'.
@@ -157,7 +159,7 @@ def predecir_afluencia_con_reglas(dia: date, distrito: str) -> PrediccionAfluenc
     if caracteristicas.hay_feria_dominical:
         return PrediccionAfluencia(
             nivel=NivelAfluencia.ALTO,
-            motivo="Hoy hay Feria Dominical en Huancayo",
+            motivo=aviso("afluencia_feria_dominical"),
             festividades=nombres,
             calculado_por="reglas",
         )
@@ -165,7 +167,8 @@ def predecir_afluencia_con_reglas(dia: date, distrito: str) -> PrediccionAfluenc
     if caracteristicas.hay_festividad_en_el_distrito:
         return PrediccionAfluencia(
             nivel=NivelAfluencia.ALTO,
-            motivo=f"Hay festividad: {', '.join(nombres)}",
+            # Los nombres de las fiestas no se traducen: son nombres propios.
+            motivo=aviso("afluencia_festividad", fiestas=", ".join(nombres)),
             festividades=nombres,
             calculado_por="reglas",
         )
@@ -173,7 +176,7 @@ def predecir_afluencia_con_reglas(dia: date, distrito: str) -> PrediccionAfluenc
     if caracteristicas.es_feriado_nacional:
         return PrediccionAfluencia(
             nivel=NivelAfluencia.ALTO,
-            motivo="Es feriado nacional",
+            motivo=aviso("afluencia_feriado_nacional"),
             festividades=nombres,
             calculado_por="reglas",
         )
@@ -181,9 +184,9 @@ def predecir_afluencia_con_reglas(dia: date, distrito: str) -> PrediccionAfluenc
     if caracteristicas.dias_hasta_la_festividad_mas_cercana <= 3:
         return PrediccionAfluencia(
             nivel=NivelAfluencia.MEDIO,
-            motivo=(
-                f"Faltan {caracteristicas.dias_hasta_la_festividad_mas_cercana} días "
-                "para una festividad"
+            motivo=aviso(
+                "afluencia_festividad_cercana",
+                dias=caracteristicas.dias_hasta_la_festividad_mas_cercana,
             ),
             calculado_por="reglas",
         )
@@ -191,20 +194,20 @@ def predecir_afluencia_con_reglas(dia: date, distrito: str) -> PrediccionAfluenc
     if caracteristicas.es_fin_de_semana:
         return PrediccionAfluencia(
             nivel=NivelAfluencia.MEDIO,
-            motivo="Es fin de semana",
+            motivo=aviso("afluencia_fin_de_semana"),
             calculado_por="reglas",
         )
 
     if caracteristicas.temporada == "alta":
         return PrediccionAfluencia(
             nivel=NivelAfluencia.MEDIO,
-            motivo="Es temporada alta en el valle",
+            motivo=aviso("afluencia_temporada_alta"),
             calculado_por="reglas",
         )
 
     return PrediccionAfluencia(
         nivel=NivelAfluencia.BAJO,
-        motivo="Día laborable fuera de temporada alta",
+        motivo=aviso("afluencia_dia_normal"),
         calculado_por="reglas",
     )
 

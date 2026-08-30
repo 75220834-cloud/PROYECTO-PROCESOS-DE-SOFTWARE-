@@ -63,7 +63,7 @@ def _preferencia_accesible(sesion: SesionBD, preferencia_id: int, usuario) -> Pr
     if not hay_acceso:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una preferencia con ese identificador",
+            detail={"codigo": "sin_preferencia"},
         )
 
     return preferencia  # type: ignore[return-value]
@@ -318,7 +318,7 @@ def consultar_itinerario(
     if not hay_acceso:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe un itinerario con ese identificador",
+            detail={"codigo": "sin_itinerario"},
         )
 
     assert itinerario is not None  # ya lo comprobó hay_acceso
@@ -334,7 +334,7 @@ def consultar_itinerario(
         "costo_total_soles": itinerario.costo_total_soles,
         "distancia_total_km": itinerario.distancia_total_km,
         "desnivel_total_m": itinerario.desnivel_total_m,
-        "avisos": itinerario.avisos.split("\n") if itinerario.avisos else [],
+        "avisos": itinerario.avisos,
         "paradas": [
             {
                 "orden": parada.orden,

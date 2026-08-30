@@ -27,6 +27,7 @@ import {
   type DatosPreferencia,
 } from '@/servicios/api';
 import { formatearNombrePropio } from '@/utilidades/formato';
+import { traducirError } from '@/utilidades/avisos';
 
 const TOTAL_DE_PASOS = 6;
 
@@ -420,7 +421,7 @@ export function AsistentePreferencias() {
 
       {guardar.isError && (
         <p role="alert" className="mt-4 text-sm text-error">
-          {(guardar.error as Error).message}
+          {traducirError(t, guardar.error, t('preferencia.error'))}
         </p>
       )}
 

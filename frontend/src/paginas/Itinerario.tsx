@@ -38,6 +38,8 @@ import {
   type RespuestaItinerario,
 } from '@/servicios/api';
 import { formatearFecha } from '@/utilidades/formato';
+import { redactarAviso } from '@/utilidades/avisos';
+import { traducirError } from '@/utilidades/avisos';
 
 export function Itinerario() {
   const { t, i18n } = useTranslation();
@@ -166,7 +168,7 @@ export function Itinerario() {
           {t('itinerario.titulo')}
         </h1>
         <p className="mt-3 text-sobre-error-contenedor">
-          {error instanceof Error ? error.message : t('itinerario.errorGenerico')}
+          {traducirError(t, error, t('itinerario.errorGenerico'))}
         </p>
         <Link
           to={`/preferencias/${identificador}/resultados`}
@@ -243,11 +245,11 @@ export function Itinerario() {
           <ul className="mt-2 space-y-1.5">
             {itinerario.avisos.map((aviso) => (
               <li
-                key={aviso}
+                key={aviso.codigo}
                 className="flex items-start gap-2 text-sm text-sobre-terciario-contenedor"
               >
                 <span aria-hidden="true">•</span>
-                <span>{aviso}</span>
+                <span>{redactarAviso(t, aviso)}</span>
               </li>
             ))}
           </ul>

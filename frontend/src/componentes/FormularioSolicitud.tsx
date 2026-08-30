@@ -18,17 +18,19 @@
  */
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
 import { useSesion } from '@/hooks/useSesion';
 import {
   comprobarDisponibilidad,
   crearSolicitud,
-  ErrorDeApi,
   type ServicioPublico,
   type SolicitudPublica,
 } from '@/servicios/api';
 import { formatearPrecio } from '@/utilidades/formato';
+import { redactarAviso } from '@/utilidades/avisos';
+import { traducirError } from '@/utilidades/avisos';
 
 interface Propiedades {
   servicio: ServicioPublico;
@@ -176,8 +178,8 @@ export default function FormularioSolicitud({
               </p>
               <ul className="mt-1 space-y-0.5">
                 {disponibilidad.data.motivos.map((motivo) => (
-                  <li key={motivo} className="text-sm text-sobre-terciario-contenedor">
-                    • {motivo}
+                  <li key={motivo.codigo} className="text-sm text-sobre-terciario-contenedor">
+                    • {redactarAviso(t, motivo)}
                   </li>
                 ))}
               </ul>
@@ -263,12 +265,8 @@ export default function FormularioSolicitud({
  * motivos. Enseñar «no se pudo enviar» y tirar esa lista sería desperdiciar
  * justo la información que el visitante necesita para arreglarlo.
  */
-function mensajeDeError(error: unknown, t: (clave: string) => string): string {
-  if (error instanceof ErrorDeApi) {
-    return error.message;
-  }
-
-  return t('coordinacion.errorAlEnviar');
+function mensajeDeError(error: unknown, t: TFunction): string {
+  return traducirError(t, error, t('coordinacion.errorAlEnviar'));
 }
 
 /** Un campo de formulario con su etiqueta asociada. */

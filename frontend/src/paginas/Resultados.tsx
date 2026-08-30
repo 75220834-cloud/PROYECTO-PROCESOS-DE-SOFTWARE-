@@ -22,6 +22,8 @@ import { ResumenPreferencia } from '@/componentes/ResumenPreferencia';
 import { TarjetaRecomendacion } from '@/componentes/TarjetaRecomendacion';
 import { useSesion } from '@/hooks/useSesion';
 import { obtenerPreferencia, obtenerRecomendaciones } from '@/servicios/api';
+import { redactarAviso } from '@/utilidades/avisos';
+import { traducirError } from '@/utilidades/avisos';
 
 export function Resultados() {
   const { t } = useTranslation();
@@ -61,7 +63,7 @@ export function Resultados() {
   if (isError || !resultado) {
     return (
       <main className="mx-auto max-w-contenido px-4 py-16 sm:px-6">
-        <p className="text-error">{(error as Error)?.message ?? t('resultados.error')}</p>
+        <p className="text-error">{traducirError(t, error, t('resultados.error'))}</p>
         <Link
           to="/preferencias"
           className="mt-4 inline-block font-semibold text-primario underline"
@@ -140,10 +142,10 @@ export function Resultados() {
 
       {resultado.avisos.map((aviso) => (
         <p
-          key={aviso}
+          key={aviso.codigo}
           className="mt-3 rounded-md bg-terciario-contenedor px-4 py-2.5 text-sm text-sobre-terciario-contenedor"
         >
-          {aviso}
+          {redactarAviso(t, aviso)}
         </p>
       ))}
 
@@ -193,7 +195,9 @@ export function Resultados() {
                   className="flex flex-wrap items-baseline gap-x-2 text-sm"
                 >
                   <span className="font-medium text-sobre-superficie">{descartado.nombre}</span>
-                  <span className="text-sobre-superficie-variante">— {descartado.motivo}</span>
+                  <span className="text-sobre-superficie-variante">
+                    — {redactarAviso(t, descartado.motivo)}
+                  </span>
                 </li>
               ))}
             </ul>

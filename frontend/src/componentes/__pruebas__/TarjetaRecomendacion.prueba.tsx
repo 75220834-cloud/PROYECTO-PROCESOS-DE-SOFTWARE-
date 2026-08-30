@@ -29,7 +29,7 @@ const RECOMENDACION: RecomendacionPublica = {
   intereses_cubiertos: ['artesania'],
   afluencia: {
     nivel: 'alto',
-    motivo: 'Hoy hay Feria Dominical en Huancayo',
+    motivo: { codigo: 'afluencia_feria_dominical', parametros: {} },
     festividades: [],
     calculado_por: 'reglas',
   },

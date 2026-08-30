@@ -124,3 +124,33 @@ def csv_de_ejemplo(tmp_path: Path) -> Path:
     ruta = tmp_path / "inventario_de_prueba.csv"
     ruta.write_bytes(contenido.encode("cp1252"))
     return ruta
+
+
+def codigos(avisos: list) -> set[str]:
+    """Los códigos de una lista de avisos, vengan del API o de un servicio.
+
+    Desde la Fase 7 los avisos son ``{codigo, parametros}`` y no frases. Las
+    pruebas afirman sobre el código, que es lo que decide el backend; la frase
+    la elige la interfaz según el idioma.
+
+    El cambio no es cosmético: antes, retocar una coma en un aviso rompía
+    pruebas que no tenían nada que ver con lo que se estaba tocando.
+
+    Acepta las dos formas porque las pruebas de servicio reciben objetos
+    ``Aviso`` y las de endpoint reciben diccionarios ya serializados.
+    """
+    return {aviso["codigo"] if isinstance(aviso, dict) else aviso.codigo for aviso in avisos}
+
+
+def parametros_de(avisos: list, codigo: str) -> dict:
+    """Los parámetros del aviso con ese código. Falla si no está.
+
+    Se usa cuando la prueba comprueba **qué dato** lleva el aviso —cuántos
+    recursos, cuántos metros—, no solo que se emitió.
+    """
+    for aviso in avisos:
+        actual = aviso["codigo"] if isinstance(aviso, dict) else aviso.codigo
+        if actual == codigo:
+            return aviso["parametros"] if isinstance(aviso, dict) else aviso.parametros
+
+    raise AssertionError(f"No se emitió ningún aviso «{codigo}». Se emitieron: {codigos(avisos)}")

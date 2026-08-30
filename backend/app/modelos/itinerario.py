@@ -18,11 +18,12 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
-    Text,
     Time,
     UniqueConstraint,
     func,
+    text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.base_datos import Base
@@ -96,7 +97,15 @@ class Itinerario(Base):
     generado_por: Mapped[str] = mapped_column(String(16), nullable=False, default="modelo")
 
     #: Avisos que hay que mostrar: tramos estimados, altitud, esfuerzo del día.
-    avisos: Mapped[str | None] = mapped_column(Text)
+    #:
+    #: Se guardan como JSONB —una lista de ``{codigo, parametros}``— y no como
+    #: texto concatenado, porque desde la Fase 7 un aviso **es un dato**: se
+    #: puede contar cuántos itinerarios avisaron de altitud sin buscar
+    #: subcadenas, y la interfaz lo redacta en el idioma del visitante. Ver
+    #: `servicios/avisos.py` para el razonamiento completo.
+    avisos: Mapped[list[dict]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
 
     creado_en: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), index=True

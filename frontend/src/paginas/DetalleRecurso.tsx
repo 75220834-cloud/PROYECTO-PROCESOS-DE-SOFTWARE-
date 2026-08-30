@@ -17,7 +17,7 @@ import { obtenerRecurso, type RasgoRecurso } from '@/servicios/api';
 import { formatearCategoria, formatearNombrePropio } from '@/utilidades/formato';
 
 export function DetalleRecurso() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const identificador = Number(id);
 
@@ -144,7 +144,13 @@ export function DetalleRecurso() {
             {t('detalle.descripcion')}
           </h2>
           <p className="mt-3 text-sobre-superficie-variante">
-            {recurso.descripcion_es ?? t('detalle.sin_descripcion')}
+            {/* El catálogo guarda las dos versiones. Antes se pintaba siempre
+                la española, así que la columna en inglés no se usaba nunca.
+                Si falta la del idioma pedido se cae a la otra: media ficha en
+                el idioma equivocado informa más que ninguna. */}
+            {(i18n.language.startsWith('en')
+              ? (recurso.descripcion_en ?? recurso.descripcion_es)
+              : (recurso.descripcion_es ?? recurso.descripcion_en)) ?? t('detalle.sin_descripcion')}
           </p>
         </section>
 

@@ -6,6 +6,10 @@
  */
 
 /** Dirección del backend. Viene del .env; en desarrollo es localhost:8000. */
+import type { AvisoDelBackend } from '@/utilidades/avisos';
+
+export type { AvisoDelBackend };
+
 export const URL_API = import.meta.env.VITE_URL_API ?? 'http://localhost:8000';
 
 // ---------------------------------------------------------------------------
@@ -253,11 +257,41 @@ export class ErrorDeApi extends Error {
   // tipos que se pueda borrar sin dejar rastro.
   readonly estado: number;
 
-  constructor(estado: number, mensaje: string) {
+  /**
+   * Los motivos, cuando el error trae varios.
+   *
+   * Solo lo llena el 409 al pedir un servicio no disponible, que devuelve
+   * TODOS los motivos y no el primero: decirle a alguien «no hay sitio» y,
+   * cuando lo arregla, «además llegas tarde», hace abandonar un formulario.
+   *
+   * Van sin redactar, como el resto de avisos. `traducirError` los junta.
+   */
+  readonly motivos: AvisoDelBackend[];
+
+  constructor(estado: number, mensaje: string, motivos: AvisoDelBackend[] = []) {
     super(mensaje);
     this.name = 'ErrorDeApi';
     this.estado = estado;
+    this.motivos = motivos;
   }
+}
+
+/**
+ * Los motivos de un error, si los trae.
+ *
+ * Se saca aparte de `mensajeDeError` porque esa función devuelve un texto y
+ * estos son datos: aplanarlos ahí obligaría a volver a partirlos después.
+ */
+function motivosDeError(cuerpo: unknown): AvisoDelBackend[] {
+  if (typeof cuerpo !== 'object' || cuerpo === null || !('detail' in cuerpo)) return [];
+
+  const detalle = (cuerpo as { detail: unknown }).detail;
+
+  if (typeof detalle !== 'object' || detalle === null || Array.isArray(detalle)) return [];
+
+  const motivos = (detalle as { motivos?: unknown }).motivos;
+
+  return Array.isArray(motivos) ? (motivos as AvisoDelBackend[]) : [];
 }
 
 /** Extrae un mensaje legible del cuerpo de error que devuelve FastAPI. */
@@ -276,14 +310,12 @@ function mensajeDeError(cuerpo: unknown, estado: number): string {
     // Cuando un servicio no está disponible, la API devuelve el motivo (o los
     // motivos) dentro de un objeto. Sin este caso se perdían y el visitante
     // veía «La API respondió 409», que no le dice cómo arreglarlo.
+    // Los errores propios viajan como { codigo }, no como frase: se devuelve
+    // el código y la interfaz lo redacta con traducirError.
     if (typeof detalle === 'object' && detalle !== null) {
-      const conMotivos = detalle as { mensaje?: string; motivos?: unknown };
+      const conCodigo = detalle as { codigo?: unknown };
 
-      if (Array.isArray(conMotivos.motivos) && conMotivos.motivos.length > 0) {
-        return conMotivos.motivos.filter((m) => typeof m === 'string').join(' ');
-      }
-
-      if (typeof conMotivos.mensaje === 'string') return conMotivos.mensaje;
+      if (typeof conCodigo.codigo === 'string') return conCodigo.codigo;
     }
   }
 
@@ -309,7 +341,11 @@ async function enviar<T>(
   const datos = await respuesta.json().catch(() => null);
 
   if (!respuesta.ok) {
-    throw new ErrorDeApi(respuesta.status, mensajeDeError(datos, respuesta.status));
+    throw new ErrorDeApi(
+      respuesta.status,
+      mensajeDeError(datos, respuesta.status),
+      motivosDeError(datos),
+    );
   }
 
   return datos as T;
@@ -324,7 +360,11 @@ async function obtenerConToken<T>(ruta: string, token: string | null): Promise<T
   const datos = await respuesta.json().catch(() => null);
 
   if (!respuesta.ok) {
-    throw new ErrorDeApi(respuesta.status, mensajeDeError(datos, respuesta.status));
+    throw new ErrorDeApi(
+      respuesta.status,
+      mensajeDeError(datos, respuesta.status),
+      motivosDeError(datos),
+    );
   }
 
   return datos as T;
@@ -390,7 +430,8 @@ export function reclamarPreferencia(id: number, token: string): Promise<Preferen
 /** Cuánta gente se espera en un sitio, y por qué. */
 export interface AfluenciaEstimada {
   nivel: 'bajo' | 'medio' | 'alto';
-  motivo: string;
+  /** Por qué, como código y parámetros: se redacta con `redactarAviso`. */
+  motivo: AvisoDelBackend;
   festividades: string[];
   calculado_por: 'modelo' | 'reglas';
 }
@@ -419,7 +460,8 @@ export interface RecomendacionPublica {
 export interface RecursoDescartado {
   recurso_id: number;
   nombre: string;
-  motivo: string;
+  /** Por qué quedó fuera, como código y parámetros. */
+  motivo: AvisoDelBackend;
 }
 
 /** Respuesta completa de la recomendación. */
@@ -432,7 +474,7 @@ export interface RespuestaRecomendacion {
   total_descartados: number;
   recomendaciones: RecomendacionPublica[];
   descartados: RecursoDescartado[];
-  avisos: string[];
+  avisos: AvisoDelBackend[];
 }
 
 /** Una festividad del calendario del valle. */
@@ -537,7 +579,7 @@ export interface RespuestaItinerario {
   subida_total_m: number;
   esfuerzo: 'suave' | 'moderado' | 'exigente';
   hay_tramos_estimados: boolean;
-  avisos: string[];
+  avisos: AvisoDelBackend[];
 }
 
 /** Un itinerario guardado, tal como aparece en el listado. */
@@ -683,7 +725,8 @@ export interface RespuestaDisponibilidad {
   fecha: string;
   numero_personas: number;
   hay_disponibilidad: boolean;
-  motivos: string[];
+  /** Todos los motivos por los que no se puede pedir así, como códigos. */
+  motivos: AvisoDelBackend[];
   plazas_libres: number | null;
 }
 
@@ -948,21 +991,28 @@ export interface ResumenDeEvidencia {
   evolucion: PuntoEnElTiempo[];
   analizadas_por_modelo: number;
   analizadas_por_reglas: number;
-  /** Avisos sobre la fiabilidad de lo que se muestra. */
-  avisos: string[];
+  /** Avisos sobre la fiabilidad de lo que se muestra, como códigos. */
+  avisos: AvisoDelBackend[];
 }
 
 /** Un indicador cualquiera, en la forma en que lo muestra el tablero. */
 export interface IndicadorDelIncremento {
+  /**
+   * Qué incremento mide. **De aquí salen el nombre, la brecha y la
+   * salvedad**: son constantes por indicador y viven en los archivos de
+   * idioma, bajo `indicadores.{numero}`.
+   */
   incremento: number;
-  nombre: string;
-  brecha: string;
+  /** Cifra con símbolo. Vacío cuando el valor es una frase traducible. */
   valor: string;
-  detalle: string | null;
+  /** Para los indicadores cuyo valor es una frase y no una cifra. */
+  valor_traducible: AvisoDelBackend | null;
+  /** El contexto del valor, como código y parámetros. */
+  detalle: AvisoDelBackend | null;
   /** `false` cuando todavía no se puede medir. Cero es una medición; esto no. */
   hay_dato: boolean;
-  /** Lo que este indicador NO dice. Va en el dato para que no se lea sin él. */
-  salvedad: string | null;
+  /** Por qué no hay dato todavía, cuando `hay_dato` es falso. */
+  sin_dato_porque: AvisoDelBackend | null;
 }
 
 /** Los seis indicadores del proyecto en un solo lugar. */

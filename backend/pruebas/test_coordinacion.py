@@ -33,6 +33,7 @@ from app.modelos.coordinacion import (
 )
 from app.modelos.usuario import RolUsuario
 from app.servicios.usuarios import registrar_usuario
+from pruebas.conftest import codigos
 
 #: Fecha del servicio en las pruebas: un sábado lejano, para que siempre pase
 #: el filtro de antelación mínima y el día de la semana sea estable.
@@ -251,7 +252,7 @@ class TestDisponibilidad:
 
         cuerpo = respuesta.json()
         assert cuerpo["hay_disponibilidad"] is False
-        assert any("máximo" in m for m in cuerpo["motivos"])
+        assert "supera_la_capacidad" in codigos(cuerpo["motivos"])
 
     def test_rechaza_si_no_hay_antelacion_suficiente(
         self, cliente: TestClient, sesion: Session, escenario: dict
@@ -264,7 +265,7 @@ class TestDisponibilidad:
 
         cuerpo = respuesta.json()
         assert cuerpo["hay_disponibilidad"] is False
-        assert any("antelación" in m for m in cuerpo["motivos"])
+        assert "falta_antelacion" in codigos(cuerpo["motivos"])
 
     def test_rechaza_los_dias_en_que_el_proveedor_no_atiende(
         self, cliente: TestClient, sesion: Session, escenario: dict
@@ -283,7 +284,7 @@ class TestDisponibilidad:
 
         cuerpo = respuesta.json()
         assert cuerpo["hay_disponibilidad"] is False
-        assert any("no atiende los" in m for m in cuerpo["motivos"])
+        assert "no_atiende_ese_dia" in codigos(cuerpo["motivos"])
 
     def test_rechaza_las_horas_fuera_del_tramo(self, cliente: TestClient, escenario: dict):
         respuesta = cliente.post(
@@ -293,7 +294,7 @@ class TestDisponibilidad:
 
         cuerpo = respuesta.json()
         assert cuerpo["hay_disponibilidad"] is False
-        assert any("A esa hora no atiende" in m for m in cuerpo["motivos"])
+        assert "no_atiende_a_esa_hora" in codigos(cuerpo["motivos"])
 
     def test_devuelve_todos_los_motivos_y_no_solo_el_primero(
         self, cliente: TestClient, escenario: dict
@@ -436,7 +437,7 @@ class TestCicloDeUnaSolicitud:
         )
 
         assert respuesta.status_code == 422
-        assert "precio acordado" in respuesta.json()["detail"]
+        assert respuesta.json()["detail"]["codigo"] == "falta_precio_acordado"
 
     def test_una_solicitud_rechazada_no_resucita(self, cliente: TestClient, escenario: dict):
         solicitud = pedir(cliente, escenario["servicio_a"].id)
@@ -609,7 +610,7 @@ class TestPermisos:
         )
 
         assert respuesta.status_code == 403
-        assert "Solo los proveedores" in respuesta.json()["detail"]
+        assert respuesta.json()["detail"]["codigo"] == "solo_proveedores_publican"
 
     def test_sin_sesion_no_se_puede_publicar_servicios(self, cliente: TestClient):
         respuesta = cliente.post(
@@ -681,7 +682,7 @@ class TestPermisos:
         )
 
         assert respuesta.status_code == 403
-        assert "no es tuyo" in respuesta.json()["detail"]
+        assert respuesta.json()["detail"]["codigo"] == "servicio_ajeno"
 
 
 # ---------------------------------------------------------------------------

@@ -315,7 +315,7 @@ def test_al_recortar_por_falta_de_tiempo_se_avisa():
 
     assert len(paradas) < len(orden)
     assert avisos, "se recortaron paradas sin decírselo a nadie"
-    assert "quitaron" in avisos[0]
+    assert avisos[0].codigo == "paradas_recortadas"
 
 
 # ---------------------------------------------------------------------------

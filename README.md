@@ -551,38 +551,66 @@ y fuente, y se muestran con la palabra «aprox.» y la fecha visible.
 
 Se declaran aquí en vez de esperar a que alguien las descubra.
 
-### La interfaz está en dos idiomas; los avisos del backend, no
+### La aplicación está entera en dos idiomas
 
-Las 467 cadenas de la interfaz están traducidas al español y al inglés, y
-coinciden una a una. Se comprobó recorriendo las doce rutas en inglés.
+Las **581 cadenas** de la interfaz están en español y en inglés, y coinciden
+una a una.
 
-Lo que **no** está traducido son los textos que redacta el backend: los avisos
-del itinerario («este tramo se estimó en línea recta»), las salvedades del
-tablero del gestor («solo hay 4 valoraciones») y los mensajes de error. Son 71
-cadenas repartidas por cuatro módulos de servicio, y viajan como texto ya
-escrito, no como claves que la interfaz pueda traducir.
+Los avisos que redacta el backend —los del itinerario, las salvedades del
+tablero, los motivos de afluencia y los mensajes de error— **también**. No
+viajan como frases sino como un código y sus datos:
 
-Un visitante que use la aplicación en inglés verá la interfaz en inglés y esos
-avisos concretos en español.
+```json
+{ "codigo": "altitud", "parametros": { "metros": 3706 } }
+```
 
-Arreglarlo bien exige convertir esas 71 cadenas en claves con parámetros y
-traducirlas en el frontend. No se hizo por su tamaño y por el riesgo de tocar
-código que funciona; queda identificado y acotado.
+La interfaz los redacta con i18next. Eso resuelve además la concordancia de
+número: «1 valoración» y «4 valoraciones» salen de la misma clave, y en inglés
+salen bien sin escribir dos veces la frase.
 
-La excepción que sí es correcta: **el asistente conversacional responde en el
-idioma en que se le escribe**, porque es el modelo quien redacta.
+Son **67 códigos**. Una prueba lee la lista del propio archivo de Python y
+falla si a alguno le falta su frase en cualquiera de los dos idiomas, así que
+no se puede añadir un aviso y olvidar traducirlo.
 
-### Los nombres del catálogo no se traducen, y es deliberado
+**El asistente conversacional responde en el idioma en que se le escribe**,
+porque ahí quien redacta es el modelo.
 
-«Convento De Santa Rosa De Ocopa» se llama así en inglés también. Son nombres
-propios del inventario del MINCETUR: traducirlos sería inventarse un nombre
-que nadie usa y que no aparecería en ningún cartel del valle.
+### Lo que sí sigue en un solo idioma, y por qué
+
+- **Los nombres del catálogo.** «Convento De Santa Rosa De Ocopa» se llama así
+  en inglés también. Son nombres propios del inventario del MINCETUR:
+  traducirlos sería inventarse un nombre que no aparece en ningún cartel del
+  valle.
+- **Las descripciones de los servicios de los proveedores.** La tabla
+  `servicio` tiene una sola columna `descripcion`, no una por idioma. Es
+  contenido que escribe el proveedor, y obligarle a redactar en dos idiomas es
+  una decisión de producto, no un fallo. El catálogo sí guarda las dos
+  versiones (`descripcion_es` y `descripcion_en`) y la ficha muestra la que
+  corresponde al idioma elegido.
+
+### El inventario del MINCETUR no trae descripciones
+
+Ninguno de los 295 recursos tiene texto descriptivo en la fuente: las dos
+columnas están vacías. La ficha lo dice en vez de rellenarlo con texto
+inventado.
 
 ### No hay horarios de atención
 
-El inventario del MINCETUR no publica horarios. La restricción está
-implementada y probada con horarios insertados a mano, y el itinerario avisa
-al visitante de que no puede garantizar que un sitio esté abierto.
+El inventario tampoco publica horarios. La restricción está implementada y
+probada con horarios insertados a mano, y el itinerario avisa al visitante de
+que no puede garantizar que un sitio esté abierto.
+
+### No existe ninguna fuente publicada de tarifas del valle
+
+Los precios de transporte se estiman con una fórmula documentada, y se
+muestran siempre con «aprox.» y su fecha de referencia. Ver
+[cómo se calculan las tarifas](docs/decisiones/2026-08-29-como-se-calculan-las-tarifas-de-transporte.md).
+
+### Los volúmenes son pequeños
+
+Con los datos de demostración hay pocas valoraciones, pocos itinerarios y una
+sola solicitud. Los indicadores funcionan, pero **casi nada es
+estadísticamente sólido**, y el propio tablero lo avisa antes que los números.
 
 ---
 

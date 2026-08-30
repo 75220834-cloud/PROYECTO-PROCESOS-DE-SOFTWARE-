@@ -32,6 +32,7 @@ from app.ia.sentimiento import analizar
 from app.modelos.coordinacion import EstadoSolicitud, SolicitudCoordinacion
 from app.modelos.itinerario import Itinerario
 from app.modelos.valoracion import Valoracion
+from app.servicios.avisos import aviso
 from app.servicios.evidencia import resumir_evidencia
 from app.servicios.validacion_catalogo import obtener_ultimo_registro
 from app.utilidades.dependencias import ConfiguracionInyectada, SesionBD, UsuarioOpcional
@@ -95,7 +96,7 @@ def crear_valoracion(
     if itinerario is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe un itinerario con ese identificador",
+            detail={"codigo": "sin_itinerario"},
         )
 
     # Los itinerarios con dueño solo los valora su dueño. 404 y no 403 para no
@@ -105,7 +106,7 @@ def crear_valoracion(
     ):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe un itinerario con ese identificador",
+            detail={"codigo": "sin_itinerario"},
         )
 
     _comprobar_que_no_esta_repetida(sesion, datos)
@@ -159,7 +160,7 @@ def _comprobar_que_no_esta_repetida(sesion: SesionBD, datos: ValoracionNueva) ->
     if ya_existe is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Ya valoraste esto en este itinerario. Solo se admite una valoración.",
+            detail={"codigo": "ya_valoraste"},
         )
 
 
@@ -294,24 +295,19 @@ def _indicador_1_catalogo(sesion: SesionBD) -> IndicadorDelIncremento:
     if registro is None:
         return IndicadorDelIncremento(
             incremento=1,
-            nombre="Oferta validada y vigente",
-            brecha="1 — no existe una fuente integrada, oficial y actualizada",
             valor="—",
             hay_dato=False,
-            salvedad="Todavía no se ha ejecutado la validación del catálogo.",
+            sin_dato_porque=aviso("sin_validacion_todavia").a_diccionario(),
         )
 
     return IndicadorDelIncremento(
         incremento=1,
-        nombre="Oferta validada y vigente",
-        brecha="1 — no existe una fuente integrada, oficial y actualizada",
         valor=f"{registro.porcentaje_validado:.2f} %",
-        detalle=f"{registro.validados} de {registro.total_recursos} recursos del MINCETUR",
-        salvedad=(
-            "«Validado» significa que pasa las comprobaciones automáticas de "
-            "coordenadas, provincia y vigencia. No significa que alguien haya ido a "
-            "comprobarlo sobre el terreno."
-        ),
+        detalle=aviso(
+            "detalle_indicador_1",
+            validados=registro.validados,
+            total=registro.total_recursos,
+        ).a_diccionario(),
     )
 
 
@@ -328,24 +324,17 @@ def _indicador_2_preferencias(sesion: SesionBD) -> IndicadorDelIncremento:
     if total == 0:
         return IndicadorDelIncremento(
             incremento=2,
-            nombre="Preferencias que llegan a itinerario",
-            brecha="3 — las preferencias no se registran ni se usan",
             valor="—",
             hay_dato=False,
-            salvedad="Todavía no hay preferencias registradas.",
+            sin_dato_porque=aviso("sin_preferencias_todavia").a_diccionario(),
         )
 
     return IndicadorDelIncremento(
         incremento=2,
-        nombre="Preferencias que llegan a itinerario",
-        brecha="3 — las preferencias no se registran ni se usan",
         valor=f"{100 * con_itinerario / total:.1f} %",
-        detalle=f"{con_itinerario} de {total} preferencias",
-        salvedad=(
-            "El indicador que proponía el plan era el TIEMPO entre preferencias y "
-            "confirmación. Sin uso real no hay tiempos que medir, así que se mide "
-            "cuántas preferencias llegan a convertirse en un plan."
-        ),
+        detalle=aviso(
+            "detalle_indicador_2", con_itinerario=con_itinerario, total=total
+        ).a_diccionario(),
     )
 
 
@@ -355,15 +344,8 @@ def _indicador_3_recomendaciones(sesion: SesionBD) -> IndicadorDelIncremento:
 
     return IndicadorDelIncremento(
         incremento=3,
-        nombre="Recomendaciones sin error",
-        brecha="2 y 3 — el análisis recae en el visitante, sin criterios explícitos",
         valor="100 %",
-        detalle="Ninguna recomendación viola una restricción declarada",
-        salvedad=(
-            "Mide que no se contradiga ninguna restricción del visitante (alcance, "
-            "presupuesto, intereses, validación). NO mide si son las que la persona "
-            "habría elegido: eso exigiría un conjunto anotado que nadie ha construido."
-        ),
+        detalle=aviso("detalle_indicador_3").a_diccionario(),
     )
 
 
@@ -373,15 +355,8 @@ def _indicador_4_itinerarios(sesion: SesionBD) -> IndicadorDelIncremento:
 
     return IndicadorDelIncremento(
         incremento=4,
-        nombre="Itinerarios viables y trazables",
-        brecha="4 — el proceso no incorpora la distribución geográfica ni el costo",
-        valor="4 de 4 perfiles",
-        detalle=f"{total} itinerarios guardados · peor caso medido 5,05 s de 10 s",
-        salvedad=(
-            "El plan proponía «error medio entre tiempo estimado y real». No es "
-            "medible sin tiempos cronometrados en campo, que no existen. Se mide "
-            "que el itinerario no contradiga ninguna de sus propias restricciones."
-        ),
+        valor_traducible=aviso("valor_indicador_4", perfiles=4).a_diccionario(),
+        detalle=aviso("detalle_indicador_4", guardados=total).a_diccionario(),
     )
 
 
@@ -398,15 +373,8 @@ def _indicador_5_coordinacion(sesion: SesionBD) -> IndicadorDelIncremento:
 
     return IndicadorDelIncremento(
         incremento=5,
-        nombre="Canales para confirmar un servicio",
-        brecha="5 y 6 — capacidad no verificable, sin punto único ni registro",
-        valor="1 canal",
-        detalle=f"{confirmadas} de {total} solicitudes confirmadas · antes 3 o más canales",
-        salvedad=(
-            "El número de canales es estructural y sí es válido. Las horas medias "
-            "hasta confirmar NO significan nada: los proveedores son de "
-            "demostración y el ciclo se ejecuta en segundos."
-        ),
+        valor_traducible=aviso("valor_indicador_5", canales=1).a_diccionario(),
+        detalle=aviso("detalle_indicador_5", confirmadas=confirmadas, total=total).a_diccionario(),
     )
 
 
@@ -419,21 +387,15 @@ def _indicador_6_evidencia(sesion: SesionBD) -> IndicadorDelIncremento:
     if total == 0:
         return IndicadorDelIncremento(
             incremento=6,
-            nombre="Experiencias con valoración",
-            brecha="7 — la retroalimentación no retorna estructurada",
             valor="—",
             hay_dato=False,
-            salvedad="Todavía no hay itinerarios guardados que valorar.",
+            sin_dato_porque=aviso("sin_itinerarios_todavia").a_diccionario(),
         )
 
     return IndicadorDelIncremento(
         incremento=6,
-        nombre="Experiencias con valoración",
-        brecha="7 — la retroalimentación no retorna estructurada",
         valor=f"{porcentaje:.1f} %",
-        detalle=f"{con_valoracion} de {total} itinerarios valorados",
-        salvedad=(
-            "Se cuenta sobre itinerarios y no sobre valoraciones: diez opiniones de "
-            "un mismo viaje siguen siendo una experiencia."
-        ),
+        detalle=aviso(
+            "detalle_indicador_6", con_valoracion=con_valoracion, total=total
+        ).a_diccionario(),
     )

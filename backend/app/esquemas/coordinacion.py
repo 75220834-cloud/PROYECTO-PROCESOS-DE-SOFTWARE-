@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.esquemas.avisos import AvisoPublico
+
 TipoServicioLiteral = Literal[
     "transporte", "alimentacion", "hospedaje", "guiado", "taller", "artesania"
 ]
@@ -92,7 +94,7 @@ class RespuestaDisponibilidad(BaseModel):
     fecha: date
     numero_personas: int
     hay_disponibilidad: bool
-    motivos: list[str] = Field(default_factory=list)
+    motivos: list[AvisoPublico] = Field(default_factory=list)
     plazas_libres: int | None = None
 
 

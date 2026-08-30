@@ -37,6 +37,7 @@ from sqlalchemy.orm import Session
 from app.modelos.catalogo import RecursoTuristico
 from app.modelos.itinerario import Itinerario
 from app.modelos.valoracion import RegistroDeEvidencia, Sentimiento, Valoracion
+from app.servicios.avisos import Aviso, aviso
 
 #: Cuántas valoraciones hacen falta para que una media signifique algo.
 #:
@@ -146,8 +147,10 @@ class ResumenDeEvidencia:
     analizadas_por_modelo: int = 0
     analizadas_por_reglas: int = 0
 
-    #: Avisos sobre la fiabilidad de lo que se está mostrando.
-    avisos: list[str] = field(default_factory=list)
+    #: Avisos sobre la fiabilidad de lo que se está mostrando, como código
+    #: y parámetros; la interfaz los redacta. Ver
+    #: `servicios/avisos.py` para por qué no viajan ya escritos.
+    avisos: list[Aviso] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -324,10 +327,7 @@ def resumir_evidencia(sesion: Session) -> ResumenDeEvidencia:
     resumen.total_valoraciones = sesion.scalar(select(func.count()).select_from(Valoracion)) or 0
 
     if resumen.total_valoraciones == 0:
-        resumen.avisos.append(
-            "Todavía no hay ninguna valoración registrada. El tablero se llena "
-            "cuando los visitantes empiezan a valorar sus itinerarios."
-        )
+        resumen.avisos.append(aviso("sin_valoraciones"))
         return resumen
 
     resumen.con_comentario = (
@@ -404,42 +404,36 @@ def _agregar_avisos(resumen: ResumenDeEvidencia, valorados: list[RecursoValorado
     # «valoración(es)» es cómodo de programar y desagradable de leer, y este
     # tablero lo va a leer un gestor municipal, no un programador.
     if resumen.total_valoraciones < MINIMO_PARA_FIARSE:
-        cuantas = resumen.total_valoraciones
         resumen.avisos.append(
-            f"Solo hay {cuantas} {'valoración' if cuantas == 1 else 'valoraciones'}. "
-            "Las medias de este tablero son orientativas hasta que haya al menos "
-            f"{MINIMO_PARA_FIARSE}."
+            aviso(
+                "pocas_valoraciones",
+                cuantas=resumen.total_valoraciones,
+                minimo=MINIMO_PARA_FIARSE,
+            )
         )
 
     poco_fiables = sum(1 for recurso in valorados if not recurso.es_fiable)
 
     if poco_fiables:
-        # «1 de los 1 recursos valorados tienen» era lo que salía antes.
-        de_cuantos = (
-            f"de {len(valorados)} recurso valorado tiene"
-            if len(valorados) == 1
-            else f"de los {len(valorados)} recursos valorados tienen"
-        )
+        # Los plurales los resuelve i18next: «1 de 1 recurso valorado tiene»
+        # frente a «3 de los 5 recursos valorados tienen». Concordarlos aquí
+        # a mano fue justamente lo que produjo «1 de los 1 recursos».
         resumen.avisos.append(
-            f"{poco_fiables} {de_cuantos} menos de {MINIMO_PARA_FIARSE} "
-            "valoraciones. Su media se mueve mucho con cada opinión nueva."
+            aviso(
+                "recursos_poco_fiables",
+                cuantos=poco_fiables,
+                total=len(valorados),
+                minimo=MINIMO_PARA_FIARSE,
+            )
         )
 
     sin_comentario = resumen.total_valoraciones - resumen.con_comentario
 
     if sin_comentario:
-        resumen.avisos.append(
-            f"{sin_comentario} "
-            f"{'valoración no trae' if sin_comentario == 1 else 'valoraciones no traen'} "
-            "comentario. De esas solo se conoce la puntuación, no de qué hablan."
-        )
+        resumen.avisos.append(aviso("valoraciones_sin_comentario", cuantas=sin_comentario))
 
     if resumen.analizadas_por_reglas and not resumen.analizadas_por_modelo:
-        resumen.avisos.append(
-            "Todas las valoraciones se analizaron con la alternativa por reglas, "
-            "no con el modelo de lenguaje. Es peor leyendo matices y expresiones "
-            "que no están en su diccionario."
-        )
+        resumen.avisos.append(aviso("todo_por_reglas"))
 
 
 # ---------------------------------------------------------------------------

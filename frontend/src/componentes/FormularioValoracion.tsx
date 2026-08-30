@@ -22,7 +22,8 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useSesion } from '@/hooks/useSesion';
-import { crearValoracion, ErrorDeApi, type ValoracionPublica } from '@/servicios/api';
+import { crearValoracion, type ValoracionPublica } from '@/servicios/api';
+import { traducirError } from '@/utilidades/avisos';
 
 /** Las cinco estrellas, de menos a más. */
 const ESTRELLAS = [1, 2, 3, 4, 5];
@@ -143,7 +144,7 @@ export default function FormularioValoracion({
 
       {envio.isError && (
         <p className="mt-3 text-sm text-sobre-error-contenedor" role="alert">
-          {envio.error instanceof ErrorDeApi ? envio.error.message : t('valoracion.error')}
+          {traducirError(t, envio.error, t('valoracion.error'))}
         </p>
       )}
 

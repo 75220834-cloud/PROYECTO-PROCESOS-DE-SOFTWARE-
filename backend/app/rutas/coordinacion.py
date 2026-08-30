@@ -164,7 +164,7 @@ def _buscar_servicio(sesion: SesionBD, servicio_id: int) -> Servicio:
     if servicio is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe un servicio con ese identificador",
+            detail={"codigo": "sin_servicio"},
         )
 
     return servicio
@@ -272,7 +272,7 @@ def _proveedor_del_que_pide(sesion: SesionBD, usuario) -> Proveedor:
     if usuario.rol != RolUsuario.PROVEEDOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los proveedores pueden publicar servicios",
+            detail={"codigo": "solo_proveedores_publican"},
         )
 
     proveedor = proveedor_del_usuario(sesion, usuario)
@@ -280,10 +280,7 @@ def _proveedor_del_que_pide(sesion: SesionBD, usuario) -> Proveedor:
     if proveedor is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Tu cuenta tiene rol de proveedor pero no está asociada a ninguna "
-                "ficha de proveedor. Pide a un administrador que la asocie."
-            ),
+            detail={"codigo": "proveedor_sin_ficha_asociada"},
         )
 
     return proveedor
@@ -324,7 +321,7 @@ def publicar_tramo(
     if servicio.proveedor_id != proveedor.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Ese servicio no es tuyo",
+            detail={"codigo": "servicio_ajeno"},
         )
 
     sesion.add(DisponibilidadServicio(servicio_id=servicio.id, **datos.model_dump()))
@@ -369,7 +366,12 @@ def crear_solicitud(
     if motivos:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"mensaje": "El servicio no está disponible así", "motivos": motivos},
+            # El «mensaje» va como código igual que los motivos: un 409 se le
+            # enseña al visitante tal cual, así que también tiene que traducirse.
+            detail={
+                "codigo": "servicio_no_disponible",
+                "motivos": [m.a_diccionario() for m in motivos],
+            },
         )
 
     solicitud = SolicitudCoordinacion(
@@ -465,7 +467,7 @@ def consultar_solicitud(
     if not hay_acceso:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una solicitud con ese identificador",
+            detail={"codigo": "sin_solicitud"},
         )
 
     assert solicitud is not None  # ya lo comprobó hay_acceso
@@ -503,7 +505,7 @@ def mover_solicitud(
     if solicitud is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No existe una solicitud con ese identificador",
+            detail={"codigo": "sin_solicitud"},
         )
 
     # Confirmar sin precio dejaría un acuerdo sin la única cifra que importa.
@@ -514,7 +516,7 @@ def mover_solicitud(
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Para confirmar hay que indicar el precio acordado",
+            detail={"codigo": "falta_precio_acordado"},
         )
 
     try:
@@ -621,7 +623,7 @@ def mi_proveedor(sesion: SesionBD, usuario: UsuarioRequerido) -> ProveedorPublic
     if proveedor is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tu cuenta no administra ninguna ficha de proveedor",
+            detail={"codigo": "sin_ficha_de_proveedor"},
         )
 
     return _a_proveedor_publico(proveedor)

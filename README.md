@@ -8,13 +8,17 @@ con orden de visita, medio de transporte, tiempo y costo aproximado.
 Proyecto del curso **Procesos de Software (ASUC01702, NRC 30173)** —
 Universidad Continental, Huancayo. Ciclo 2026-20.
 
-> **Estado actual: Fase 7 completada.** El catálogo tiene **295 recursos**
+> **Estado actual: terminado.** El catálogo tiene **295 recursos**
 > importados del inventario oficial del MINCETUR, con un **79,32 % validado**.
 > El visitante registra lo que quiere de su viaje —sin necesidad de cuenta—,
 > recibe recomendaciones que **explican por qué** se le proponen, obtiene un
 > itinerario de un día con mapa, horas y costo aproximado, coordina servicios
 > con proveedores y valora la experiencia al terminar. Un asistente
 > conversacional permite pedir todo eso hablando, sin cambiar de pantalla.
+>
+> Los datos son reales: 295 atractivos con su descripción y su horario del
+> inventario del MINCETUR, 414 conteos de visitantes, y 162 prestadores
+> certificados por el Estado a los que el visitante puede llamar.
 
 ---
 
@@ -161,7 +165,45 @@ parecido a esto:
 Se puede ejecutar las veces que haga falta: identifica cada recurso por su
 código del MINCETUR, así que actualiza en vez de duplicar.
 
-### 2.6 Crear los usuarios de demostración
+### 2.6 Traer lo que el CSV no publica
+
+El CSV del inventario no trae descripción, ni horario, ni precio. La **ficha
+web** de cada recurso sí, y su dirección ya viene en el CSV. Este guion las
+lee:
+
+```bash
+python -m app.utilidades.cargar_fichas
+```
+
+Tarda unos cinco minutos la primera vez: son 295 páginas de un servicio
+público y se piden **de una en una, con un segundo de espera**, para no
+degradarlo. Cada página se guarda en disco, así que volver a ejecutarlo no
+genera ni una petición.
+
+Debe terminar con algo parecido a esto:
+
+```
+  Leídas: 295   No disponibles: 0
+    descripción       295 de 295  (100 %)
+    horario           208 de 295  ( 71 %)
+    visitantes        207 de 295  ( 70 %)
+  Fiestas del catálogo: 36
+    con fecha en la ficha : 28
+```
+
+### 2.7 Cargar los prestadores reales del valle
+
+162 hospedajes, agencias de viaje y restaurantes que **existen de verdad**,
+del Directorio Nacional de Prestadores de Servicios Turísticos Calificados:
+
+```bash
+python -m app.utilidades.cargar_prestadores
+```
+
+Están certificados por el MINCETUR y traen su RUC y su número de certificado,
+pero **no tienen convenio con este proyecto**. La interfaz lo dice.
+
+### 2.8 Crear los usuarios de demostración
 
 Crea una cuenta por cada rol del proyecto, para poder probar la aplicación sin
 registrarlas a mano:
@@ -182,7 +224,7 @@ python -m app.utilidades.usuarios_semilla
 cualquiera del equipo pueda levantar el proyecto y entrar. El guion se niega a
 ejecutarse si la variable `ENTORNO` del `.env` no dice `desarrollo`.
 
-### 2.7 Crear los proveedores de demostración
+### 2.9 Crear los proveedores de demostración
 
 Los servicios que se pueden coordinar —transporte, talleres, guías,
 restaurantes— necesitan proveedores que los ofrezcan:
@@ -196,7 +238,7 @@ valle, así que todos llevan el sufijo «(demostración)» y teléfonos que empi
 por `+51 900 000`, un rango que no corresponde a ningún número peruano.
 Sirven para enseñar cómo funcionaría la coordinación, no para llamar.
 
-### 2.8 Cargar el calendario festivo
+### 2.10 Cargar el calendario festivo
 
 Vuelca en la base las fiestas del valle. Las móviles —Semana Santa, Carnavales
 y Corpus Christi— se **calculan** con el algoritmo de la Pascua, no se escriben
@@ -206,7 +248,7 @@ a mano:
 python -m app.utilidades.cargar_calendario --desde 2026 --hasta 2028
 ```
 
-### 2.9 Preparar el frontend
+### 2.11 Preparar el frontend
 
 En otra terminal:
 
@@ -226,7 +268,7 @@ Abre <http://localhost:5173>.
 
 ---
 
-### 2.10 Instalar el asistente conversacional (opcional)
+### 2.12 Instalar el asistente conversacional (opcional)
 
 El asistente deja pedir las cosas hablando en vez de rellenando formularios.
 **No añade ninguna capacidad**: todo lo que permite pedir se puede pedir
@@ -376,7 +418,7 @@ Devuelve el estado de los tres componentes de la plataforma:
 
 Si `ollama` aparece como `no_disponible`, el resto de la plataforma funciona
 igual: el asistente es opcional y no aporta ninguna capacidad exclusiva. Para
-habilitarlo, vuelve al paso 2.10.
+habilitarlo, vuelve al paso 2.12.
 
 Comprueba también que las pruebas pasan:
 
@@ -588,19 +630,68 @@ porque ahí quien redacta es el modelo.
   versiones (`descripcion_es` y `descripcion_en`) y la ficha muestra la que
   corresponde al idioma elegido.
 
-### El inventario del MINCETUR no trae descripciones
+### Lo que el CSV no traía, y la ficha web sí
 
-Ninguno de los 295 recursos tiene texto descriptivo en la fuente: las dos
-columnas están vacías. La ficha lo dice en vez de rellenarlo con texto
-inventado.
+Durante seis fases el proyecto declaró dos limitaciones como irresolubles: que
+el inventario del MINCETUR no publica horarios y que no trae descripciones.
 
-### No hay horarios de atención
+**Era verdad del CSV. No de la fuente.** Cada recurso tiene además una ficha
+web en el propio sistema del MINCETUR, y su dirección ya estaba guardada en la
+columna `url_ficha` desde la Fase 1. Nadie había mirado qué hay dentro.
 
-El inventario tampoco publica horarios. La restricción está implementada y
-probada con horarios insertados a mano, y el itinerario avisa al visitante de
-que no puede garantizar que un sitio esté abierto.
+De las 295 fichas leídas, 0 fallidas:
 
-### No existe ninguna fuente publicada de tarifas del valle
+| Dato | Antes | Ahora |
+|---|---|---|
+| Descripciones | 0 | **295** (100 %) |
+| Horarios de atención | 0 | **208** (71 %) |
+| Tipo de ingreso | 0 | **210** (71 %) |
+| Conteos reales de visitantes | 0 | **414 filas** en 207 recursos |
+| Fiestas con su fecha | 0 | **28** de 36 |
+
+Los conteos llegan a 120 889 visitantes locales en el Centro Piscícola El
+Ingenio en 2023. Eran datos públicos que no se estaban usando.
+
+Se leen con `python -m app.utilidades.cargar_fichas`, despacio —un segundo
+entre páginas—, guardando cada una en disco e identificándose en el
+`User-Agent`. Reejecutar el guion no genera ni una petición nueva.
+
+### Lo que la ficha sigue sin decir
+
+**El 29 % de los recursos no tiene horario** en su ficha, y ocho de las 36
+fiestas no precisan su fecha. Para esos, el sistema dice que no lo sabe y el
+itinerario sigue avisando de que no puede garantizar que estén abiertos.
+
+Un campo vacío es información; uno rellenado a ojo es una mentira que nadie va
+a poder detectar después.
+
+### Las fechas de las fiestas se comparan por mes, no por día
+
+Muchas fiestas del valle son móviles: «el último domingo de enero», «fecha
+móvil entre marzo y abril». Convertirlas a un día exacto exigiría calcular el
+calendario litúrgico y adivinar lo que la ficha no dice.
+
+Se guarda **la frase literal** de la ficha —que es lo que el visitante lee— y
+**los meses** que menciona, que es lo que el sistema compara con el viaje. Si
+no coinciden, la fiesta se muestra igual con un aviso en rojo: esconderla
+dejaría al visitante sin saber que existe.
+
+### Los prestadores son reales, pero no tienen convenio con el proyecto
+
+Los 162 hospedajes, agencias y restaurantes del directorio **existen y están
+certificados por el MINCETUR**, con su RUC y su número de certificado. Lo que
+no tienen es ningún trato con este proyecto, y la interfaz lo dice donde se
+lee, no en letra pequeña.
+
+Por eso no se les inventa capacidad, precio ni disponibilidad: eso no está
+publicado. Se enlaza a su teléfono, a su web y a Google Maps para que el
+visitante los contacte él mismo.
+
+Los cinco proveedores **de demostración** siguen ahí, en su propia sección.
+Sin ellos no hay ninguna cuenta que pueda entrar y confirmar una solicitud, y
+el ciclo que cierran las brechas 5 y 6 dejaría de poderse enseñar.
+
+### No existe ninguna fuente publicada de tarifas de transporte
 
 Los precios de transporte se estiman con una fórmula documentada, y se
 muestran siempre con «aprox.» y su fecha de referencia. Ver

@@ -14,7 +14,8 @@
     "planificar": "Plan",
     "cerrar_sesion": "Sign out",
     "coordinar": "Coordinate",
-    "panel": "Dashboard"
+    "panel": "Dashboard",
+    "valorar": "Rate"
   },
   "encabezado": {
     "cambiar_a_oscuro": "Switch to dark theme",
@@ -304,7 +305,10 @@
     "paradasContadas_other": "{{count}} stops",
     "coordinarTitulo": "Need to book anything?",
     "coordinarDetalle": "Food, guiding, transport or lodging for this day, requested from valley providers in one place.",
-    "coordinarBoton": "Coordinate services"
+    "coordinarBoton": "Coordinate services",
+    "valorarTitulo": "Already been?",
+    "valorarDetalle": "Tell us how it went. Your feedback returns to the process and improves what gets recommended to others.",
+    "valorarBoton": "Rate the experience"
   },
   "coordinacion": {
     "titulo": "Coordinate services",
@@ -433,6 +437,75 @@
     "validados": "Validated",
     "vigentes": "Current",
     "porcentajeValidado": "Validated",
-    "fechaMedicion": "Last measured"
+    "fechaMedicion": "Last measured",
+    "pestanaEvidencia": "Evidence",
+    "pestanaIndicadores": "Indicators"
+  },
+  "valoracion": {
+    "titulo": "How was it?",
+    "subtitulo": "Your feedback returns to the process: it improves what gets recommended.",
+    "puntuacion": "Your rating",
+    "estrellas_one": "{{count}} star",
+    "estrellas_other": "{{count}} stars",
+    "elegirEstrellas": "Choose {{numero}} out of 5 stars",
+    "comentario": "Tell us (optional)",
+    "comentarioAyuda": "What you write is analysed to learn what people talk about: cleanliness, service, price, access… The original text is stored as you wrote it.",
+    "queValoras": "What are you rating?",
+    "elDiaCompleto": "The whole day",
+    "enviar": "Send rating",
+    "enviando": "Sending…",
+    "enviada": "Thank you. Your rating has been recorded.",
+    "error": "The rating could not be sent.",
+    "yaValorado": "You already rated this.",
+    "cerrar": "Close",
+    "sinPuntuacion": "Pick how many stars before sending.",
+    "loQueEntendimos": "What we understood",
+    "sentimiento": {
+      "positivo": "Positive",
+      "neutro": "Neutral",
+      "negativo": "Negative"
+    },
+    "temas": {
+      "limpieza": "Cleanliness",
+      "atencion": "Service",
+      "precio": "Price",
+      "acceso": "Access",
+      "senalizacion": "Signage",
+      "seguridad": "Safety",
+      "comida": "Food",
+      "paisaje": "Scenery",
+      "infraestructura": "Facilities"
+    },
+    "analizadoPorModelo": "Analysed with the Spanish language model.",
+    "analizadoPorReglas": "Analysed with the rule-based alternative: rating plus a word dictionary.",
+    "confianza": "Confidence {{valor}} %",
+    "misValoraciones": "What you already rated",
+    "tableroTitulo": "Evidence from experiences",
+    "tableroVacio": "No ratings yet. The dashboard fills up once visitors start rating their itineraries.",
+    "cobertura": "Itineraries rated",
+    "totalValoraciones": "Ratings",
+    "conComentario": "With a comment",
+    "puntuacionMedia": "Average rating",
+    "distribucion": "How people feel",
+    "temasMasMencionados": "What people talk about",
+    "menciones_one": "{{count}} mention",
+    "menciones_other": "{{count}} mentions",
+    "negativoPorcentaje": "{{valor}} % in negative comments",
+    "mejorValorados": "Best rated",
+    "peorValorados": "Worst rated",
+    "pocasValoraciones": "Few ratings",
+    "pocasValoracionesAyuda": "With so few opinions, the average moves a lot with every new rating. Take it as indicative.",
+    "evolucion": "How it evolves",
+    "periodo": "Period",
+    "analizadasPor": "Analysed by",
+    "porModelo": "model",
+    "porReglas": "rules",
+    "avisosDelTablero": "Bear in mind",
+    "seisIndicadores": "The project's six indicators",
+    "incremento": "Increment {{numero}}",
+    "brechaQueCierra": "Closes gap",
+    "sinDato": "No data yet",
+    "loQueNoDice": "What this indicator does not say",
+    "generadoEn": "Generated on {{fecha}}"
   }
 }

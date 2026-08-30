@@ -842,3 +842,156 @@ export function obtenerMisServicios(token: string | null): Promise<ServicioPubli
 export function obtenerIndicadorDeCoordinacion(): Promise<ResumenDeCoordinacion> {
   return obtener<ResumenDeCoordinacion>('/api/indicadores/coordinacion');
 }
+
+// ---------------------------------------------------------------------------
+// Valoración de cierre y evidencia (Incremento 6)
+// ---------------------------------------------------------------------------
+
+/** Cómo se leyó el comentario. */
+export type Sentimiento = 'positivo' | 'neutro' | 'negativo';
+
+/** De qué habla un comentario. Conjunto cerrado, para poder agregarlo. */
+export type TemaValoracion =
+  | 'limpieza'
+  | 'atencion'
+  | 'precio'
+  | 'acceso'
+  | 'senalizacion'
+  | 'seguridad'
+  | 'comida'
+  | 'paisaje'
+  | 'infraestructura';
+
+/** Una valoración con lo que la persona puso y lo que el sistema entendió. */
+export interface ValoracionPublica {
+  id: number;
+  itinerario_id: number;
+  recurso_id: number | null;
+  recurso_nombre: string | null;
+  servicio_id: number | null;
+  servicio_nombre: string | null;
+  puntuacion: number;
+  comentario: string | null;
+  /** `null` si no había comentario: una puntuación sola no tiene sentimiento. */
+  sentimiento: Sentimiento | null;
+  confianza_sentimiento: number | null;
+  temas: string[];
+  /** `modelo` o `reglas`. La trazabilidad de la regla de oro de la IA. */
+  analizado_por: 'modelo' | 'reglas' | null;
+  version_del_analisis: string | null;
+  creado_en: string;
+}
+
+/** Lo que el visitante manda al cerrar su itinerario. */
+export interface ValoracionNueva {
+  itinerario_id: number;
+  puntuacion: number;
+  comentario?: string | null;
+  recurso_id?: number | null;
+  servicio_id?: number | null;
+}
+
+/** Cuántas valoraciones hay de cada signo. */
+export interface DistribucionDeSentimiento {
+  positivas: number;
+  neutras: number;
+  negativas: number;
+  total: number;
+  /** `null` si no hay valoraciones: un porcentaje de cero casos no es cero. */
+  porcentaje_positivo: number | null;
+}
+
+/** Cuánto se menciona un tema, y con qué signo. */
+export interface TemaAgregado {
+  tema: string;
+  menciones: number;
+  positivas: number;
+  neutras: number;
+  negativas: number;
+  /** El número que dice DÓNDE actuar. */
+  porcentaje_negativo: number | null;
+}
+
+/** Un recurso con su valoración media. */
+export interface RecursoValorado {
+  recurso_id: number;
+  nombre: string;
+  distrito: string;
+  total_valoraciones: number;
+  puntuacion_media: number;
+  temas_frecuentes: string[];
+  /** `false` si tiene muy pocas valoraciones para que la media signifique algo. */
+  es_fiable: boolean;
+}
+
+/** La media de un mes, para dibujar la evolución. */
+export interface PuntoEnElTiempo {
+  periodo: string;
+  total: number;
+  puntuacion_media: number;
+  positivas: number;
+  negativas: number;
+}
+
+/** Todo lo que el tablero del gestor necesita. */
+export interface ResumenDeEvidencia {
+  total_itinerarios: number;
+  itinerarios_con_valoracion: number;
+  porcentaje_con_valoracion: number;
+  total_valoraciones: number;
+  con_comentario: number;
+  puntuacion_media: number | null;
+  sentimiento: DistribucionDeSentimiento;
+  temas: TemaAgregado[];
+  mejor_valorados: RecursoValorado[];
+  peor_valorados: RecursoValorado[];
+  evolucion: PuntoEnElTiempo[];
+  analizadas_por_modelo: number;
+  analizadas_por_reglas: number;
+  /** Avisos sobre la fiabilidad de lo que se muestra. */
+  avisos: string[];
+}
+
+/** Un indicador cualquiera, en la forma en que lo muestra el tablero. */
+export interface IndicadorDelIncremento {
+  incremento: number;
+  nombre: string;
+  brecha: string;
+  valor: string;
+  detalle: string | null;
+  /** `false` cuando todavía no se puede medir. Cero es una medición; esto no. */
+  hay_dato: boolean;
+  /** Lo que este indicador NO dice. Va en el dato para que no se lea sin él. */
+  salvedad: string | null;
+}
+
+/** Los seis indicadores del proyecto en un solo lugar. */
+export interface TableroDeIndicadores {
+  indicadores: IndicadorDelIncremento[];
+  generado_en: string;
+}
+
+/** Valora una experiencia. Funciona sin cuenta. */
+export function crearValoracion(
+  datos: ValoracionNueva,
+  token: string | null,
+): Promise<ValoracionPublica> {
+  return enviar<ValoracionPublica>('/api/valoraciones', 'POST', datos, token);
+}
+
+/** Lo que ya se valoró de un itinerario. */
+export function obtenerValoraciones(itinerarioId: number): Promise<ValoracionPublica[]> {
+  return obtener<ValoracionPublica[]>('/api/valoraciones', {
+    itinerario_id: itinerarioId,
+  });
+}
+
+/** El tablero de evidencia del gestor. */
+export function obtenerEvidencia(): Promise<ResumenDeEvidencia> {
+  return obtener<ResumenDeEvidencia>('/api/indicadores/evidencia');
+}
+
+/** Los seis indicadores del proyecto. */
+export function obtenerTableroDeIndicadores(): Promise<TableroDeIndicadores> {
+  return obtener<TableroDeIndicadores>('/api/indicadores/tablero');
+}

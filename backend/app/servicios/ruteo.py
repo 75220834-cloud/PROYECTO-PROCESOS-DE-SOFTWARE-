@@ -1254,11 +1254,35 @@ def guardar_itinerario(
     titulo: str,
     usuario_id: int | None = None,
 ) -> Itinerario:
-    """Persiste un itinerario calculado y devuelve la fila creada.
+    """Persiste un itinerario calculado y devuelve la fila.
+
+    **Es idempotente por preferencia y fecha.** Si ya hay un itinerario guardado
+    para ese mismo día y esa misma preferencia, se actualiza en vez de crear
+    otro.
+
+    Sin esto, cada visita a una pantalla que guarde el itinerario crearía una
+    fila nueva, y eso rompe tres cosas a la vez:
+
+    - Las **valoraciones** quedan colgando de un itinerario distinto del que la
+      pantalla está enseñando, así que lo ya valorado se vuelve a pedir.
+    - El **indicador del Incremento 6** —porcentaje de itinerarios con
+      valoración— se diluye con duplicados que nadie valorará nunca.
+    - «Mis viajes» se llena de copias del mismo día.
+
+    «El itinerario del día X para la preferencia Y» es una sola cosa, y así se
+    trata.
 
     No hace ``commit``: eso lo decide quien llama, para que la operación entera
     del endpoint sea una sola transacción.
     """
+    existente = sesion.scalars(
+        select(Itinerario)
+        .where(Itinerario.preferencia_id == preferencia.id, Itinerario.fecha == fecha)
+        .limit(1)
+    ).first()
+
+    if existente is not None:
+        return _actualizar_itinerario(sesion, existente, calculado, titulo)
     itinerario = Itinerario(
         preferencia_id=preferencia.id,
         usuario_id=usuario_id,
@@ -1275,31 +1299,69 @@ def guardar_itinerario(
         avisos="\n".join(calculado.avisos) if calculado.avisos else None,
     )
 
-    for parada in calculado.paradas:
-        traslado = parada.traslado
-
-        itinerario.paradas.append(
-            ParadaItinerario(
-                recurso_id=parada.candidato.recurso_id,
-                orden=parada.orden,
-                hora_llegada=parada.hora_llegada,
-                hora_salida=parada.hora_salida,
-                modo_traslado=traslado.modo if traslado else None,
-                tiempo_traslado_min=traslado.minutos if traslado else 0,
-                distancia_traslado_km=traslado.distancia_km if traslado else 0,
-                desnivel_traslado_m=traslado.desnivel_m if traslado else 0,
-                costo_traslado_min_soles=traslado.precio_min_soles if traslado else 0,
-                costo_traslado_max_soles=traslado.precio_max_soles if traslado else 0,
-                origen_del_calculo=(
-                    traslado.origen_del_calculo if traslado else OrigenDelCalculo.RED_VIAL
-                ),
-            )
-        )
-
     sesion.add(itinerario)
-    sesion.flush()  # para que el itinerario tenga id antes de responder
+    sesion.flush()  # para que el itinerario tenga id antes de crear sus paradas
+
+    for parada in calculado.paradas:
+        itinerario.paradas.append(_a_parada_guardada(itinerario.id, parada))
+
+    sesion.flush()
 
     return itinerario
+
+
+def _actualizar_itinerario(
+    sesion: Session,
+    itinerario: Itinerario,
+    calculado: ItinerarioCalculado,
+    titulo: str,
+) -> Itinerario:
+    """Reescribe un itinerario ya guardado con el cálculo nuevo.
+
+    Se borran las paradas viejas y se ponen las nuevas en vez de intentar
+    casarlas una a una: el orden puede haber cambiado entero, y reconciliar dos
+    listas ordenadas sería mucho código para ahorrar unas cuantas filas.
+
+    Lo que **no** se toca es el identificador ni el estado: si alguien ya valoró
+    este itinerario, su valoración sigue apuntando aquí.
+    """
+    itinerario.titulo = titulo
+    itinerario.tiempo_total_min = calculado.tiempo_total_min
+    itinerario.costo_total_soles = calculado.costo_max_soles
+    itinerario.distancia_total_km = calculado.distancia_total_km
+    itinerario.desnivel_total_m = calculado.subida_total_m
+    itinerario.generado_por = calculado.generado_por
+    itinerario.avisos = "\n".join(calculado.avisos) if calculado.avisos else None
+
+    itinerario.paradas.clear()
+    sesion.flush()
+
+    for parada in calculado.paradas:
+        itinerario.paradas.append(_a_parada_guardada(itinerario.id, parada))
+
+    sesion.flush()
+
+    return itinerario
+
+
+def _a_parada_guardada(itinerario_id: int, parada: ParadaCalculada) -> ParadaItinerario:
+    """Convierte una parada calculada en su fila de la base de datos."""
+    traslado = parada.traslado
+
+    return ParadaItinerario(
+        itinerario_id=itinerario_id,
+        recurso_id=parada.candidato.recurso_id,
+        orden=parada.orden,
+        hora_llegada=parada.hora_llegada,
+        hora_salida=parada.hora_salida,
+        modo_traslado=traslado.modo if traslado else None,
+        tiempo_traslado_min=traslado.minutos if traslado else 0,
+        distancia_traslado_km=traslado.distancia_km if traslado else 0,
+        desnivel_traslado_m=traslado.desnivel_m if traslado else 0,
+        costo_traslado_min_soles=traslado.precio_min_soles if traslado else 0,
+        costo_traslado_max_soles=traslado.precio_max_soles if traslado else 0,
+        origen_del_calculo=(traslado.origen_del_calculo if traslado else OrigenDelCalculo.RED_VIAL),
+    )
 
 
 def titulo_por_defecto(paradas: list[ParadaCalculada], fecha: date) -> str:

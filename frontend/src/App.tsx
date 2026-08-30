@@ -19,6 +19,7 @@ import { MisViajes } from '@/paginas/MisViajes';
 import { Panel } from '@/paginas/Panel';
 import { PreferenciaGuardada } from '@/paginas/PreferenciaGuardada';
 import { Resultados } from '@/paginas/Resultados';
+import { Valorar } from '@/paginas/Valorar';
 
 function Pie() {
   const { t } = useTranslation();
@@ -78,6 +79,7 @@ export function App() {
           <Route path="/preferencias/:id" element={<PreferenciaGuardada />} />
           <Route path="/preferencias/:id/resultados" element={<Resultados />} />
           <Route path="/preferencias/:id/itinerario" element={<Itinerario />} />
+          <Route path="/preferencias/:id/valorar" element={<Valorar />} />
           <Route path="/acceso" element={<Acceso />} />
           <Route path="/mis-viajes" element={<MisViajes />} />
           <Route path="/coordinar" element={<Coordinacion />} />

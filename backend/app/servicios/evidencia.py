@@ -348,8 +348,7 @@ def resumir_evidencia(sesion: Session) -> ResumenDeEvidencia:
     valorados = _recursos_valorados(sesion)
     por_media = sorted(valorados, key=lambda r: (-r.puntuacion_media, -r.total_valoraciones))
 
-    resumen.mejor_valorados = por_media[:CUANTOS_EN_EL_RANQUIN]
-    resumen.peor_valorados = list(reversed(por_media[-CUANTOS_EN_EL_RANQUIN:]))
+    resumen.mejor_valorados, resumen.peor_valorados = _partir_el_ranquin(por_media)
 
     resumen.evolucion = _evolucion(sesion)
 
@@ -366,6 +365,33 @@ def resumir_evidencia(sesion: Session) -> ResumenDeEvidencia:
     _agregar_avisos(resumen, valorados)
 
     return resumen
+
+
+def _partir_el_ranquin(
+    por_media: list[RecursoValorado],
+) -> tuple[list[RecursoValorado], list[RecursoValorado]]:
+    """Separa el ranquin en mejor y peor valorados, **sin solaparlos**.
+
+    Tomar los cinco primeros y los cinco ultimos de una lista de tres devuelve
+    los mismos tres en las dos, y el tablero acaba diciendo que un recurso es a
+    la vez lo mejor y lo peor. Se veia con los datos de la demostracion.
+
+    Con pocos recursos, la mitad de arriba va a «mejor» y la de abajo a «peor»;
+    con muchos, los extremos habituales. Si solo hay uno, no hay ranquin que
+    hacer y «peor» queda vacio: la interfaz lo trata como lista vacia.
+    """
+    total = len(por_media)
+
+    if total <= 1:
+        return por_media, []
+
+    # Con pocos recursos se parte por la mitad para que ninguno se repita.
+    corte = min(CUANTOS_EN_EL_RANQUIN, total // 2)
+
+    mejores = por_media[:corte]
+    peores = list(reversed(por_media[-corte:]))
+
+    return mejores, peores
 
 
 def _agregar_avisos(resumen: ResumenDeEvidencia, valorados: list[RecursoValorado]) -> None:

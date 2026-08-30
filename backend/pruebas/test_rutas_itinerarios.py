@@ -589,3 +589,59 @@ class TestElSistemaExplicaPorQueElDiaQuedoCorto:
 
         assert "de los 1 recursos" not in aviso
         assert "1 de los 1" not in aviso
+
+
+class TestGuardarEsIdempotente:
+    """Guardar dos veces el mismo dia no puede crear dos itinerarios.
+
+    El fallo aparecio usando la aplicacion: la pantalla de valoracion rearma el
+    itinerario al entrar, y con `guardar: true` creaba una fila nueva cada vez.
+    Las valoraciones quedaban colgando de un itinerario distinto del que la
+    pantalla enseñaba, y el indicador del Incremento 6 se diluia con duplicados
+    que nadie iba a valorar.
+    """
+
+    def test_guardar_dos_veces_devuelve_el_mismo_itinerario(
+        self, cliente: TestClient, preferencia: PreferenciaViaje, catalogo_del_valle: Session
+    ):
+        primero = armar(cliente, preferencia.id, guardar=True)
+        segundo = armar(cliente, preferencia.id, guardar=True)
+
+        assert primero["itinerario_id"] == segundo["itinerario_id"]
+        assert catalogo_del_valle.query(Itinerario).count() == 1
+
+    def test_guardar_de_nuevo_actualiza_las_paradas(
+        self, cliente: TestClient, preferencia: PreferenciaViaje, catalogo_del_valle: Session
+    ):
+        """No basta con no duplicar: el itinerario tiene que quedar al dia."""
+        primero = armar(cliente, preferencia.id, guardar=True)
+
+        # Se rearma con una jornada mas corta, que deja menos paradas.
+        segundo = armar(
+            cliente,
+            preferencia.id,
+            guardar=True,
+            hora_inicio="09:00:00",
+            hora_fin="11:00:00",
+        )
+
+        guardado = catalogo_del_valle.get(Itinerario, segundo["itinerario_id"])
+
+        assert guardado is not None
+        assert len(guardado.paradas) == len(segundo["paradas"])
+        assert primero["itinerario_id"] == segundo["itinerario_id"]
+
+    def test_dias_distintos_si_son_itinerarios_distintos(
+        self, cliente: TestClient, preferencia: PreferenciaViaje, catalogo_del_valle: Session
+    ):
+        """La idempotencia es por preferencia Y fecha, no solo por preferencia."""
+        primero = armar(cliente, preferencia.id, guardar=True, fecha=SABADO.isoformat())
+        segundo = armar(
+            cliente,
+            preferencia.id,
+            guardar=True,
+            fecha=(SABADO + timedelta(days=1)).isoformat(),
+        )
+
+        assert primero["itinerario_id"] != segundo["itinerario_id"]
+        assert catalogo_del_valle.query(Itinerario).count() == 2

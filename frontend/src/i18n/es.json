@@ -14,7 +14,8 @@
     "planificar": "Planificar",
     "cerrar_sesion": "Salir",
     "coordinar": "Coordinar",
-    "panel": "Panel"
+    "panel": "Panel",
+    "valorar": "Valorar"
   },
   "encabezado": {
     "cambiar_a_oscuro": "Cambiar a tema oscuro",
@@ -304,7 +305,10 @@
     "paradasContadas_other": "{{count}} paradas",
     "coordinarTitulo": "¿Necesitas reservar algo?",
     "coordinarDetalle": "Comida, guiado, transporte o alojamiento para este día, pedidos a los proveedores del valle desde un solo sitio.",
-    "coordinarBoton": "Coordinar servicios"
+    "coordinarBoton": "Coordinar servicios",
+    "valorarTitulo": "¿Ya lo viviste?",
+    "valorarDetalle": "Cuéntanos qué tal estuvo. Tu opinión vuelve al proceso y mejora lo que se recomienda a los demás.",
+    "valorarBoton": "Valorar la experiencia"
   },
   "coordinacion": {
     "titulo": "Coordinar servicios",
@@ -433,6 +437,75 @@
     "validados": "Validados",
     "vigentes": "Vigentes",
     "porcentajeValidado": "Validado",
-    "fechaMedicion": "Última medición"
+    "fechaMedicion": "Última medición",
+    "pestanaEvidencia": "Evidencia",
+    "pestanaIndicadores": "Indicadores"
+  },
+  "valoracion": {
+    "titulo": "¿Qué tal estuvo?",
+    "subtitulo": "Tu opinión vuelve al proceso: ayuda a mejorar lo que se recomienda.",
+    "puntuacion": "Tu puntuación",
+    "estrellas_one": "{{count}} estrella",
+    "estrellas_other": "{{count}} estrellas",
+    "elegirEstrellas": "Elegir {{numero}} de 5 estrellas",
+    "comentario": "Cuéntanos (opcional)",
+    "comentarioAyuda": "Lo que escribas se analiza para saber de qué habla la gente: limpieza, atención, precio, acceso… El texto original se guarda tal cual.",
+    "queValoras": "¿Qué valoras?",
+    "elDiaCompleto": "El día completo",
+    "enviar": "Enviar valoración",
+    "enviando": "Enviando…",
+    "enviada": "Gracias. Tu valoración quedó registrada.",
+    "error": "No se pudo enviar la valoración.",
+    "yaValorado": "Ya valoraste esto.",
+    "cerrar": "Cerrar",
+    "sinPuntuacion": "Elige cuántas estrellas antes de enviar.",
+    "loQueEntendimos": "Lo que entendimos",
+    "sentimiento": {
+      "positivo": "Positivo",
+      "neutro": "Neutro",
+      "negativo": "Negativo"
+    },
+    "temas": {
+      "limpieza": "Limpieza",
+      "atencion": "Atención",
+      "precio": "Precio",
+      "acceso": "Acceso",
+      "senalizacion": "Señalización",
+      "seguridad": "Seguridad",
+      "comida": "Comida",
+      "paisaje": "Paisaje",
+      "infraestructura": "Infraestructura"
+    },
+    "analizadoPorModelo": "Analizado con el modelo de lenguaje en español.",
+    "analizadoPorReglas": "Analizado con la alternativa por reglas: puntuación más diccionario de palabras.",
+    "confianza": "Confianza {{valor}} %",
+    "misValoraciones": "Lo que ya valoraste",
+    "tableroTitulo": "Evidencia de las experiencias",
+    "tableroVacio": "Todavía no hay valoraciones. El tablero se llena cuando los visitantes empiezan a valorar sus itinerarios.",
+    "cobertura": "Itinerarios valorados",
+    "totalValoraciones": "Valoraciones",
+    "conComentario": "Con comentario",
+    "puntuacionMedia": "Puntuación media",
+    "distribucion": "Cómo se sienten",
+    "temasMasMencionados": "De qué habla la gente",
+    "menciones_one": "{{count}} mención",
+    "menciones_other": "{{count}} menciones",
+    "negativoPorcentaje": "{{valor}} % en comentarios negativos",
+    "mejorValorados": "Mejor valorados",
+    "peorValorados": "Peor valorados",
+    "pocasValoraciones": "Pocas valoraciones",
+    "pocasValoracionesAyuda": "Con tan pocas opiniones, la media se mueve mucho con cada valoración nueva. Tómala como orientativa.",
+    "evolucion": "Cómo evoluciona",
+    "periodo": "Periodo",
+    "analizadasPor": "Analizadas por",
+    "porModelo": "modelo",
+    "porReglas": "reglas",
+    "avisosDelTablero": "Ten en cuenta",
+    "seisIndicadores": "Los seis indicadores del proyecto",
+    "incremento": "Incremento {{numero}}",
+    "brechaQueCierra": "Cierra la brecha",
+    "sinDato": "Sin dato todavía",
+    "loQueNoDice": "Lo que este indicador no dice",
+    "generadoEn": "Generado el {{fecha}}"
   }
 }

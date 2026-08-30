@@ -24,15 +24,19 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import SeisIndicadores from '@/componentes/SeisIndicadores';
+import TableroDeEvidencia from '@/componentes/TableroDeEvidencia';
 import TarjetaServicio from '@/componentes/TarjetaServicio';
 import TarjetaSolicitud from '@/componentes/TarjetaSolicitud';
 import { useSesion } from '@/hooks/useSesion';
 import {
   cambiarEstadoDeSolicitud,
   obtenerIndicadorDeCoordinacion,
+  obtenerEvidencia,
   obtenerIndicadorCatalogo,
   obtenerMisServicios,
   obtenerSolicitudes,
+  obtenerTableroDeIndicadores,
   type EstadoSolicitud,
   type SolicitudPublica,
 } from '@/servicios/api';
@@ -40,9 +44,9 @@ import {
 /** Qué pestañas ve cada rol. El orden es el de uso más frecuente. */
 const PESTANAS_POR_ROL: Record<string, string[]> = {
   proveedor: ['solicitudes', 'servicios', 'indicador'],
-  operador: ['solicitudes', 'indicador'],
-  gestor: ['catalogo', 'indicador'],
-  administrador: ['solicitudes', 'servicios', 'catalogo', 'indicador'],
+  operador: ['solicitudes', 'evidencia', 'indicador'],
+  gestor: ['evidencia', 'indicadores', 'catalogo'],
+  administrador: ['solicitudes', 'servicios', 'evidencia', 'indicadores', 'catalogo'],
 };
 
 const ROLES_CON_PANEL = Object.keys(PESTANAS_POR_ROL);
@@ -110,6 +114,8 @@ export function Panel() {
         {pestanaActiva === 'servicios' && <PestanaServicios token={token} />}
         {pestanaActiva === 'catalogo' && <PestanaCatalogo />}
         {pestanaActiva === 'indicador' && <PestanaIndicador />}
+        {pestanaActiva === 'evidencia' && <PestanaEvidencia />}
+        {pestanaActiva === 'indicadores' && <PestanaSeisIndicadores />}
       </div>
     </main>
   );
@@ -417,6 +423,48 @@ function PestanaIndicador() {
       </dl>
     </section>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Evidencia — la pestaña que cierra la brecha 7 para el gestor
+// ---------------------------------------------------------------------------
+
+function PestanaEvidencia() {
+  const { t } = useTranslation();
+
+  const evidencia = useQuery({
+    queryKey: ['evidencia'],
+    queryFn: obtenerEvidencia,
+  });
+
+  if (evidencia.isLoading) {
+    return <p className="text-sobre-superficie-variante">{t('coordinacion.cargando')}</p>;
+  }
+
+  if (evidencia.isError || !evidencia.data) {
+    return <p className="text-sobre-error-contenedor">{t('coordinacion.error')}</p>;
+  }
+
+  return <TableroDeEvidencia resumen={evidencia.data} />;
+}
+
+// ---------------------------------------------------------------------------
+// Los seis indicadores del proyecto
+// ---------------------------------------------------------------------------
+
+function PestanaSeisIndicadores() {
+  const { t } = useTranslation();
+
+  const tablero = useQuery({
+    queryKey: ['tablero-indicadores'],
+    queryFn: obtenerTableroDeIndicadores,
+  });
+
+  if (!tablero.data) {
+    return <p className="text-sobre-superficie-variante">{t('coordinacion.cargando')}</p>;
+  }
+
+  return <SeisIndicadores tablero={tablero.data} />;
 }
 
 // ---------------------------------------------------------------------------

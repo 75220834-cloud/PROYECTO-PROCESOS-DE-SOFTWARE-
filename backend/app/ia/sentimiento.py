@@ -233,6 +233,25 @@ TERMINOS_POR_TEMA: dict[str, tuple[str, ...]] = {
         "atento",
         "atenta",
         "recibieron",
+        # La espera es de lo que mas se queja la gente y no estaba: un
+        # comentario como «nos hicieron esperar bajo el sol y nadie se
+        # disculpo» no detectaba ningun tema, asi que el gestor veia el
+        # sentimiento sin saber de que hablaba. Se encontro usando la
+        # aplicacion, no con una prueba.
+        "esperar",
+        "espera",
+        "esperamos",
+        "esperando",
+        "demora",
+        "demoraron",
+        "tardaron",
+        "disculpa",
+        "disculparon",
+        "disculpo",
+        "cola",
+        "fila",
+        "puntual",
+        "impuntual",
     ),
     TemaValoracion.PRECIO: (
         "precio",

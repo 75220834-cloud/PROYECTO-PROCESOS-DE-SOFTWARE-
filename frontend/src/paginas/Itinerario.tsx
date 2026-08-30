@@ -278,6 +278,26 @@ export function Itinerario() {
         </section>
       )}
 
+      {/* El cierre del recorrido: valorar lo vivido. Va despues de coordinar
+          porque es lo ultimo que ocurre, y solo se ofrece si hubo paradas: no
+          se puede valorar un dia que no se armo. */}
+      {itinerario.paradas.length > 0 && (
+        <section className="mt-4 rounded-lg border border-contorno-variante bg-superficie-contenedor p-5">
+          <h2 className="font-titulo font-semibold text-sobre-superficie">
+            {t('itinerario.valorarTitulo')}
+          </h2>
+          <p className="mt-1 text-sm text-sobre-superficie-variante">
+            {t('itinerario.valorarDetalle')}
+          </p>
+          <Link
+            to={`/preferencias/${identificador}/valorar?fecha=${itinerario.fecha}`}
+            className="mt-3 inline-block rounded-full border border-primario px-5 py-2 text-sm font-semibold text-primario transition-colors hover:bg-primario hover:text-sobre-primario"
+          >
+            {t('itinerario.valorarBoton')}
+          </Link>
+        </section>
+      )}
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
         <section aria-label={t('itinerario.tituloLinea')}>
           <div className="mb-3 flex items-baseline justify-between gap-3">

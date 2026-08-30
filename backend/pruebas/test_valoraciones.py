@@ -510,3 +510,49 @@ def test_el_resumen_no_revienta_con_la_base_vacia(sesion: Session):
     assert resumen.total_valoraciones == 0
     assert resumen.puntuacion_media is None
     assert resumen.avisos
+
+
+class TestElRanquinNoSeSolapa:
+    """Un recurso no puede ser a la vez lo mejor y lo peor valorado.
+
+    Con la implementacion ingenua —los cinco primeros y los cinco ultimos de
+    una lista— tres recursos aparecian identicos en las dos listas. Se vio en
+    el tablero con los datos de la demostracion.
+    """
+
+    def test_con_pocos_recursos_las_listas_no_comparten_ninguno(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ):
+        for indice, recurso in enumerate(recursos):
+            valorar(cliente, itinerario.id, recurso_id=recurso.id, puntuacion=5 - indice)
+
+        cuerpo = cliente.get("/api/indicadores/evidencia").json()
+
+        mejores = {r["recurso_id"] for r in cuerpo["mejor_valorados"]}
+        peores = {r["recurso_id"] for r in cuerpo["peor_valorados"]}
+
+        assert not (mejores & peores), "un recurso aparece en las dos listas"
+
+    def test_con_un_solo_recurso_no_hay_ranquin_de_peores(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ):
+        """Con uno solo no hay nada que comparar, y decir que es «el peor» seria absurdo."""
+        valorar(cliente, itinerario.id, recurso_id=recursos[0].id, puntuacion=5)
+
+        cuerpo = cliente.get("/api/indicadores/evidencia").json()
+
+        assert len(cuerpo["mejor_valorados"]) == 1
+        assert cuerpo["peor_valorados"] == []
+
+    def test_el_mejor_tiene_mas_puntuacion_que_el_peor(
+        self, cliente: TestClient, itinerario: Itinerario, recursos: list[RecursoTuristico]
+    ):
+        valorar(cliente, itinerario.id, recurso_id=recursos[0].id, puntuacion=5)
+        valorar(cliente, itinerario.id, recurso_id=recursos[1].id, puntuacion=1)
+
+        cuerpo = cliente.get("/api/indicadores/evidencia").json()
+
+        assert (
+            cuerpo["mejor_valorados"][0]["puntuacion_media"]
+            > cuerpo["peor_valorados"][0]["puntuacion_media"]
+        )

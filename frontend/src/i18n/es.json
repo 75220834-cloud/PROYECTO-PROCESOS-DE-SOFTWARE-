@@ -257,7 +257,10 @@
     "descartados_ayuda": "Se descartan antes de puntuar nada: sin coordenadas no pueden entrar en un itinerario, y fuera de tu alcance no podrías llegar.",
     "ver": "Ver",
     "ocultar": "Ocultar",
-    "proxima_fase": "El itinerario con mapa, horarios y costos de traslado llega en la siguiente fase del proyecto."
+    "proxima_fase": "El itinerario con mapa, horarios y costos de traslado llega en la siguiente fase del proyecto.",
+    "fueraDeFecha": "No coincide con tu viaje",
+    "cuandoSeCelebra": "Cuándo se celebra",
+    "fuenteFicha": "Según la ficha oficial del MINCETUR"
   },
   "itinerario": {
     "titulo": "Tu itinerario",

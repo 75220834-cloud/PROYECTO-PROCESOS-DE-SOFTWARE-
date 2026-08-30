@@ -109,6 +109,10 @@ def obtener_recomendaciones(
                     calculado_por=r.afluencia.calculado_por,
                 ),
                 generado_por=r.generado_por,
+                dias_de_celebracion=r.dias_de_celebracion,
+                meses_de_celebracion=r.meses_de_celebracion,
+                esta_en_temporada=r.esta_en_temporada,
+                tipo_de_ingreso=r.tipo_de_ingreso,
             )
             for r in resultado.recomendaciones
         ],

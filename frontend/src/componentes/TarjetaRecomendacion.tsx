@@ -93,6 +93,39 @@ export function TarjetaRecomendacion({
         </p>
       )}
 
+      {/* Cuándo se celebra, para las 36 fiestas del catálogo.
+
+          No se esconde la fiesta cuando no coincide con el viaje: se enseña
+          con su fecha y se avisa. Esconderla dejaría al visitante sin saber
+          que existe; enseñarla con su fecha le deja mover el viaje si quiere.
+
+          El aviso solo sale cuando `esta_en_temporada` es falso. Cuando es
+          nulo —la ficha no precisa la fecha— no se avisa de nada, porque no
+          sabemos si coincide o no. */}
+      {recomendacion.dias_de_celebracion && (
+        <div
+          className={
+            'mt-3 rounded-md border-l-4 px-3 py-2 ' +
+            (recomendacion.esta_en_temporada === false
+              ? 'border-error bg-error-contenedor text-sobre-error-contenedor'
+              : 'border-secundario bg-secundario-contenedor text-sobre-secundario-contenedor')
+          }
+        >
+          <p className="text-xs font-semibold">
+            {recomendacion.esta_en_temporada === false
+              ? t('resultados.fueraDeFecha')
+              : t('resultados.cuandoSeCelebra')}
+          </p>
+
+          {/* La frase va literal de la ficha oficial. Resumirla nos obligaría
+              a interpretar «el último domingo de enero», y ahí es donde se
+              empiezan a inventar fechas. */}
+          <p className="mt-1 text-xs">{recomendacion.dias_de_celebracion}</p>
+
+          <p className="mt-1 text-[0.7rem] opacity-75">{t('resultados.fuenteFicha')}</p>
+        </div>
+      )}
+
       {/* Afluencia esperada, con su motivo debajo. */}
       <div className="mt-auto pt-4">
         <span

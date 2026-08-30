@@ -34,6 +34,11 @@ const RECOMENDACION: RecomendacionPublica = {
     calculado_por: 'reglas',
   },
   generado_por: 'modelo',
+  // La mayoría de recursos no son fiestas: no tienen fecha de celebración.
+  dias_de_celebracion: null,
+  meses_de_celebracion: [],
+  esta_en_temporada: null,
+  tipo_de_ingreso: 'Libre',
 };
 
 function renderizar(elemento: ReactNode) {

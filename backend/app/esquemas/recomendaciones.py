@@ -66,6 +66,23 @@ class RecomendacionPublica(BaseModel):
     #: 'modelo' o 'reglas'. Trazabilidad de la regla de oro de la IA.
     generado_por: Literal["modelo", "reglas"]
 
+    # --- Cuándo se puede ver, para las 36 fiestas del catálogo -------------
+
+    #: Lo que dice la ficha oficial sobre cuándo se celebra, **literal**. No es
+    #: una fecha que hayamos deducido: muchas fiestas del valle son móviles
+    #: —«el último domingo de enero»— y darles un día exacto sería inventarlo.
+    dias_de_celebracion: str | None = None
+
+    meses_de_celebracion: list[int] = Field(default_factory=list)
+
+    #: `true` si cae dentro del viaje, `false` si no, y **`null` cuando no
+    #: aplica**: no es una fiesta, o su ficha no precisa la fecha. La interfaz
+    #: solo avisa en rojo cuando es `false`.
+    esta_en_temporada: bool | None = None
+
+    #: «Libre», «Previa presentación de boleto»… de la ficha oficial.
+    tipo_de_ingreso: str | None = None
+
 
 class RecursoDescartadoPublico(BaseModel):
     """Un recurso que no pasó los filtros duros, con su motivo."""

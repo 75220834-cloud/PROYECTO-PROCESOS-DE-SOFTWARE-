@@ -30,6 +30,7 @@ from app.ia.afluencia import PrediccionAfluencia, predecir_afluencia
 from app.modelos.catalogo import RecursoTuristico
 from app.modelos.preferencias import PreferenciaViaje
 from app.servicios.avisos import Aviso, aviso
+from app.servicios.temporada import esta_en_temporada, meses_del_viaje
 
 # ---------------------------------------------------------------------------
 # Capa 0 — filtros duros
@@ -88,6 +89,22 @@ class Recomendacion:
 
     afluencia: PrediccionAfluencia
     generado_por: str
+
+    # --- Cuándo se puede ver, para las 36 fiestas del catálogo -------------
+
+    #: Qué dice la ficha oficial sobre cuándo se celebra, literal.
+    dias_de_celebracion: str | None = None
+
+    #: Los meses que menciona esa frase.
+    meses_de_celebracion: list[int] = field(default_factory=list)
+
+    #: `True` si cae dentro del viaje, `False` si no, y **`None` cuando no
+    #: aplica**: no es una fiesta, o su ficha no precisa la fecha. Avisar en
+    #: rojo de algo que no sabemos sería mentir.
+    esta_en_temporada: bool | None = None
+
+    #: «Libre», «Previa presentación de boleto»… de la ficha oficial.
+    tipo_de_ingreso: str | None = None
 
 
 @dataclass
@@ -327,6 +344,9 @@ def recomendar(
     # la cabeza cuando mira los resultados.
     dia_de_referencia: date = preferencia.fecha_inicio
 
+    # Los meses que toca el viaje. Se calculan una vez, no por recurso.
+    meses_de_este_viaje = meses_del_viaje(preferencia.fecha_inicio, preferencia.fecha_fin)
+
     recomendaciones: list[Recomendacion] = []
 
     for recurso, latitud, longitud, distancia_km in aceptados:
@@ -350,6 +370,12 @@ def recomendar(
                     dia_de_referencia, recurso.distrito, usar_modelo=usar_modelo_afluencia
                 ),
                 generado_por=afinidad.calculado_por,
+                dias_de_celebracion=recurso.dias_de_celebracion,
+                meses_de_celebracion=list(recurso.meses_de_celebracion or []),
+                esta_en_temporada=esta_en_temporada(
+                    recurso.meses_de_celebracion, meses_de_este_viaje
+                ),
+                tipo_de_ingreso=recurso.tipo_de_ingreso,
             )
         )
 

@@ -454,6 +454,27 @@ export interface RecomendacionPublica {
   intereses_cubiertos: string[];
   afluencia: AfluenciaEstimada;
   generado_por: 'modelo' | 'reglas';
+
+  /**
+   * Lo que dice la ficha oficial del MINCETUR sobre cuándo se celebra, literal.
+   *
+   * 36 de los 295 recursos del catálogo son fiestas, y una fiesta no está ahí
+   * todo el año. No es una fecha deducida: muchas son móviles —«el último
+   * domingo de enero»— y darles un día exacto sería inventarlo.
+   */
+  dias_de_celebracion: string | null;
+
+  meses_de_celebracion: number[];
+
+  /**
+   * `true` si cae dentro del viaje, `false` si no, y **`null` cuando no
+   * aplica**: no es una fiesta, o su ficha no precisa la fecha. Solo se avisa
+   * en rojo cuando es `false`; avisar de lo que no sabemos sería mentir.
+   */
+  esta_en_temporada: boolean | null;
+
+  /** «Libre», «Previa presentación de boleto»… de la ficha oficial. */
+  tipo_de_ingreso: string | null;
 }
 
 /** Un recurso que no pasó los filtros duros, con su motivo. */

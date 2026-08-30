@@ -13,6 +13,7 @@ from datetime import date, datetime, time
 
 from geoalchemy2 import Geography
 from sqlalchemy import (
+    ARRAY,
     Boolean,
     CheckConstraint,
     Date,
@@ -90,6 +91,45 @@ class RecursoTuristico(Base):
     # Duración sugerida de la visita, en minutos. La necesita el ruteo de la
     # Fase 4 para las ventanas de tiempo.
     duracion_visita_min: Mapped[int | None] = mapped_column(Integer)
+
+    # --- Lo que viene de la ficha web del MINCETUR (Fase 8) ---------------
+    #
+    # El CSV del inventario no trae nada de esto; la ficha de cada recurso, sí.
+    # Ver `utilidades/fichas_mincetur.py` para por qué se leen y cómo.
+
+    #: «Libre», «Previa presentación de boleto»… Tal cual lo escribe la ficha:
+    #: no se convierte a un precio porque la ficha no da precios, y ponerle un
+    #: número sería inventarlo.
+    tipo_de_ingreso: Mapped[str | None] = mapped_column(String(120))
+
+    #: Cuándo conviene visitarlo: «Todo el Año», «Julio - Agosto». Para las 36
+    #: fiestas del catálogo esto **es su fecha**, y por eso se enseña en rojo
+    #: cuando no coincide con el viaje.
+    epoca_propicia: Mapped[str | None] = mapped_column(String(200))
+
+    #: Los días concretos, cuando la ficha los da: «se realiza cada año en la
+    #: Plaza de Armas de Jauja los días 18, 19 y 20 de enero».
+    #:
+    #: Es la frase **literal** de la descripción oficial, no una fecha que
+    #: hayamos deducido. Muchas fiestas del valle no caen en días fijos —«el
+    #: último domingo de enero», «fecha móvil entre marzo y abril»— y
+    #: convertirlas a un rango exacto sería inventarse una precisión que la
+    #: fuente no tiene.
+    dias_de_celebracion: Mapped[str | None] = mapped_column(Text)
+
+    #: Los meses que menciona esa frase, del 1 al 12.
+    #:
+    #: Es lo único que se deduce, y se deduce de algo tan simple como el nombre
+    #: del mes. Sirve para lo único que hace falta: saber si la fiesta cae o no
+    #: dentro del viaje, y avisar en rojo cuando no.
+    meses_de_celebracion: Mapped[list[int]] = mapped_column(
+        ARRAY(SmallInteger), nullable=False, server_default="{}"
+    )
+
+    #: Cuándo se leyó la ficha. Va aquí y no en un registro aparte porque la
+    #: honestidad con los datos exige poder decir «esto es de tal fecha»
+    #: junto al dato, no en otra tabla que nadie mira.
+    ficha_leida_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     creado_en: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

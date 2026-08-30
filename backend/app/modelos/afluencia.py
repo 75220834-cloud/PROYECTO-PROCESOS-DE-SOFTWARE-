@@ -107,7 +107,19 @@ class AfluenciaHistorica(Base):
     )
 
     anio: Mapped[int] = mapped_column(SmallInteger, nullable=False)
-    mes: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+
+    #: El mes, o **nulo cuando la cifra es del año entero**.
+    #:
+    #: Las series del Ministerio de Cultura vienen por mes; las fichas del
+    #: MINCETUR dan el total del año. Repartir un total anual entre doce meses
+    #: sería inventarse una estacionalidad que la fuente no mide, así que se
+    #: guarda como lo que es y quien lo use decide qué hacer con ello.
+    mes: Mapped[int | None] = mapped_column(SmallInteger)
+
+    #: «Turistas Extranjeros», «Visitantes Locales»… Nulo cuando la fuente da
+    #: un total sin desglosar. La ficha del MINCETUR sí desglosa, y perder ese
+    #: desglose sumándolo todo tiraría información que ya está publicada.
+    tipo_de_visitante: Mapped[str | None] = mapped_column(String(80))
 
     visitantes: Mapped[int] = mapped_column(Integer, nullable=False)
 
@@ -120,11 +132,19 @@ class AfluenciaHistorica(Base):
     recurso: Mapped[RecursoTuristico] = relationship()
 
     __table_args__ = (
-        CheckConstraint("mes BETWEEN 1 AND 12", name="ck_afluencia_mes"),
+        CheckConstraint("mes IS NULL OR mes BETWEEN 1 AND 12", name="ck_afluencia_mes"),
         CheckConstraint("anio BETWEEN 2000 AND 2100", name="ck_afluencia_anio"),
         CheckConstraint("visitantes >= 0", name="ck_afluencia_visitantes"),
-        UniqueConstraint("recurso_id", "anio", "mes", name="uq_afluencia_recurso_periodo"),
+        UniqueConstraint(
+            "recurso_id",
+            "anio",
+            "mes",
+            "tipo_de_visitante",
+            name="uq_afluencia_recurso_periodo",
+        ),
     )
 
     def __repr__(self) -> str:
-        return f"<AfluenciaHistorica recurso={self.recurso_id} {self.anio}-{self.mes:02d}>"
+        periodo = f"{self.anio}-{self.mes:02d}" if self.mes else str(self.anio)
+
+        return f"<AfluenciaHistorica recurso={self.recurso_id} {periodo}>"

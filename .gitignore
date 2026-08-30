@@ -41,6 +41,12 @@ backend/datos/crudos/
 backend/datos/derivados/
 backend/datos/cache_osm/
 backend/datos/dem/
+# Las 295 fichas web del MINCETUR (unos 30 MB de HTML) y los tres CSV del
+# directorio de prestadores. Se vuelven a bajar con:
+#   python -m app.utilidades.cargar_fichas
+#   python -m app.utilidades.cargar_prestadores
+backend/datos/fichas/
+backend/datos/prestadores/
 backend/datos/*.gpkg
 backend/datos/*.tif
 backend/modelos_entrenados/

@@ -142,11 +142,48 @@ class Proveedor(Base):
 
     descripcion: Mapped[str | None] = mapped_column(Text)
 
-    #: **Marca de dato de demostración.** El proyecto no tiene convenios con
-    #: proveedores reales del valle, así que los que hay están inventados para
-    #: poder enseñar el flujo. Que esto sea una columna y no un comentario es
-    #: deliberado: la interfaz lo muestra y nadie puede confundirse.
+    #: **Marca de dato de demostración.**
+    #:
+    #: Verdadero: el proveedor está inventado por el equipo para poder enseñar
+    #: el ciclo de solicitud y confirmación de punta a punta.
+    #:
+    #: Falso: es un prestador **real**, cargado del Directorio Nacional de
+    #: Prestadores de Servicios Turísticos Calificados del MINCETUR. Existe, se
+    #: certificó ante el Estado y sus datos son públicos. Lo que **no** tiene
+    #: es ningún convenio con este proyecto: la interfaz lo dice.
+    #:
+    #: Que esto sea una columna y no un comentario es deliberado: la interfaz
+    #: lo muestra y nadie puede confundirse.
     es_demostracion: Mapped[bool] = mapped_column(nullable=False, default=True, index=True)
+
+    # --- Solo para los prestadores reales del directorio del MINCETUR -----
+    #
+    # Van vacíos en los de demostración, que no tienen RUC porque no existen.
+
+    #: Registro Único de Contribuyentes. Es el identificador con el que el
+    #: Estado los reconoce, y sirve para no duplicarlos al recargar.
+    ruc: Mapped[str | None] = mapped_column(String(11), unique=True, index=True)
+
+    #: Dirección tal como la publica el directorio.
+    direccion: Mapped[str | None] = mapped_column(String(255))
+
+    pagina_web: Mapped[str | None] = mapped_column(String(255))
+
+    #: Qué es: «Hostal», «Operador de Turismo», «Restaurante»…
+    clase: Mapped[str | None] = mapped_column(String(80))
+
+    #: Su categoría oficial: «2 Estrellas», «Restaurante Un (1) Tenedor».
+    categoria: Mapped[str | None] = mapped_column(String(80))
+
+    #: El número de certificado que le dio el Estado. Es lo que hace que
+    #: «certificado» sea una afirmación comprobable y no un adorno.
+    certificado: Mapped[str | None] = mapped_column(String(80))
+
+    #: De dónde salió, y con qué fecha de corte. Va junto al dato por la misma
+    #: razón que en el catálogo: un dato sin procedencia no se puede defender.
+    fuente: Mapped[str | None] = mapped_column(String(200))
+
+    fecha_corte: Mapped[date | None] = mapped_column(Date)
 
     esta_activo: Mapped[bool] = mapped_column(nullable=False, default=True)
 

@@ -33,6 +33,7 @@ from app.modelos import (  # noqa: F401
     preferencias,
     transporte,
     usuario,
+    valoracion,
 )
 
 config = context.config

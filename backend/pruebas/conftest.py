@@ -73,7 +73,8 @@ def sesion(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
             "TRUNCATE recurso_turistico, horario_atencion, registro_validacion,"
             " usuario, preferencia_viaje, itinerario, parada_itinerario,"
             " tarifa_transporte, proveedor, servicio, disponibilidad_servicio,"
-            " solicitud_coordinacion, cambio_de_estado CASCADE"
+            " solicitud_coordinacion, cambio_de_estado, valoracion,"
+            " registro_de_evidencia CASCADE"
         )
     )
 

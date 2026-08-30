@@ -19,6 +19,7 @@ from app.rutas import (
     preferencias,
     recomendaciones,
     salud,
+    valoraciones,
 )
 
 aplicacion = FastAPI(
@@ -55,6 +56,7 @@ aplicacion.include_router(preferencias.enrutador)
 aplicacion.include_router(recomendaciones.enrutador)
 aplicacion.include_router(itinerarios.enrutador)
 aplicacion.include_router(coordinacion.enrutador)
+aplicacion.include_router(valoraciones.enrutador)
 
 
 @aplicacion.get("/", tags=["salud"], summary="Mensaje de bienvenida")

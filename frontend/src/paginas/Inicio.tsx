@@ -12,6 +12,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import { consultarSalud, type SaludComponente } from '@/servicios/api';
 
@@ -92,12 +93,16 @@ export function Inicio() {
             {t('inicio.subtitulo')}
           </p>
 
-          <button
-            type="button"
-            className="mt-9 rounded-md bg-primario px-8 py-3.5 font-semibold text-sobre-primario shadow-elevada transition-transform hover:-translate-y-0.5"
+          {/* Es un enlace y no un boton: lleva a otra pantalla, y con un
+              <button> sin onClick -que es lo que habia- no hacia nada. Siendo
+              enlace tambien se puede abrir en otra pestana y lo anuncia bien
+              un lector de pantalla. */}
+          <Link
+            to="/preferencias"
+            className="mt-9 inline-block rounded-md bg-primario px-8 py-3.5 font-semibold text-sobre-primario shadow-elevada transition-transform hover:-translate-y-0.5"
           >
             {t('inicio.planificar')}
-          </button>
+          </Link>
 
           {/* El div envolvente fuerza un salto de linea: sin el, la etiqueta
               quedaria al costado del boton, porque ambos son inline-block. */}

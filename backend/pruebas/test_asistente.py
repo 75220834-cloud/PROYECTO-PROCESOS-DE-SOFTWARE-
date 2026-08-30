@@ -310,9 +310,7 @@ class TestSinResultadosSeAvisaExplicitamente:
 class TestLosFallosSeCuentan:
     """Si una función revienta, el modelo tiene que enterarse."""
 
-    def test_una_funcion_desconocida_devuelve_error_y_no_revienta(
-        self, sesion: Session
-    ) -> None:
+    def test_una_funcion_desconocida_devuelve_error_y_no_revienta(self, sesion: Session) -> None:
         resultado = ejecutar_funcion(sesion, "funcion_que_no_existe", {}, idioma="es")
 
         assert "error" in resultado
@@ -355,9 +353,7 @@ class TestLasHerramientasEstanBienDeclaradas:
     equivocados, que es mucho más difícil de detectar.
     """
 
-    def test_cada_herramienta_apunta_a_una_funcion_que_existe(
-        self, sesion: Session
-    ) -> None:
+    def test_cada_herramienta_apunta_a_una_funcion_que_existe(self, sesion: Session) -> None:
         """Declarar una función que nadie implementa es prometer y no cumplir."""
         for herramienta in HERRAMIENTAS:
             nombre = herramienta["function"]["name"]
@@ -366,9 +362,9 @@ class TestLasHerramientasEstanBienDeclaradas:
             # Llamarlas sin argumentos puede dar otros errores —faltan datos
             # obligatorios— y eso está bien. Lo que no puede pasar es que el
             # backend no reconozca el nombre que el modelo tiene permitido usar.
-            assert "No existe una función" not in resultado.get("error", ""), (
-                f"El modelo puede pedir «{nombre}» pero el backend no la conoce"
-            )
+            assert "No existe una función" not in resultado.get(
+                "error", ""
+            ), f"El modelo puede pedir «{nombre}» pero el backend no la conoce"
 
     def test_todas_tienen_descripcion_y_parametros(self) -> None:
         for herramienta in HERRAMIENTAS:
@@ -384,9 +380,9 @@ class TestLasHerramientasEstanBienDeclaradas:
             parametros = herramienta["function"]["parameters"]
 
             for obligatorio in parametros.get("required", []):
-                assert obligatorio in parametros["properties"], (
-                    f"«{obligatorio}» es obligatorio pero no está descrito"
-                )
+                assert (
+                    obligatorio in parametros["properties"]
+                ), f"«{obligatorio}» es obligatorio pero no está descrito"
 
 
 # ---------------------------------------------------------------------------
@@ -415,9 +411,7 @@ class TestSinOllamaSeAvisaSinFallar:
 
         assert cliente.get("/api/asistente/estado").json()["modelo"]
 
-    def test_sin_ollama_devuelve_200_y_no_un_error(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_sin_ollama_devuelve_200_y_no_un_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """No es un error del servidor: es una capacidad opcional que no está.
 
         Devolver 500 haría que la interfaz enseñara «algo ha fallado», que es

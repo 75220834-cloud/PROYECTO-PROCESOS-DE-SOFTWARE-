@@ -222,3 +222,18 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Los globos que agrupan marcadores en el mapa (Leaflet).
+ *
+ * Leaflet los pinta con un fondo claro fijo, escrito en su propia hoja de
+ * estilos y sin variantes de tema. En modo oscuro el numero heredaba el color
+ * de texto claro de la aplicacion y quedaba casi invisible: claro sobre claro.
+ *
+ * Se fija el color del numero en vez de repintar el fondo porque el fondo de
+ * Leaflet cambia de tono segun cuantos marcadores agrupe -verde, amarillo,
+ * naranja-, y esos tres tonos son claros los tres. Un texto oscuro se lee
+ * sobre los tres; repintar los tres fondos seria mas codigo y mas fragil. */
+.marker-cluster span {
+  color: #161110;
+  font-weight: 600;
+}

@@ -547,7 +547,46 @@ y fuente, y se muestran con la palabra «aprox.» y la fecha visible.
 
 ---
 
-## 8. Fuente de los datos
+## 8. Limitaciones conocidas
+
+Se declaran aquí en vez de esperar a que alguien las descubra.
+
+### La interfaz está en dos idiomas; los avisos del backend, no
+
+Las 467 cadenas de la interfaz están traducidas al español y al inglés, y
+coinciden una a una. Se comprobó recorriendo las doce rutas en inglés.
+
+Lo que **no** está traducido son los textos que redacta el backend: los avisos
+del itinerario («este tramo se estimó en línea recta»), las salvedades del
+tablero del gestor («solo hay 4 valoraciones») y los mensajes de error. Son 71
+cadenas repartidas por cuatro módulos de servicio, y viajan como texto ya
+escrito, no como claves que la interfaz pueda traducir.
+
+Un visitante que use la aplicación en inglés verá la interfaz en inglés y esos
+avisos concretos en español.
+
+Arreglarlo bien exige convertir esas 71 cadenas en claves con parámetros y
+traducirlas en el frontend. No se hizo por su tamaño y por el riesgo de tocar
+código que funciona; queda identificado y acotado.
+
+La excepción que sí es correcta: **el asistente conversacional responde en el
+idioma en que se le escribe**, porque es el modelo quien redacta.
+
+### Los nombres del catálogo no se traducen, y es deliberado
+
+«Convento De Santa Rosa De Ocopa» se llama así en inglés también. Son nombres
+propios del inventario del MINCETUR: traducirlos sería inventarse un nombre
+que nadie usa y que no aparecería en ningún cartel del valle.
+
+### No hay horarios de atención
+
+El inventario del MINCETUR no publica horarios. La restricción está
+implementada y probada con horarios insertados a mano, y el itinerario avisa
+al visitante de que no puede garantizar que un sitio esté abierto.
+
+---
+
+## 9. Fuente de los datos
 
 El catálogo proviene del **Inventario Nacional de Recursos Turísticos** del
 MINCETUR (Dirección General de Estrategia Turística):
@@ -565,7 +604,7 @@ versiona por su tamaño.
 
 ---
 
-## 9. Equipo
+## 10. Equipo
 
 | Integrante | Rol |
 |---|---|

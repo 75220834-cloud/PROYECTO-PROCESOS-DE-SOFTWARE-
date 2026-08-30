@@ -28,6 +28,16 @@ function servicio(cambios: Partial<ServicioPublico> = {}): ServicioPublico {
       correo: 'taller.cochas@ejemplo.invalid',
       descripcion: null,
       es_demostracion: true,
+      // Los de demostración no están en el directorio del Estado: no tienen
+      // RUC ni certificado porque no existen.
+      ruc: null,
+      direccion: null,
+      pagina_web: null,
+      clase: null,
+      categoria: null,
+      certificado: null,
+      fuente: null,
+      fecha_corte: null,
     },
     recurso_id: null,
     capacidad_maxima: 12,

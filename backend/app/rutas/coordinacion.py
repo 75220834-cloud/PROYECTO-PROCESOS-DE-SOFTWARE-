@@ -609,6 +609,51 @@ def indicador_de_coordinacion(sesion: SesionBD) -> ResumenDeCoordinacion:
 
 
 @enrutador.get(
+    "/proveedores",
+    response_model=list[ProveedorPublico],
+    summary="Directorio de prestadores del valle",
+)
+def listar_proveedores(
+    sesion: SesionBD,
+    distrito: str | None = None,
+    clase: str | None = None,
+    solo_reales: bool = True,
+) -> list[ProveedorPublico]:
+    """Los prestadores turísticos de las cuatro provincias de la ruta.
+
+    Por defecto devuelve solo los **reales**: los 162 que están en el
+    Directorio Nacional de Prestadores de Servicios Turísticos Calificados del
+    MINCETUR, con su RUC, su categoría oficial y su número de certificado.
+
+    Están certificados por el Estado, pero **no tienen convenio con este
+    proyecto**. No se les inventa capacidad ni horarios, porque eso no está
+    publicado: se les enseña para que el visitante los encuentre y los llame
+    él mismo.
+
+    Con ``solo_reales=false`` entran también los cinco de demostración, que son
+    los que tienen servicios publicados y permiten enseñar el ciclo completo de
+    solicitud y confirmación.
+    """
+    consulta = select(Proveedor).where(Proveedor.esta_activo.is_(True))
+
+    if solo_reales:
+        consulta = consulta.where(Proveedor.es_demostracion.is_(False))
+
+    if distrito:
+        consulta = consulta.where(Proveedor.distrito.ilike(f"%{distrito}%"))
+
+    if clase:
+        consulta = consulta.where(Proveedor.clase.ilike(f"%{clase}%"))
+
+    # Se ordena por nombre y no por categoría: ordenar por estrellas seria
+    # decidir por el visitante que un hotel de 3 es mejor que un hostal de 2
+    # para lo que el necesita, y eso no lo sabemos.
+    proveedores = sesion.scalars(consulta.order_by(Proveedor.nombre).limit(200)).all()
+
+    return [ProveedorPublico.model_validate(p, from_attributes=True) for p in proveedores]
+
+
+@enrutador.get(
     "/proveedores/mio",
     response_model=ProveedorPublico,
     summary="La ficha de proveedor de quien ha iniciado sesión",

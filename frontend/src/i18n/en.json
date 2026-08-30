@@ -442,7 +442,16 @@
     "porcentajeValidado": "Validated",
     "fechaMedicion": "Last measured",
     "pestanaEvidencia": "Evidence",
-    "pestanaIndicadores": "Indicators"
+    "pestanaIndicadores": "Indicators",
+    "directorioTitulo": "Real providers in the valley",
+    "directorioAviso": "{{total}} businesses that really exist, certified by MINCETUR. They have NO agreement with this project: we tell you who to call, we do not book anything for you. Their hours, prices and availability are not published, so we do not show them.",
+    "directorioFuente": "Source: National Directory of Qualified Tourism Service Providers, MINCETUR (open data).",
+    "suWeb": "Their website",
+    "verEnElMapa": "View on the map",
+    "ruc": "Tax ID",
+    "todos": "All",
+    "verTodos": "See all {{total}}",
+    "sinPrestadores": "There are no providers of that type in the official directory."
   },
   "valoracion": {
     "titulo": "How was it?",

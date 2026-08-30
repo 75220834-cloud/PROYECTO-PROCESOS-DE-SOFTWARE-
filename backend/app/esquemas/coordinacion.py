@@ -32,7 +32,35 @@ class ProveedorPublico(BaseModel):
     #: ``true`` cuando el proveedor es inventado para poder enseñar el flujo.
     #: La interfaz lo muestra: nadie debe llamar a un teléfono de demostración
     #: creyendo que va a contestar alguien.
+    #:
+    #: ``false`` significa que es un prestador **real**, del Directorio
+    #: Nacional de Prestadores de Servicios Turísticos Calificados del
+    #: MINCETUR. Existe y está certificado por el Estado, pero **no tiene
+    #: convenio con este proyecto**, y la interfaz también dice eso.
     es_demostracion: bool
+
+    # --- Solo en los reales. Es lo que los hace comprobables --------------
+
+    #: El RUC con el que el Estado lo reconoce. Con él, cualquiera puede ir al
+    #: directorio del MINCETUR y verificar que existe.
+    ruc: str | None = None
+
+    direccion: str | None = None
+    pagina_web: str | None = None
+
+    #: «Hostal», «Operador de Turismo»… Si está en dos directorios, los dos:
+    #: «Hotel · Hostal».
+    clase: str | None = None
+
+    #: Su categoría oficial: «2 Estrellas», «Restaurante Un (1) Tenedor».
+    categoria: str | None = None
+
+    #: El número de certificado del Estado. Es lo que convierte «certificado»
+    #: en una afirmación comprobable y no en un adorno.
+    certificado: str | None = None
+
+    fuente: str | None = None
+    fecha_corte: date | None = None
 
 
 class TramoDisponible(BaseModel):

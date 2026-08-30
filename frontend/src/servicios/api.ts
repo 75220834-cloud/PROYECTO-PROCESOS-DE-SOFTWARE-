@@ -702,6 +702,22 @@ export interface ProveedorPublico {
   telefono: string | null;
   correo: string | null;
   descripcion: string | null;
+
+  // --- Solo en los reales. Es lo que los hace comprobables ---
+
+  /** El RUC con el que el Estado lo reconoce. Sirve para verificarlo. */
+  ruc: string | null;
+  direccion: string | null;
+  pagina_web: string | null;
+  /** «Hostal», «Operador de Turismo»… o las dos si está en dos directorios. */
+  clase: string | null;
+  /** Su categoría oficial: «2 Estrellas», «Restaurante Un (1) Tenedor». */
+  categoria: string | null;
+  /** El número de certificado del Estado. Hace «certificado» comprobable. */
+  certificado: string | null;
+  fuente: string | null;
+  fecha_corte: string | null;
+
   /**
    * `true` cuando el proveedor está inventado para poder enseñar el flujo.
    *
@@ -1131,4 +1147,15 @@ export function enviarMensajeAlAsistente(
     // El backend solo acepta «es» o «en»; i18next puede dar «es-PE».
     idioma: idioma.startsWith('en') ? 'en' : 'es',
   });
+}
+
+/**
+ * El directorio de prestadores REALES del valle.
+ *
+ * Están certificados por el MINCETUR pero **no tienen convenio con este
+ * proyecto**, y la interfaz lo dice. No se les inventa capacidad ni horarios:
+ * eso no está publicado.
+ */
+export function listarPrestadores(clase?: string): Promise<ProveedorPublico[]> {
+  return obtener<ProveedorPublico[]>('/api/proveedores', { clase });
 }

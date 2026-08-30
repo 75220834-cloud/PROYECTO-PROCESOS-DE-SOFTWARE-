@@ -442,7 +442,16 @@
     "porcentajeValidado": "Validado",
     "fechaMedicion": "Última medición",
     "pestanaEvidencia": "Evidencia",
-    "pestanaIndicadores": "Indicadores"
+    "pestanaIndicadores": "Indicadores",
+    "directorioTitulo": "Prestadores reales del valle",
+    "directorioAviso": "{{total}} negocios que existen de verdad, certificados por el MINCETUR. NO tienen convenio con este proyecto: aquí se te dice a quién llamar, no se reserva nada por ti. Sus horarios, precios y disponibilidad no están publicados, así que no los mostramos.",
+    "directorioFuente": "Fuente: Directorio Nacional de Prestadores de Servicios Turísticos Calificados, MINCETUR (datos abiertos).",
+    "suWeb": "Su web",
+    "verEnElMapa": "Ver en el mapa",
+    "ruc": "RUC",
+    "todos": "Todos",
+    "verTodos": "Ver los {{total}}",
+    "sinPrestadores": "No hay prestadores de ese tipo en el directorio oficial."
   },
   "valoracion": {
     "titulo": "¿Qué tal estuvo?",

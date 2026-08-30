@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import FormularioSolicitud from '@/componentes/FormularioSolicitud';
+import { DirectorioDePrestadores } from '@/componentes/DirectorioDePrestadores';
 import TarjetaServicio from '@/componentes/TarjetaServicio';
 import TarjetaSolicitud from '@/componentes/TarjetaSolicitud';
 import { useSesion } from '@/hooks/useSesion';
@@ -153,6 +154,13 @@ export function Coordinacion() {
           </ul>
         )}
       </section>
+
+      {/* Los prestadores REALES del valle, debajo de los servicios que sí se
+          pueden pedir aquí. Van en su propia sección y no mezclados: unos
+          existen y no tienen trato con nosotros; los otros son de
+          demostración y sirven para enseñar el ciclo completo. Mezclarlos
+          haría imposible saber cuál es cuál. */}
+      <DirectorioDePrestadores />
 
       {/* Mis solicitudes: el seguimiento que cierra la brecha 6. */}
       {token && (

@@ -261,18 +261,49 @@ sobre ese campo en vez de dar por hecho que hay red.
 | **Migraciones** | La última, sobre un esquema que ya existe | **Las 11, desde cero** |
 | **Dependencias** | Ya instaladas hace meses | **Se instalan desde `pyproject.toml`** en cada ejecución |
 | **Qué evidencia deja** | **Ninguna.** Lo que salió por la terminal y se perdió | Registro completo por paso, con fecha, guardado en GitHub, y distintivo verde o rojo junto al commit |
-| **Cuánto tarda** | **~4 min** medidos (3:11 pytest + 0:36 vitest + el resto) | **Estimado 8–12 min** la primera vez; menos después, por la caché de pip y npm. *No medido: ver el aviso de abajo* |
+| **Cuánto tarda** | **~4 min** medidos (3:11 pytest + 0:36 vitest + el resto) | **3 min 3 s** medidos en la primera ejecución. Los dos trabajos van en paralelo, así que manda el más lento |
 | **Se puede saltar** | Sí, sin dejar rastro | No |
 | **Qué comprueba de más** | Prettier, y con la red vial completa | Instalación desde cero, migraciones desde vacío |
 | **Qué comprueba de menos** | — | Prettier, el asistente con Ollama, el modelo de sentimiento |
 
 ### Sobre la fila «cuánto tarda»
 
-Los tiempos del procedimiento manual están **medidos en esta laptop**. Los del
-automático son **una estimación**, no una medición: el flujo se sube en este
-mismo commit y su primera ejecución ocurre en los servidores de GitHub.
+Los dos están medidos. El manual, en esta laptop. El automático, en la
+**primera ejecución real** del flujo:
+[run 33940471717](https://github.com/75220834-cloud/PROYECTO-PROCESOS-DE-SOFTWARE-/actions/runs/33940471717),
+disparada por el push de `bc17ea7`, **verde al primer intento**.
 
-El tiempo real hay que leerlo en la pestaña **Actions** del repositorio.
+| Trabajo | Duración | Paso más caro |
+|---|---|---|
+| Backend | **177 s** | Instalar dependencias (55 s) y pruebas (81 s) |
+| Frontend | **31 s** | Pruebas de vitest (7 s) |
+| **Total de la ejecución** | **3 min 3 s** | Los dos trabajos corren a la vez |
+
+Desglose del trabajo del backend, que es el que manda:
+
+| Paso | Tiempo |
+|---|---|
+| Levantar el contenedor de PostGIS | 27 s |
+| Descargar el código | 1 s |
+| Preparar Python 3.14 | 1 s |
+| **Instalar las dependencias** | **55 s** |
+| Crear las extensiones | 1 s |
+| **Las 11 migraciones desde vacío** | **1 s** |
+| **Las 550 pruebas con cobertura** | **81 s** |
+| ruff | < 1 s |
+| black `--check` | 2 s |
+
+Dos cosas llaman la atención en esa tabla, y las dos son buenas noticias:
+
+**Las pruebas tardan 81 s en GitHub y 191 s en la laptop.** No es que la
+máquina de GitHub sea el doble de rápida: es que **no tiene la red vial
+descargada**, así que los traslados se calculan en línea recta en vez de
+recorrer un grafo de 28 MB. Es el mismo motivo por el que allí la cobertura
+sale algo más baja.
+
+**Instalar las dependencias cuesta más que ejecutar todas las pruebas.** Esos
+55 s bajarán en las siguientes ejecuciones, porque `cache: pip` guarda las
+descargas de una ejecución a la siguiente.
 
 ---
 

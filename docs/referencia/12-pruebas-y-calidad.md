@@ -13,7 +13,15 @@ archivo, la filosofía que siguen y las herramientas de calidad que se ejecutan.
 | **Frontend** | 148 pasan | — |
 | **Total** | **697** | |
 
-El mínimo que exige el proyecto es **60 % en el backend**.
+El mínimo que exige el proyecto es **60 % en el backend**, y desde el 4 de
+septiembre de 2026 **se exige de verdad**: `pyproject.toml` lleva
+`fail_under = 60` en la configuración de cobertura, así que `pytest` devuelve
+error si el total baja de ahí.
+
+> Antes solo se **medía**. El porcentaje salía por pantalla y pytest devolvía
+> éxito aunque hubiera bajado al 20 %. La regla existía en la documentación y
+> en ningún sitio más. Ver
+> [la nota del 4 de septiembre](../decisiones/2026-09-04-que-se-automatizo-y-que-sigue-siendo-manual.md).
 
 ```bash
 cd backend && .venv/Scripts/python.exe -m pytest -q
@@ -183,9 +191,24 @@ cd frontend && npx tsc --noEmit -p tsconfig.app.json && npx eslint src/ && npx p
 
 Si los dos pasan, se puede hacer commit.
 
+**Y al subirlo, GitHub Actions los vuelve a ejecutar solo**, en una máquina
+limpia y con la base de datos construida desde cero. No sustituye a la lista
+de arriba: la respalda, y deja constancia pública de cada ejecución. Ver
+[17 — Integración y despliegue](17-integracion-y-despliegue.md).
+
+Dos matices, para no citar de más:
+
+- La integración continua **no ejecuta Prettier** (riesgo de fallar por
+  finales de línea, no por calidad), ni el asistente con Ollama, ni el modelo
+  de sentimiento. Se salta **una** prueba, y está medido.
+- A cambio comprueba dos cosas que la laptop no comprueba nunca: que el
+  proyecto **se instala desde cero** y que **las 11 migraciones se aplican
+  sobre una base vacía**.
+
 ---
 
 ## Relacionado
 
 - [15 — Historial de fallos](15-historial-de-fallos.md)
 - [13 — Instalación y operación](13-instalacion-y-operacion.md)
+- [17 — Integración y despliegue](17-integracion-y-despliegue.md)

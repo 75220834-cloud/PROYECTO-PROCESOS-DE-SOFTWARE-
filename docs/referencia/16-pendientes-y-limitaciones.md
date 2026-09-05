@@ -154,6 +154,8 @@ Y una que no está en el plan pero se ganó a pulso:
 | Idiomas | 2, 581 claves simétricas |
 | Modo oscuro | 0 fallos de contraste en 9 rutas |
 | SonarQube | Preparado, **NO ejecutado** |
+| Integración continua | GitHub Actions, en cada push a `main` |
+| Despliegue | **No existe.** Ver [17](17-integracion-y-despliegue.md) |
 
 ---
 
@@ -162,3 +164,4 @@ Y una que no está en el plan pero se ganó a pulso:
 - [01 — Visión y contexto](01-vision-y-contexto.md)
 - [06 — Fuentes de datos](06-fuentes-de-datos.md)
 - [15 — Historial de fallos](15-historial-de-fallos.md)
+- [17 — Integración y despliegue](17-integracion-y-despliegue.md)

@@ -1,0 +1,449 @@
+# ---------------------------------------------------------------------------
+# RutaVivaMantaro — Integración continua
+#
+# QUÉ ES ESTO
+#
+# Un archivo que GitHub lee y ejecuta solo, en sus propias máquinas, cada vez
+# que alguien sube código. Levanta el proyecto desde cero —base de datos
+# incluida—, corre todas las pruebas y todas las comprobaciones de estilo, y
+# marca el commit en verde o en rojo.
+#
+# POR QUÉ EXISTE
+#
+# Hasta ahora las mismas comprobaciones se hacían **a mano**, en la laptop,
+# antes de cada commit. Funcionaba mientras nadie se olvidara. El problema de
+# un control manual no es que falle: es que **no deja constancia**. Nadie puede
+# comprobar, mirando el repositorio, si las pruebas pasaron antes de un commit
+# concreto o si ese día había prisa.
+#
+# Esto convierte esa disciplina en una comprobación que se ejecuta sola, en una
+# máquina limpia, y que deja registro público de cada ejecución.
+#
+# LA MÁQUINA LIMPIA IMPORTA
+#
+# GitHub arranca un Ubuntu recién creado, sin Python instalado, sin la base de
+# datos, sin `node_modules` y sin los datos descargados. Si el proyecto solo
+# funcionaba por algo que quedó instalado en la laptop hace meses, aquí se cae.
+# Eso es una función del sistema, no un inconveniente.
+#
+# DOCUMENTACIÓN COMPLETA: docs/referencia/17-integracion-y-despliegue.md
+# ---------------------------------------------------------------------------
+
+name: Integración continua
+
+# ---------------------------------------------------------------------------
+# CUÁNDO SE DISPARA
+#
+# Dos situaciones, y las dos apuntan a `main` porque este proyecto no usa
+# ramas (regla 1.4 del plan de trabajo: todo va a `main`):
+#
+#   push          — cada vez que se sube un commit. Es el caso real de este
+#                   proyecto, y el que deja el distintivo verde o rojo junto
+#                   al commit en la página del repositorio.
+#   pull_request  — si alguna vez se abre una propuesta de cambio contra
+#                   `main`, se comprueba ANTES de integrarla. Hoy no se usa,
+#                   pero cuesta una línea y es lo que pide la asignatura.
+# ---------------------------------------------------------------------------
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# ---------------------------------------------------------------------------
+# PERMISOS
+#
+# El flujo solo necesita LEER el repositorio: no publica nada, no crea
+# etiquetas, no comenta en las propuestas de cambio. Se declara el permiso
+# mínimo de forma explícita en vez de aceptar el que GitHub da por omisión,
+# que es más amplio.
+#
+# Es el mismo principio de la regla 1.9 sobre secretos: no conceder nada que
+# no haga falta.
+# ---------------------------------------------------------------------------
+permissions:
+  contents: read
+
+# ---------------------------------------------------------------------------
+# EJECUCIONES SIMULTÁNEAS
+#
+# Si se suben dos commits seguidos, la ejecución del primero se cancela: lo
+# que interesa saber es si el ÚLTIMO estado del código está sano. Sin esto se
+# acumulan ejecuciones que ya no responden a ninguna pregunta útil y se gastan
+# minutos del plan gratuito.
+# ---------------------------------------------------------------------------
+concurrency:
+  group: integracion-continua-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # =========================================================================
+  # TRABAJO 1 — BACKEND
+  #
+  # Necesita base de datos de verdad, así que es el más largo. Se explica
+  # entero abajo, bloque por bloque.
+  # =========================================================================
+  backend:
+    name: Backend — migraciones, pruebas y estilo
+    runs-on: ubuntu-latest
+
+    # Un tope de tiempo. Si algo se cuelga —una descarga que no responde, una
+    # consulta bloqueada— la ejecución se corta en vez de quedarse consumiendo
+    # minutos hasta el límite de seis horas que pone GitHub por omisión.
+    timeout-minutes: 30
+
+    # -----------------------------------------------------------------------
+    # EL SERVICIO DE BASE DE DATOS
+    #
+    # GitHub levanta este contenedor ANTES de ejecutar ningún paso, y lo
+    # mantiene vivo durante todo el trabajo. Es el equivalente exacto de
+    # `docker compose up -d` en la laptop.
+    #
+    # POR QUÉ LA MISMA IMAGEN QUE docker-compose.yml
+    #
+    # `postgis/postgis:16-3.4` es literalmente la misma línea que está en
+    # docker-compose.yml. Si aquí se pusiera un PostgreSQL pelado, las pruebas
+    # fallarían en la primera columna GEOGRAPHY; y si se pusiera otra versión
+    # de PostGIS, la integración continua estaría comprobando un sistema
+    # distinto del que corre en la laptop, que es la peor forma de tener una
+    # comprobación: la que da confianza sin merecerla.
+    #
+    # POR QUÉ NO SE PUEDEN SIMULAR ESTAS PRUEBAS
+    #
+    # El proyecto usa ST_X, ST_Y, índices GIST y `unaccent`. Ninguna base
+    # simulada las implementa. Está razonado en pruebas/conftest.py.
+    # -----------------------------------------------------------------------
+    services:
+      base_datos:
+        image: postgis/postgis:16-3.4
+        env:
+          # Estas credenciales son de usar y tirar: viven dentro de una máquina
+          # que GitHub destruye al terminar y a la que nadie más tiene acceso.
+          # NO son un secreto del proyecto y por eso pueden estar escritas
+          # aquí; el .env real sigue sin subirse nunca (regla 1.9).
+          POSTGRES_USER: rutaviva
+          POSTGRES_PASSWORD: contrasena_de_integracion_continua
+          POSTGRES_DB: rutavivamantaro
+        ports:
+          # Se publica el puerto en la máquina que ejecuta los pasos, para que
+          # el backend pueda conectarse a localhost:5432 igual que en la laptop.
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rutaviva -d rutavivamantaro"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        # El health-check de arriba es imprescindible, no decorativo. Sin él,
+        # GitHub daría el servicio por listo en cuanto el proceso arranca, y
+        # las migraciones se lanzarían contra una base que todavía no acepta
+        # conexiones. Con él, ningún paso empieza hasta que `pg_isready`
+        # responde que sí de verdad.
+
+    # -----------------------------------------------------------------------
+    # VARIABLES DE ENTORNO DEL BACKEND
+    #
+    # En la laptop estos valores salen del archivo `.env`, que NO está en el
+    # repositorio y por lo tanto tampoco está aquí. `pydantic-settings` lee
+    # primero las variables de entorno, así que el backend arranca igual sin
+    # ver ningún `.env`.
+    #
+    # Esto es, de paso, una comprobación gratis de la regla 1.9: si alguien
+    # metiera un secreto de verdad en el código en vez de en la configuración,
+    # este flujo seguiría pasando en verde y el fallo pasaría desapercibido…
+    # pero si alguien hiciera lo contrario —hacer que el backend NO arranque
+    # sin `.env`— se caería aquí de inmediato.
+    # -----------------------------------------------------------------------
+    env:
+      POSTGRES_USUARIO: rutaviva
+      POSTGRES_CONTRASENA: contrasena_de_integracion_continua
+      POSTGRES_BASE: rutavivamantaro
+      POSTGRES_HOST: localhost
+      POSTGRES_PUERTO: 5432
+
+      ENTORNO: desarrollo
+      # Clave de firma de tokens SOLO para esta ejecución. No es la del
+      # proyecto, no sirve fuera de esta máquina y se destruye con ella.
+      CLAVE_SECRETA: clave_de_integracion_continua_sin_ningun_valor_real
+      MINUTOS_EXPIRACION_TOKEN: 1440
+
+      # Los tres interruptores de la regla de oro (1.6) se dejan como en la
+      # laptop. Las pruebas que comparan modelo contra reglas pasan los dos
+      # valores a mano, así que no dependen de esto; queda igual para que la
+      # integración continua no esté midiendo una configuración distinta.
+      USAR_MODELO_RECOMENDACION: true
+      USAR_MODELO_AFLUENCIA: true
+      USAR_MODELO_SENTIMIENTO: true
+
+    # Todos los pasos se ejecutan dentro de `backend/`, igual que en la laptop.
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      # ---------------------------------------------------------------------
+      # PASO 1 — Traer el código
+      #
+      # Clona el repositorio en la máquina. Sin esto no hay nada que probar.
+      # ---------------------------------------------------------------------
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------------
+      # PASO 2 — Preparar Python
+      #
+      # La máquina viene con alguna versión de Python, pero no necesariamente
+      # la del proyecto. Se fija la misma que usa la laptop (3.14) para que la
+      # integración continua no esté probando un intérprete distinto.
+      #
+      # `cache: pip` guarda las descargas de un día para otro. La primera vez
+      # no ahorra nada; a partir de la segunda, quita varios minutos, que es
+      # casi todo el tiempo de este paso.
+      # ---------------------------------------------------------------------
+      - name: Preparar Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      # ---------------------------------------------------------------------
+      # PASO 3 — Instalar las dependencias del backend
+      #
+      # Se instalan cuatro de los cinco grupos declarados en pyproject.toml:
+      #
+      #   desarrollo     pytest, pytest-cov, ruff, black
+      #   autenticacion  passlib[argon2], python-jose  → pruebas de seguridad
+      #   datos          pandas, scikit-learn          → catálogo y TF-IDF
+      #   geo            ortools, osmnx, rasterio      → ruteo y elevación
+      #
+      # QUÉ FALTA A PROPÓSITO, Y POR QUÉ
+      #
+      # El grupo `sentimiento` (pysentimiento) NO se instala. Arrastra PyTorch
+      # —unos 2,5 GB— y además el analizador **descarga su modelo por red la
+      # primera vez que se usa**. Las pruebas de este proyecto no tocan la red
+      # por decisión declarada: una prueba que depende de un servidor ajeno
+      # falla el día que ese servidor se cae, y no por culpa del código.
+      #
+      # Consecuencia medida, no supuesta: se salta UNA prueba, la que compara
+      # el modelo con las reglas. Las otras 50 del análisis de sentimiento
+      # corren igual, porque están escritas contra la alternativa por reglas
+      # —que es la que tiene que funcionar siempre—, y el módulo se queda en
+      # 96 % de cobertura de todas formas.
+      #
+      # Es la regla de oro (1.6) dando un beneficio que no se buscaba: como
+      # cada funcionalidad con modelo tiene su alternativa por reglas, el
+      # proyecto se puede comprobar entero sin descargar un solo modelo.
+      # ---------------------------------------------------------------------
+      - name: Instalar las dependencias del backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[desarrollo,autenticacion,datos,geo]"
+
+      # ---------------------------------------------------------------------
+      # PASO 4 — Crear las extensiones de PostgreSQL
+      #
+      # La imagen de PostGIS instala `postgis` sola, pero el proyecto necesita
+      # dos extensiones más:
+      #
+      #   unaccent  buscar «Concepcion» y encontrar «CONCEPCIÓN». Es
+      #             exactamente el fallo por el que el asistente llegó a negar
+      #             que Concepción tuviera atractivos, teniendo trece.
+      #   pg_trgm   búsqueda por similitud, tolerante a erratas.
+      #
+      # En la laptop esto lo hace Docker solo, montando el archivo SQL en
+      # /docker-entrypoint-initdb.d/. Aquí no se puede: el contenedor del
+      # servicio arranca ANTES de que exista el código descargado, así que no
+      # hay nada que montar. Por eso el mismo archivo se aplica a mano, y se
+      # aplica el ARCHIVO REAL del repositorio en vez de copiar sus órdenes
+      # aquí: si mañana se añade una extensión, este paso la recoge solo.
+      #
+      # `ON_ERROR_STOP=1` hace que psql devuelva error en vez de seguir
+      # adelante. Sin eso, una extensión que no se pudiera crear dejaría el
+      # fallo escondido hasta la primera prueba que la usara.
+      # ---------------------------------------------------------------------
+      - name: Crear las extensiones de PostgreSQL (PostGIS, unaccent, pg_trgm)
+        env:
+          PGPASSWORD: contrasena_de_integracion_continua
+        run: |
+          # El cliente de PostgreSQL suele venir en la máquina de GitHub; si
+          # algún día deja de venir, se instala aquí en vez de fallar.
+          if ! command -v psql > /dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          psql -h localhost -p 5432 -U rutaviva -d rutavivamantaro \
+               -v ON_ERROR_STOP=1 -f scripts_sql/99_extensiones.sql
+
+      # ---------------------------------------------------------------------
+      # PASO 5 — Migraciones de Alembic
+      #
+      # Construye el esquema completo desde una base VACÍA, aplicando las
+      # migraciones una por una en orden.
+      #
+      # Esto comprueba algo que en la laptop no se comprueba casi nunca: que
+      # la cadena entera de migraciones funciona desde cero. En el día a día
+      # uno aplica solo la última sobre una base que ya existe. Si una
+      # migración antigua se quedó rota —porque se editó a mano, o porque
+      # depende de algo que se borró después—, la laptop no se entera y esto
+      # sí.
+      #
+      # Es especialmente útil en este proyecto, donde ya hubo que escribir a
+      # mano el cambio de una restricción CHECK porque Alembic no la detecta.
+      # ---------------------------------------------------------------------
+      - name: Ejecutar las migraciones de Alembic
+        run: python -m alembic upgrade head
+
+      # ---------------------------------------------------------------------
+      # PASO 6 — Las pruebas, con el umbral de cobertura
+      #
+      # 550 pruebas. La configuración de cobertura vive en pyproject.toml, y
+      # desde este mismo cambio incluye `fail_under = 60`: pytest devuelve
+      # error si la cobertura total baja del 60 %, sin necesidad de pasarle
+      # nada por línea de órdenes.
+      #
+      # QUÉ SE ROMPÍA ANTES
+      #
+      # La cobertura se medía pero no se exigía. El número salía por pantalla
+      # y pytest devolvía éxito aunque hubiera bajado al 20 %. La meta del
+      # 60 % existía solo como texto en la documentación.
+      #
+      # POR QUÉ AQUÍ SALE UN NÚMERO ALGO MENOR QUE EN LA LAPTOP
+      #
+      # Esta máquina no tiene la red vial descargada (son 28 MB que el
+      # repositorio no guarda, por decisión: se guardan las instrucciones para
+      # obtener los datos, no los datos). Sin ella, los tramos se calculan en
+      # línea recta y unas cuantas líneas de `red_vial.py` no se recorren.
+      #
+      # Las pruebas siguen pasando porque el sistema está escrito para admitir
+      # las dos situaciones y DECIR cuál usó —`origen_del_calculo` vale
+      # «red_vial» o «linea_recta»—, y las pruebas afirman sobre eso en vez de
+      # dar por hecho que hay red. La honestidad del sistema sobre lo que sabe
+      # y lo que estima es lo que permite que esto se pueda probar aquí.
+      # ---------------------------------------------------------------------
+      - name: Correr las pruebas con cobertura (falla por debajo del 60 %)
+        run: python -m pytest -q
+
+      # ---------------------------------------------------------------------
+      # PASO 7 — ruff
+      #
+      # Detecta imports sin usar, nombres indefinidos, orden de imports y
+      # trampas frecuentes. Se revisan las tres carpetas que se revisan a
+      # mano, `alembic/` incluida: las migraciones también son código.
+      # ---------------------------------------------------------------------
+      - name: Revisar el estilo con ruff
+        run: python -m ruff check app/ pruebas/ alembic/
+
+      # ---------------------------------------------------------------------
+      # PASO 8 — black
+      #
+      # `--check` NO reformatea: solo mira y devuelve error si algún archivo
+      # no está como black lo dejaría. Es lo que corresponde aquí, porque un
+      # flujo de integración no debe modificar el código que está juzgando.
+      #
+      # Va al final a propósito. Un fallo de formato es el menos grave de
+      # todos, y ponerlo antes que las pruebas escondería un fallo real detrás
+      # de una línea demasiado larga.
+      # ---------------------------------------------------------------------
+      - name: Comprobar el formato con black
+        run: python -m black --check app/ pruebas/ alembic/
+
+  # =========================================================================
+  # TRABAJO 2 — FRONTEND
+  #
+  # Va en un trabajo aparte, no como pasos más del anterior, por dos razones:
+  #
+  #   1. Corre EN PARALELO con el backend. El tiempo total de la ejecución es
+  #      el del trabajo más lento, no la suma de los dos.
+  #   2. No necesita base de datos. Meterlo en el trabajo del backend le haría
+  #      esperar a que PostGIS estuviera listo sin ninguna necesidad.
+  #
+  # Si uno de los dos falla, la ejecución entera sale en rojo. Son
+  # independientes para ir rápido, no para tolerarse fallos entre ellos.
+  # =========================================================================
+  frontend:
+    name: Frontend — pruebas, estilo y tipos
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      # ---------------------------------------------------------------------
+      # PASO 1 — Traer el código
+      #
+      # OJO: se descarga el repositorio COMPLETO, no solo `frontend/`.
+      #
+      # No es descuido. La prueba `utilidades/avisos.prueba.ts` abre el
+      # archivo Python `backend/app/servicios/avisos.py` y lee de ahí la lista
+      # de los 67 códigos de aviso, para comprobar que todos tienen su frase
+      # en español y en inglés. Duplicar esa lista en el frontend sería copiar
+      # justo lo que se quiere comprobar, que no comprueba nada.
+      #
+      # Consecuencia: este trabajo NO puede usar una descarga parcial. Si
+      # alguien la añade para ir más rápido, esa prueba se cae.
+      # ---------------------------------------------------------------------
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------------
+      # PASO 2 — Preparar Node
+      #
+      # Misma versión mayor que la laptop. `cache: npm` guarda las descargas
+      # entre ejecuciones, apoyándose en el package-lock.json.
+      # ---------------------------------------------------------------------
+      - name: Preparar Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # ---------------------------------------------------------------------
+      # PASO 3 — Instalar las dependencias
+      #
+      # `npm ci` y no `npm install`, que no es lo mismo:
+      #
+      #   npm install  puede ACTUALIZAR el package-lock.json si encuentra
+      #                versiones más nuevas que encajen.
+      #   npm ci       instala exactamente lo que dice el package-lock.json, y
+      #                falla si el lock no concuerda con el package.json.
+      #
+      # Para una comprobación automática hace falta lo segundo: si cada
+      # ejecución pudiera instalar versiones distintas, un fallo dejaría de
+      # ser reproducible y la comprobación no diría nada.
+      # ---------------------------------------------------------------------
+      - name: Instalar las dependencias del frontend
+        run: npm ci
+
+      # ---------------------------------------------------------------------
+      # PASO 4 — vitest
+      #
+      # 148 pruebas de componentes y utilidades, sobre jsdom. Ninguna necesita
+      # que el backend esté levantado: las respuestas del API se simulan.
+      # ---------------------------------------------------------------------
+      - name: Correr las pruebas con vitest
+        run: npx vitest run
+
+      # ---------------------------------------------------------------------
+      # PASO 5 — ESLint
+      #
+      # Configuración plana (ESLint 10), con las reglas de los ganchos de
+      # React, que son las que cazan los fallos de verdad en este proyecto.
+      # ---------------------------------------------------------------------
+      - name: Revisar el estilo con ESLint
+        run: npx eslint src/
+
+      # ---------------------------------------------------------------------
+      # PASO 6 — TypeScript
+      #
+      # `--noEmit` comprueba los tipos sin generar ningún archivo: aquí no se
+      # está construyendo nada, solo verificando.
+      #
+      # Es el paso que más se nota cuando cambia el API: el modo estricto
+      # obliga a que todos los sitios afectados se enteren del cambio, en vez
+      # de romperse en el navegador cuando el visitante abra esa pantalla.
+      # ---------------------------------------------------------------------
+      - name: Comprobar los tipos con TypeScript
+        run: npx tsc --noEmit -p tsconfig.app.json

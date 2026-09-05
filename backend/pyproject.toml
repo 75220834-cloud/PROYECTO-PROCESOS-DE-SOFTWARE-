@@ -103,7 +103,7 @@ exclude = '(\.venv|alembic/versions|notebooks)'
 
 # ---------------------------------------------------------------------------
 # pytest y cobertura. La meta declarada en el PROMPT_MAESTRO es 60 % desde
-# la Fase 2; aqui queda configurado el reporte para poder medirlo.
+# la Fase 2. Aqui no solo se mide: se EXIGE (ver fail_under mas abajo).
 # ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
 testpaths = ["pruebas"]
@@ -113,6 +113,24 @@ addopts = "-v --cov=app --cov-report=term-missing"
 [tool.coverage.run]
 source = ["app"]
 omit = ["app/__init__.py", "*/pruebas/*"]
+
+[tool.coverage.report]
+# Umbral que convierte la meta del proyecto en una comprobacion real.
+#
+# Hasta ahora la cobertura se MEDIA pero no se EXIGIA: pytest imprimia el
+# porcentaje y devolvia exito aunque hubiera bajado al 20 %. La regla del 60 %
+# existia solo como texto en la documentacion, y una regla que ninguna
+# herramienta comprueba es una regla que tarde o temprano se incumple sin que
+# nadie se entere.
+#
+# Con fail_under, pytest termina con codigo de error si el total baja de 60.
+# Eso hace que la integracion continua se ponga en rojo sola, sin que nadie
+# tenga que acordarse de mirar el numero.
+#
+# El valor es 60 y no la cobertura real de hoy (~73 %) a proposito: es el
+# minimo comprometido, no la marca actual. Subirlo a 73 obligaria a subir la
+# cobertura en cualquier cambio que toque codigo nuevo, que no es lo pactado.
+fail_under = 60
 
 # Le indica a setuptools que el codigo del backend es el paquete "app"
 # y todos sus subpaquetes (modelos, esquemas, rutas, servicios, ia...).

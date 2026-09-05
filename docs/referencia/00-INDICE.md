@@ -4,7 +4,7 @@ Esto es el **mapa completo del proyecto**. Está escrito para que nadie —ni un
 persona nueva, ni yo en una sesión futura— tenga que volver a auditar 24 000
 líneas de código para saber qué hay, cómo funciona y por qué se hizo así.
 
-**Última actualización:** 30 de agosto de 2026
+**Última actualización:** 4 de septiembre de 2026
 **Estado del proyecto:** terminado (las 8 fases del plan, 0–7)
 
 ---
@@ -33,7 +33,8 @@ verdad. **10** son los indicadores con lo que cada uno NO dice.
 ### Si vas a tocar el código
 
 **02 → 03 → 04 → 05 → 12**. Y antes de añadir nada, mira **16** por si ya está
-decidido que no se hace.
+decidido que no se hace. **17** dice qué comprueba la integración continua en
+cada push, que es lo que se va a poner en rojo si algo se rompe.
 
 ---
 
@@ -58,6 +59,7 @@ decidido que no se hace.
 | 14 | [14-guion-de-defensa.md](14-guion-de-defensa.md) | Qué enseñar y en qué orden, y las preguntas incómodas con su respuesta honesta. |
 | 15 | [15-historial-de-fallos.md](15-historial-de-fallos.md) | Todos los fallos encontrados, cómo se encontraron y cómo se arreglaron. Es lo que demuestra que esto se probó de verdad. |
 | 16 | [16-pendientes-y-limitaciones.md](16-pendientes-y-limitaciones.md) | Lo que no está hecho, lo que no se puede hacer con los datos que hay, y las ideas descartadas con su motivo. |
+| 17 | [17-integracion-y-despliegue.md](17-integracion-y-despliegue.md) | Cómo se comprueba el proyecto a mano y de forma automática, los dos procedimientos comparados, y qué haría falta para desplegarlo de verdad. |
 
 ---
 
@@ -68,7 +70,7 @@ decisión concreta vive donde se tomó, y se enlaza desde aquí:
 
 | Carpeta | Qué contiene |
 |---|---|
-| `docs/decisiones/` | **14 notas**, una por decisión de proceso. Se escribieron en el momento de tomar cada una, con las mediciones delante. Reescribirlas ahora perdería matices. |
+| `docs/decisiones/` | **15 notas**, una por decisión de proceso. Se escribieron en el momento de tomar cada una, con las mediciones delante. Reescribirlas ahora perdería matices. |
 | `docs/indicadores/` | **6 notas**, una por indicador, con su medición del día y las pruebas que lo sostienen. |
 | `README.md` | Cómo montar el proyecto desde cero. Es la puerta de entrada del repositorio, y no se duplica aquí: el archivo 13 lo resume y enlaza. |
 

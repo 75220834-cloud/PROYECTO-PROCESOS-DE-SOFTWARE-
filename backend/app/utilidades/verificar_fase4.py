@@ -193,7 +193,12 @@ def main() -> int:
             print(f"   tramos     : {reales} sobre la red vial, {estimados} estimados")
 
             # --- Comprobación 6: los tramos estimados se avisan -----------
-            hay_aviso = any("estimaci" in a.lower() for a in itinerario.avisos)
+            # Desde la Fase 7 los avisos son objetos `Aviso` con código y
+            # parámetros, no frases. Buscar una subcadena aquí reventaba con
+            # AttributeError, y además era la forma frágil de comprobarlo: el
+            # aviso se identifica por su código, que es lo que decide el
+            # backend, no por cómo lo redacte la interfaz en cada idioma.
+            hay_aviso = any(a.codigo == "tramos_estimados" for a in itinerario.avisos)
             if estimados > 0 and not hay_aviso:
                 fallos.append(f"{etiqueta}: hay tramos estimados y no se avisa de ello")
 

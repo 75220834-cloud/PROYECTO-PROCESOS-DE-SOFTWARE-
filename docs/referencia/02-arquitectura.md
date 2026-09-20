@@ -197,7 +197,7 @@ PROYECTO-PROCESOS-DE-SOFTWARE-/
 │   ├── servicios/api.ts         todas las llamadas al backend
 │   ├── utilidades/              avisos.ts y formato.ts
 │   ├── hooks/                   useSesion, useTema
-│   ├── i18n/                    es.json y en.json (581 claves cada uno)
+│   ├── i18n/                    es.json y en.json (595 claves cada uno)
 │   └── estilos/index.css        el sistema de diseño
 ├── docs/
 │   ├── referencia/  ← estás aquí

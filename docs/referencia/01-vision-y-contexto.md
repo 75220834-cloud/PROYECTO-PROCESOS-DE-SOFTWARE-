@@ -141,7 +141,7 @@ que poder defender.
 | Commits | 98, todos en `main` |
 | Pruebas | **549 backend** (73 % cobertura) + **148 frontend** |
 | Endpoints | 43, todos documentados en `/docs` |
-| Idiomas | Español e inglés, 581 claves simétricas |
+| Idiomas | Español e inglés, 595 claves simétricas |
 
 ---
 

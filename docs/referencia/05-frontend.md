@@ -135,7 +135,7 @@ color claro de la aplicación. Claro sobre claro.
 
 ## Los dos idiomas
 
-**581 claves** en `es.json` y `en.json`, que coinciden una a una.
+**595 claves** en `es.json` y `en.json`, que coinciden una a una.
 
 Lo que **no** se traduce, a propósito:
 

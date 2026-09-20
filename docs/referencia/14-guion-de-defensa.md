@@ -224,7 +224,7 @@ Y está prohibido explícitamente en el plan de trabajo.
 
 ### «¿Esto funciona en inglés?»
 
-Entero. **581 claves**, incluidos los avisos que genera el backend, que viajan
+Entero. **595 claves**, incluidos los avisos que genera el backend, que viajan
 como código y parámetros. Cámbialo con el selector y recorre lo que quieras.
 
 Lo que no se traduce, a propósito: los nombres del catálogo del MINCETUR, la
@@ -255,7 +255,7 @@ atribución de OpenStreetMap y lo que escriben los proveedores.
 | Festividades | 69 (2026–2028) |
 | Endpoints | **43** |
 | Pruebas | **549 backend** (73 %) + **148 frontend** |
-| Idiomas | 2, con 581 claves simétricas |
+| Idiomas | 2, con 595 claves simétricas |
 | Commits | 98, todos en `main` |
 
 ---

@@ -15,7 +15,7 @@ código y sus datos, y la interfaz escribe la frase:
 { "codigo": "altitud", "parametros": { "metros": 3706 } }
 ```
 
-Son **67 códigos**: los avisos del itinerario, los de las recomendaciones, las
+Son **69 códigos**: los avisos del itinerario, los de las recomendaciones, las
 salvedades del tablero, los motivos de afluencia, las razones por las que un
 recurso quedó descartado, los motivos por los que un servicio no se puede
 pedir, y los mensajes de error.
@@ -35,7 +35,7 @@ y justo debajo
 
 > «El punto más alto del día está a 3706 m s. n. m.»
 
-Las 581 cadenas de la interfaz estaban traducidas; estas no, porque no eran
+Las 595 cadenas de la interfaz estaban traducidas; estas no, porque no eran
 cadenas de la interfaz: eran frases que el backend construía y mandaba ya
 escritas.
 
@@ -148,7 +148,7 @@ respuesta HTTP a medio camino.
   real es nulo, porque al abrir un itinerario guardado los avisos se recalculan.
 - **42 pruebas hubo que reescribir.** Todas afirmaban sobre el texto. Ninguna
   perdió cobertura: la mayoría quedó comprobando algo más preciso que antes.
-- **Un archivo de idioma más largo.** 581 claves por idioma, frente a 467.
+- **Un archivo de idioma más largo.** 595 claves por idioma, frente a 467.
 
 ---
 

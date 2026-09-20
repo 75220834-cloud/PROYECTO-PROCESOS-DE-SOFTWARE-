@@ -219,7 +219,7 @@ Cualquier endpoint que quiera decirle algo al visitante devuelve
 { "codigo": "altitud", "parametros": { "metros": 3706 } }
 ```
 
-Son **67 códigos** declarados en `app/servicios/avisos.py`. La interfaz los
+Son **69 códigos** declarados en `app/servicios/avisos.py`. La interfaz los
 convierte en frase con i18next, lo que además resuelve los plurales.
 
 Aparecen en: `avisos` (itinerario, recomendaciones, evidencia), `motivo`

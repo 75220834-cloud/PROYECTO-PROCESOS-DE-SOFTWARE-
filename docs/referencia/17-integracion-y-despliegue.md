@@ -217,7 +217,7 @@ la clase de cosa que puede quedar rota sin que nadie se entere.
 
 > ⚠️ **El trabajo del frontend no puede usar una descarga parcial del
 > repositorio.** La prueba `utilidades/avisos.prueba.ts` abre el archivo Python
-> `backend/app/servicios/avisos.py` y lee de ahí los 67 códigos de aviso, para
+> `backend/app/servicios/avisos.py` y lee de ahí los 69 códigos de aviso, para
 > comprobar que todos tienen su frase en español y en inglés. Si alguien añade
 > una descarga parcial para ir más rápido, esa prueba se cae.
 

@@ -56,7 +56,7 @@ graph LR
 | **Código y parámetros** | `backend/app/servicios/avisos.py` | «Hay algo que decir aquí» |
 | **La frase** | `frontend/src/i18n/{es,en}.json` | «Cómo se dice» |
 
-Son **67 códigos**, agrupados por origen: itinerario, recomendaciones,
+Son **69 códigos**, agrupados por origen: itinerario, recomendaciones,
 afluencia, tablero, coordinación y errores.
 
 ---
@@ -179,7 +179,7 @@ traducción que no existe devolvería la clave cruda y perdería un mensaje úti
   la produjo— pero se recalculan al abrir el itinerario.
 - **42 pruebas hubo que reescribir.** Ninguna perdió cobertura: la mayoría
   quedó comprobando algo más preciso.
-- **Un archivo de idioma más largo:** 581 claves por idioma, frente a 467.
+- **Un archivo de idioma más largo:** 595 claves por idioma, frente a 467.
 
 ---
 

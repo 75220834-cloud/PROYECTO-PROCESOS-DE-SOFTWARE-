@@ -151,7 +151,7 @@ Y una que no está en el plan pero se ganó a pulso:
 | Pruebas | 549 backend (73 %) + 148 frontend |
 | Calidad | ruff, black, eslint, prettier, tsc — **limpios** |
 | Endpoints | 43, ninguno sin resumen |
-| Idiomas | 2, 581 claves simétricas |
+| Idiomas | 2, 595 claves simétricas |
 | Modo oscuro | 0 fallos de contraste en 9 rutas |
 | SonarQube | Preparado, **NO ejecutado** |
 | Integración continua | GitHub Actions, en cada push a `main` |

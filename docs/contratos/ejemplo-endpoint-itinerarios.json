@@ -1,0 +1,491 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RutaVivaMantaro",
+    "description": "API de la plataforma de turismo inteligente para la Ruta del Valle del Mantaro (Junin, Peru). Proyecto del curso Procesos de Software, Universidad Continental.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/itinerarios": {
+      "post": {
+        "tags": [
+          "itinerarios"
+        ],
+        "summary": "Arma el itinerario de un día para una preferencia",
+        "description": "Recomienda, ordena y horaria las paradas de un día.\n\nQué vía se usa lo decide ``USAR_MODELO_RECOMENDACION`` del ``.env``: con\n``true`` optimiza con OR-Tools, con ``false`` usa el vecino más cercano. El\ncampo ``generado_por`` de la respuesta deja constancia de cuál fue.",
+        "operationId": "armar_itinerario_api_itinerarios_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudItinerario"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaItinerario"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AvisoPublico": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "title": "Codigo",
+            "examples": [
+              "altitud"
+            ]
+          },
+          "parametros": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parametros",
+            "examples": [
+              {
+                "metros": 3706
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "codigo"
+        ],
+        "title": "AvisoPublico",
+        "description": "Un aviso, sin redactar.\n\nLa interfaz lo convierte en frase con ``t('avisos.' + codigo, parametros)``."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ParadaPublica": {
+        "properties": {
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "recurso_id": {
+            "type": "integer",
+            "title": "Recurso Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria"
+          },
+          "latitud": {
+            "type": "number",
+            "title": "Latitud"
+          },
+          "longitud": {
+            "type": "number",
+            "title": "Longitud"
+          },
+          "altitud_msnm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Altitud Msnm"
+          },
+          "hora_llegada": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Llegada"
+          },
+          "hora_salida": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Salida"
+          },
+          "duracion_visita_min": {
+            "type": "integer",
+            "title": "Duracion Visita Min"
+          },
+          "puntaje_relativo": {
+            "type": "integer",
+            "title": "Puntaje Relativo"
+          },
+          "traslado": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrasladoPublico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "orden",
+          "recurso_id",
+          "nombre",
+          "distrito",
+          "latitud",
+          "longitud",
+          "hora_llegada",
+          "hora_salida",
+          "duracion_visita_min",
+          "puntaje_relativo"
+        ],
+        "title": "ParadaPublica",
+        "description": "Una parada del itinerario, con su horario y cómo se llega a ella."
+      },
+      "RespuestaItinerario": {
+        "properties": {
+          "itinerario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itinerario Id"
+          },
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "generado_por": {
+            "type": "string",
+            "enum": [
+              "modelo",
+              "reglas"
+            ],
+            "title": "Generado Por"
+          },
+          "paradas": {
+            "items": {
+              "$ref": "#/components/schemas/ParadaPublica"
+            },
+            "type": "array",
+            "title": "Paradas"
+          },
+          "tiempo_total_min": {
+            "type": "integer",
+            "title": "Tiempo Total Min"
+          },
+          "costo_min_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costo Min Soles"
+          },
+          "costo_max_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costo Max Soles"
+          },
+          "distancia_total_km": {
+            "type": "number",
+            "title": "Distancia Total Km"
+          },
+          "subida_total_m": {
+            "type": "number",
+            "title": "Subida Total M"
+          },
+          "esfuerzo": {
+            "type": "string",
+            "enum": [
+              "suave",
+              "moderado",
+              "exigente"
+            ],
+            "title": "Esfuerzo"
+          },
+          "hay_tramos_estimados": {
+            "type": "boolean",
+            "title": "Hay Tramos Estimados"
+          },
+          "avisos": {
+            "items": {
+              "$ref": "#/components/schemas/AvisoPublico"
+            },
+            "type": "array",
+            "title": "Avisos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id",
+          "fecha",
+          "titulo",
+          "generado_por",
+          "tiempo_total_min",
+          "costo_min_soles",
+          "costo_max_soles",
+          "distancia_total_km",
+          "subida_total_m",
+          "esfuerzo",
+          "hay_tramos_estimados"
+        ],
+        "title": "RespuestaItinerario",
+        "description": "El itinerario de un día, con sus totales y sus avisos."
+      },
+      "SolicitudItinerario": {
+        "properties": {
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha"
+          },
+          "hora_inicio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Inicio"
+          },
+          "hora_fin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Fin"
+          },
+          "guardar": {
+            "type": "boolean",
+            "title": "Guardar",
+            "default": false
+          },
+          "titulo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id"
+        ],
+        "title": "SolicitudItinerario",
+        "description": "Petición para armar el itinerario de un día."
+      },
+      "TrasladoPublico": {
+        "properties": {
+          "modo": {
+            "type": "string",
+            "enum": [
+              "caminando",
+              "combi",
+              "colectivo",
+              "taxi"
+            ],
+            "title": "Modo"
+          },
+          "minutos": {
+            "type": "integer",
+            "title": "Minutos"
+          },
+          "distancia_km": {
+            "type": "number",
+            "title": "Distancia Km"
+          },
+          "desnivel_m": {
+            "type": "number",
+            "title": "Desnivel M"
+          },
+          "precio_min_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Min Soles"
+          },
+          "precio_max_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Max Soles"
+          },
+          "es_estimado": {
+            "type": "boolean",
+            "title": "Es Estimado"
+          },
+          "fuente": {
+            "type": "string",
+            "title": "Fuente"
+          },
+          "fecha_referencia": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Referencia"
+          },
+          "origen_del_calculo": {
+            "type": "string",
+            "enum": [
+              "red_vial",
+              "linea_recta"
+            ],
+            "title": "Origen Del Calculo"
+          },
+          "trazado": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Trazado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "modo",
+          "minutos",
+          "distancia_km",
+          "desnivel_m",
+          "precio_min_soles",
+          "precio_max_soles",
+          "es_estimado",
+          "fuente",
+          "fecha_referencia",
+          "origen_del_calculo"
+        ],
+        "title": "TrasladoPublico",
+        "description": "El desplazamiento desde la parada anterior hasta esta."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

@@ -1,0 +1,5558 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RutaVivaMantaro",
+    "description": "API de la plataforma de turismo inteligente para la Ruta del Valle del Mantaro (Junin, Peru). Proyecto del curso Procesos de Software, Universidad Continental.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/salud": {
+      "get": {
+        "tags": [
+          "salud"
+        ],
+        "summary": "Estado de la plataforma",
+        "description": "Devuelve el estado de la API, de la base de datos y de Ollama.\n\nSiempre responde 200: el endpoint informa, no falla. Un 500 aqui haria\nimposible distinguir \"el servicio de salud esta roto\" de \"un componente\nesta caido\", que es justo lo que se quiere saber.",
+        "operationId": "consultar_salud_api_salud_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaludGeneral"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recursos": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Lista recursos turísticos",
+        "description": "Devuelve una página de recursos que cumplen los filtros indicados.",
+        "operationId": "listar_recursos_api_recursos_get",
+        "parameters": [
+          {
+            "name": "provincia",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nombre de la provincia, sin tildes",
+              "title": "Provincia"
+            },
+            "description": "Nombre de la provincia, sin tildes"
+          },
+          {
+            "name": "distrito",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nombre del distrito, sin tildes",
+              "title": "Distrito"
+            },
+            "description": "Nombre del distrito, sin tildes"
+          },
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Categoría del inventario del MINCETUR",
+              "title": "Categoria"
+            },
+            "description": "Categoría del inventario del MINCETUR"
+          },
+          {
+            "name": "texto",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Busca en el nombre del recurso",
+              "title": "Texto"
+            },
+            "description": "Busca en el nombre del recurso"
+          },
+          {
+            "name": "solo_validados",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Devuelve solo los que pasaron la validación",
+              "default": false,
+              "title": "Solo Validados"
+            },
+            "description": "Devuelve solo los que pasaron la validación"
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Pagina"
+            }
+          },
+          {
+            "name": "tamano_pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 24,
+              "title": "Tamano Pagina"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaDeRecursos"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recursos/filtros": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Valores para los filtros",
+        "description": "Devuelve las provincias, distritos y categorías que existen en el catálogo.\n\nSe sacan de los datos y no de una lista fija en el código: si el\ninventario incorpora una categoría nueva, el filtro aparece solo.",
+        "operationId": "obtener_filtros_api_recursos_filtros_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenFiltros"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recursos/mapa": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Recursos en formato GeoJSON",
+        "description": "Devuelve los recursos con coordenadas, listos para pintar en el mapa.\n\nSolo se incluyen los que tienen ubicación: un marcador sin coordenada no\nse puede dibujar, y ponerlo en el centro del distrito sería inventar.",
+        "operationId": "obtener_recursos_para_el_mapa_api_recursos_mapa_get",
+        "parameters": [
+          {
+            "name": "provincia",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provincia"
+            }
+          },
+          {
+            "name": "distrito",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distrito"
+            }
+          },
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Categoria"
+            }
+          },
+          {
+            "name": "texto",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Texto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ColeccionGeoJSON"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recursos/{id_recurso}": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Detalle de un recurso",
+        "description": "Devuelve todos los datos de un recurso, o 404 si no existe.",
+        "operationId": "obtener_recurso_api_recursos__id_recurso__get",
+        "parameters": [
+          {
+            "name": "id_recurso",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id Recurso"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecursoDetalle"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicadores/catalogo": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Indicador del Incremento 1",
+        "description": "Devuelve la última validación ejecutada.\n\nEs el indicador del Incremento 1: *porcentaje de oferta con información\nvalidada y vigente*. Los números salen de la tabla, no se recalculan al\nvuelo, para que reflejen el estado del catálogo cuando se validó.",
+        "operationId": "obtener_indicador_del_catalogo_api_indicadores_catalogo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicadorCatalogo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/autenticacion/registro": {
+      "post": {
+        "tags": [
+          "autenticacion"
+        ],
+        "summary": "Crea una cuenta",
+        "description": "Registra un usuario nuevo y le abre la sesión de inmediato.\n\nSe devuelve el token junto con la cuenta creada para que el visitante no\ntenga que iniciar sesión otra vez justo después de registrarse.\n\nTodas las cuentas creadas aquí son de rol *visitante*. Los roles de\noperador, proveedor y gestor los asigna un administrador: si se pudieran\nelegir al registrarse, cualquiera se haría gestor.",
+        "operationId": "registrar_api_autenticacion_registro_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudRegistro"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaSesion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/autenticacion/sesion": {
+      "post": {
+        "tags": [
+          "autenticacion"
+        ],
+        "summary": "Inicia sesión",
+        "description": "Comprueba las credenciales y devuelve un token de sesión.",
+        "operationId": "iniciar_sesion_api_autenticacion_sesion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudInicioSesion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaSesion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/autenticacion/yo": {
+      "get": {
+        "tags": [
+          "autenticacion"
+        ],
+        "summary": "Datos de la sesión actual",
+        "description": "Devuelve los datos del usuario con la sesión abierta.\n\nEl frontend lo usa al cargar para saber si el token guardado sigue siendo\nválido, sin tener que pedir la contraseña otra vez.",
+        "operationId": "obtener_sesion_actual_api_autenticacion_yo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioPublico"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/preferencias/opciones": {
+      "get": {
+        "tags": [
+          "preferencias"
+        ],
+        "summary": "Valores para el asistente",
+        "description": "Devuelve los valores que el asistente necesita para dibujar sus pasos.\n\nLos distritos salen del catálogo real, no de una lista escrita a mano: el\nvisitante solo puede elegir como origen un distrito donde de verdad hay\nrecursos turísticos registrados.",
+        "operationId": "obtener_opciones_api_preferencias_opciones_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogoDeOpciones"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preferencias": {
+      "get": {
+        "tags": [
+          "preferencias"
+        ],
+        "summary": "Mis preferencias guardadas",
+        "description": "Devuelve las preferencias del usuario, para la página «Mis viajes».",
+        "operationId": "listar_mis_preferencias_api_preferencias_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaDePreferencias"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "preferencias"
+        ],
+        "summary": "Guarda una preferencia de viaje",
+        "description": "Registra lo que el visitante quiere de su viaje.\n\n**Funciona sin cuenta.** Si no hay sesión iniciada, la preferencia se\nguarda con ``usuario_id`` nulo y el frontend conserva su identificador en\nel navegador. Es la regla del proyecto: no se pide registrarse para\nempezar, solo para guardar.",
+        "operationId": "crear_preferencia_api_preferencias_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPreferencia"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenciaPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/preferencias/{id_preferencia}": {
+      "get": {
+        "tags": [
+          "preferencias"
+        ],
+        "summary": "Consulta una preferencia",
+        "description": "Devuelve una preferencia concreta.",
+        "operationId": "obtener_preferencia_api_preferencias__id_preferencia__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_preferencia",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id Preferencia"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenciaPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferencias"
+        ],
+        "summary": "Actualiza una preferencia",
+        "description": "Cambia una preferencia ya guardada.\n\nSirve para el botón «Cambiar preferencias» de la pantalla de resultados,\nsin obligar a rehacer el asistente desde cero.",
+        "operationId": "actualizar_preferencia_api_preferencias__id_preferencia__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_preferencia",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id Preferencia"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPreferencia"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenciaPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/preferencias/{id_preferencia}/reclamar": {
+      "post": {
+        "tags": [
+          "preferencias"
+        ],
+        "summary": "Asocia a tu cuenta una preferencia creada sin ella",
+        "description": "Convierte en propia una preferencia que se creó sin cuenta.\n\nEs el cierre del recorrido que promete el proyecto: el visitante arma su\nviaje sin registrarse y, si al final quiere conservarlo, crea la cuenta y\nreclama lo que ya había hecho, sin repetir el asistente.\n\nUna preferencia que ya tiene dueño no se puede reclamar.",
+        "operationId": "reclamar_preferencia_api_preferencias__id_preferencia__reclamar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_preferencia",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id Preferencia"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenciaPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recomendaciones": {
+      "post": {
+        "tags": [
+          "recomendaciones"
+        ],
+        "summary": "Recomienda recursos para una preferencia de viaje",
+        "description": "Devuelve los recursos ordenados por afinidad, con su explicación.\n\n**Funciona sin cuenta**, igual que el asistente de preferencias: si la\npreferencia se creó sin sesión, cualquiera con su identificador puede\npedir recomendaciones para ella.\n\nQué vía se usa lo deciden las variables ``USAR_MODELO_RECOMENDACION`` y\n``USAR_MODELO_AFLUENCIA`` del ``.env``. El campo ``generado_por`` de la\nrespuesta deja constancia de cuál se usó en cada caso.",
+        "operationId": "obtener_recomendaciones_api_recomendaciones_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudRecomendacion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaRecomendacion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/calendario/dia/{fecha}": {
+      "get": {
+        "tags": [
+          "recomendaciones"
+        ],
+        "summary": "Qué ocurre un día concreto en el valle",
+        "description": "Devuelve la afluencia esperada y las fiestas activas de un día.\n\nAlimenta la etiqueta «hoy hay fiesta en X» de la interfaz.",
+        "operationId": "consultar_dia_api_calendario_dia__fecha__get",
+        "parameters": [
+          {
+            "name": "fecha",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Fecha"
+            }
+          },
+          {
+            "name": "distrito",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Distrito sobre el que consultar",
+              "default": "HUANCAYO",
+              "title": "Distrito"
+            },
+            "description": "Distrito sobre el que consultar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Consultar Dia Api Calendario Dia  Fecha  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/calendario/{anio}": {
+      "get": {
+        "tags": [
+          "recomendaciones"
+        ],
+        "summary": "Festividades del Valle del Mantaro en un año",
+        "description": "Devuelve todas las fiestas del año, móviles y fijas.\n\nLas móviles se calculan con el algoritmo de la Pascua, así que este\nendpoint responde correctamente para cualquier año, pasado o futuro, sin\ntener que cargar nada previamente.",
+        "operationId": "consultar_calendario_api_calendario__anio__get",
+        "parameters": [
+          {
+            "name": "anio",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Anio"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarioPublico"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/itinerarios": {
+      "post": {
+        "tags": [
+          "itinerarios"
+        ],
+        "summary": "Arma el itinerario de un día para una preferencia",
+        "description": "Recomienda, ordena y horaria las paradas de un día.\n\nQué vía se usa lo decide ``USAR_MODELO_RECOMENDACION`` del ``.env``: con\n``true`` optimiza con OR-Tools, con ``false`` usa el vecino más cercano. El\ncampo ``generado_por`` de la respuesta deja constancia de cuál fue.",
+        "operationId": "armar_itinerario_api_itinerarios_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudItinerario"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaItinerario"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "itinerarios"
+        ],
+        "summary": "Lista los itinerarios guardados del usuario",
+        "description": "Devuelve los itinerarios del usuario que ha iniciado sesión.\n\nSin cuenta devuelve una lista vacía: un itinerario sin dueño no se puede\nrecuperar por listado, solo por su identificador. Devolver todos los\nanónimos convertiría la lista en el historial de viaje de desconocidos.",
+        "operationId": "listar_itinerarios_api_itinerarios_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Listar Itinerarios Api Itinerarios Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/itinerarios/reordenar": {
+      "post": {
+        "tags": [
+          "itinerarios"
+        ],
+        "summary": "Recalcula el itinerario con el orden que eligió el visitante",
+        "description": "Rehace horarios, traslados y totales respetando el orden pedido.\n\n**No reoptimiza.** Si el visitante arrastró una parada al primer puesto, se\nqueda en el primer puesto. Lo que se recalcula son las consecuencias: a qué\nhora se llega a cada sitio, cuánto cuesta llegar y si el día sigue cabiendo.",
+        "operationId": "reordenar_itinerario_api_itinerarios_reordenar_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudReordenar"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaItinerario"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/itinerarios/{itinerario_id}": {
+      "get": {
+        "tags": [
+          "itinerarios"
+        ],
+        "summary": "Recupera un itinerario guardado",
+        "description": "Devuelve un itinerario guardado con sus paradas.\n\nLos itinerarios sin dueño son accesibles por identificador, igual que las\npreferencias sin cuenta: es lo que permite compartir un plan con quien va a\nviajar contigo sin obligarle a registrarse.",
+        "operationId": "consultar_itinerario_api_itinerarios__itinerario_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "itinerario_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Itinerario Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Consultar Itinerario Api Itinerarios  Itinerario Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servicios": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Servicios ofrecidos por los proveedores",
+        "description": "Devuelve los servicios publicados, con su capacidad y su precio.\n\n**Es lo que cierra la brecha 5**: hasta ahora, saber si un proveedor podía\natender a doce personas un sábado exigía llamar. Aquí está escrito.",
+        "operationId": "listar_servicios_api_servicios_get",
+        "parameters": [
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrar por tipo de servicio",
+              "title": "Tipo"
+            },
+            "description": "Filtrar por tipo de servicio"
+          },
+          {
+            "name": "distrito",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filtrar por distrito",
+              "title": "Distrito"
+            },
+            "description": "Filtrar por distrito"
+          },
+          {
+            "name": "recurso_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Servicios de un recurso",
+              "title": "Recurso Id"
+            },
+            "description": "Servicios de un recurso"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServicioPublico"
+                  },
+                  "title": "Response Listar Servicios Api Servicios Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Publica un servicio nuevo",
+        "operationId": "publicar_servicio_api_servicios_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicioNuevo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicioPublico"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servicios/{servicio_id}": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Ficha de un servicio",
+        "operationId": "consultar_servicio_api_servicios__servicio_id__get",
+        "parameters": [
+          {
+            "name": "servicio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Servicio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicioPublico"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servicios/{servicio_id}/disponibilidad": {
+      "post": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Comprueba si un servicio se puede pedir para esa fecha",
+        "description": "Responde si se puede pedir, y si no, **todos** los motivos.\n\nSe consulta antes de enviar la solicitud para que el visitante no descubra\nque no hay sitio después de rellenar el formulario entero.",
+        "operationId": "comprobar_disponibilidad_api_servicios__servicio_id__disponibilidad_post",
+        "parameters": [
+          {
+            "name": "servicio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Servicio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsultaDisponibilidad"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaDisponibilidad"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servicios/{servicio_id}/tramos": {
+      "post": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Publica un tramo de disponibilidad",
+        "operationId": "publicar_tramo_api_servicios__servicio_id__tramos_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "servicio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Servicio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TramoNuevo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicioPublico"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes": {
+      "post": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Solicita un servicio a su proveedor",
+        "description": "Crea la solicitud y **registra su primer estado**.\n\nFunciona sin cuenta, igual que el resto del recorrido del visitante: por\neso se piden nombre y contacto en el propio formulario.\n\nSe comprueba la disponibilidad antes de crearla. Aceptar una solicitud que\nya se sabe imposible sería hacerle perder el tiempo a las dos partes.",
+        "operationId": "crear_solicitud_api_solicitudes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudNueva"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitudPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Solicitudes que puedes ver",
+        "description": "Devuelve las solicitudes según el rol de quien pregunta.\n\n- **Operador y administrador:** todas.\n- **Proveedor:** solo las de sus servicios.\n- **Visitante y gestor:** solo las suyas.\n\nExige sesión: sin cuenta no hay listado, porque no habría forma de saber\ncuáles son «las tuyas» sin enseñar las de otros.",
+        "operationId": "listar_solicitudes_api_solicitudes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SolicitudPublica"
+                  },
+                  "title": "Response Listar Solicitudes Api Solicitudes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{solicitud_id}": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Una solicitud con su historial completo",
+        "description": "Devuelve la solicitud y **todo lo que le ha pasado**.\n\nLas solicitudes creadas sin cuenta son accesibles por identificador, igual\nque los itinerarios: es lo que permite a quien pidió sin registrarse seguir\nel estado de lo que pidió.",
+        "operationId": "consultar_solicitud_api_solicitudes__solicitud_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "solicitud_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Solicitud Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitudPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{solicitud_id}/estado": {
+      "post": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Mueve una solicitud de estado",
+        "description": "Cambia el estado y deja constancia de quién lo hizo y cuándo.\n\nLas reglas viven en ``servicios/coordinacion.py``, no aquí: qué\ntransiciones son válidas y quién puede provocarlas son reglas de negocio, y\nrepartirlas entre los endpoints sería garantizar que algún día no\ncoincidan.",
+        "operationId": "mover_solicitud_api_solicitudes__solicitud_id__estado_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "solicitud_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Solicitud Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioSolicitado"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolicitudPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicadores/coordinacion": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Indicador del Incremento 5",
+        "description": "Cuántas interacciones hacen falta para confirmar un servicio.\n\nSe calcula sobre lo registrado, no sobre una estimación. Si todavía no hay\nninguna solicitud confirmada, las medias van a ``null`` y no a cero: una\nmedia de cero casos no es cero, es que no hay dato.",
+        "operationId": "indicador_de_coordinacion_api_indicadores_coordinacion_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenDeCoordinacion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proveedores": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Directorio de prestadores del valle",
+        "description": "Los prestadores turísticos de las cuatro provincias de la ruta.\n\nPor defecto devuelve solo los **reales**: los 162 que están en el\nDirectorio Nacional de Prestadores de Servicios Turísticos Calificados del\nMINCETUR, con su RUC, su categoría oficial y su número de certificado.\n\nEstán certificados por el Estado, pero **no tienen convenio con este\nproyecto**. No se les inventa capacidad ni horarios, porque eso no está\npublicado: se les enseña para que el visitante los encuentre y los llame\nél mismo.\n\nCon ``solo_reales=false`` entran también los cinco de demostración, que son\nlos que tienen servicios publicados y permiten enseñar el ciclo completo de\nsolicitud y confirmación.",
+        "operationId": "listar_proveedores_api_proveedores_get",
+        "parameters": [
+          {
+            "name": "distrito",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distrito"
+            }
+          },
+          {
+            "name": "clase",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Clase"
+            }
+          },
+          {
+            "name": "solo_reales",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Solo Reales"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProveedorPublico"
+                  },
+                  "title": "Response Listar Proveedores Api Proveedores Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proveedores/mio": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "La ficha de proveedor de quien ha iniciado sesión",
+        "description": "Devuelve el proveedor que administra el usuario actual.\n\nLo usa el panel para saber si hay algo que gestionar antes de pintarlo.",
+        "operationId": "mi_proveedor_api_proveedores_mio_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProveedorPublico"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/proveedores/mio/servicios": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Los servicios del proveedor de quien ha iniciado sesión",
+        "description": "Incluye los NO publicados: el proveedor tiene que poder ver sus borradores.",
+        "operationId": "mis_servicios_api_proveedores_mio_servicios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ServicioPublico"
+                  },
+                  "type": "array",
+                  "title": "Response Mis Servicios Api Proveedores Mio Servicios Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/servicios/{servicio_id}/plazas": {
+      "get": {
+        "tags": [
+          "coordinación"
+        ],
+        "summary": "Plazas libres de un servicio en una fecha",
+        "description": "Cuánto cupo queda ese día, contando lo ya comprometido.",
+        "operationId": "plazas_libres_api_servicios__servicio_id__plazas_get",
+        "parameters": [
+          {
+            "name": "servicio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Servicio Id"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Fecha"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Plazas Libres Api Servicios  Servicio Id  Plazas Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/valoraciones": {
+      "post": {
+        "tags": [
+          "valoraciones"
+        ],
+        "summary": "Valora una experiencia ya vivida",
+        "description": "Guarda la valoración y **analiza el comentario en el momento**.\n\nEl análisis se hace al guardar y no al consultar, por dos razones que están\nexplicadas en el modelo: reproducibilidad —si el modelo cambia de versión,\nlas valoraciones viejas no deben cambiar de sentimiento retroactivamente— y\ncoste —el modelo tarda cerca de un segundo por texto, y un tablero con\ndoscientas valoraciones tardaría minutos en pintarse—.\n\nQué vía se usa lo decide ``USAR_MODELO_SENTIMIENTO`` del ``.env``. Con el\nmodelo apagado, o si no está disponible, se analiza con las reglas y el\ncampo ``analizado_por`` lo dice.\n\n**Funciona sin cuenta**, igual que el resto del recorrido: obligar a\nregistrarse justo al final del viaje perdería la valoración.",
+        "operationId": "crear_valoracion_api_valoraciones_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValoracionNueva"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValoracionPublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "valoraciones"
+        ],
+        "summary": "Valoraciones de un itinerario",
+        "description": "Devuelve lo que ya se valoró de un itinerario.\n\nLo usa la interfaz para no volver a pedir lo que la persona ya puntuó.",
+        "operationId": "listar_valoraciones_api_valoraciones_get",
+        "parameters": [
+          {
+            "name": "itinerario_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Itinerario del que se quieren las valoraciones",
+              "title": "Itinerario Id"
+            },
+            "description": "Itinerario del que se quieren las valoraciones"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limite"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ValoracionPublica"
+                  },
+                  "title": "Response Listar Valoraciones Api Valoraciones Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicadores/evidencia": {
+      "get": {
+        "tags": [
+          "valoraciones"
+        ],
+        "summary": "Tablero de evidencia del gestor (Incremento 6)",
+        "description": "Distribución de sentimiento, temas, ranquin de recursos y evolución.",
+        "operationId": "obtener_evidencia_api_indicadores_evidencia_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenDeEvidenciaPublico"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicadores/tablero": {
+      "get": {
+        "tags": [
+          "valoraciones"
+        ],
+        "summary": "Los indicadores de los seis incrementos",
+        "description": "Reúne los seis indicadores del proyecto.\n\n**Cada uno lleva su salvedad.** No es adorno: cuatro de los seis miden algo\ndistinto de lo que su nombre sugiere a primera vista, y un tablero que\nenseñe seis números sin decir qué no dicen es peor que no tenerlo.",
+        "operationId": "obtener_tablero_api_indicadores_tablero_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableroDeIndicadores"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asistente/estado": {
+      "get": {
+        "tags": [
+          "asistente"
+        ],
+        "summary": "Comprueba si el asistente está disponible",
+        "description": "Dice si Ollama responde y tiene el modelo.\n\nLa interfaz lo consulta al cargar para decidir si enseña el botón del\nasistente o el aviso con el camino por formulario. **No falla en\nsilencio**: si no está, se dice y se dice por qué.",
+        "operationId": "consultar_estado_api_asistente_estado_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoDelAsistente"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/asistente/mensaje": {
+      "post": {
+        "tags": [
+          "asistente"
+        ],
+        "summary": "Envía un mensaje al asistente",
+        "description": "Una vuelta de conversación, con llamada a funciones del backend.\n\nEl modelo elige qué función responde a lo que se le pide, el backend la\nejecuta contra la base de datos, y el modelo redacta con ese resultado.\n**Nunca inventa datos**: solo puede hablar de lo que devolvieron las\nfunciones.\n\nSi Ollama no está, se responde 200 con ``esta_disponible = false`` y el\nmotivo. No es un error del cliente ni del servidor: es una capacidad\nopcional que no está, y la interfaz tiene que poder enseñarlo con calma.",
+        "operationId": "enviar_mensaje_api_asistente_mensaje_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PeticionAlAsistente"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RespuestaDelAsistentePublica"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "salud"
+        ],
+        "summary": "Mensaje de bienvenida",
+        "description": "Confirma que la API esta viva y orienta hacia la documentacion.",
+        "operationId": "raiz__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Raiz  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AfluenciaEstimada": {
+        "properties": {
+          "nivel": {
+            "type": "string",
+            "enum": [
+              "bajo",
+              "medio",
+              "alto"
+            ],
+            "title": "Nivel"
+          },
+          "motivo": {
+            "$ref": "#/components/schemas/AvisoPublico"
+          },
+          "festividades": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Festividades"
+          },
+          "calculado_por": {
+            "type": "string",
+            "enum": [
+              "modelo",
+              "reglas"
+            ],
+            "title": "Calculado Por"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nivel",
+          "motivo",
+          "calculado_por"
+        ],
+        "title": "AfluenciaEstimada",
+        "description": "Cuánta gente se espera, y por qué.\n\nEl motivo no es decorativo: sin él, «mucha gente» es una afirmación que el\nvisitante no puede comprobar ni discutir."
+      },
+      "AvisoPublico": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "title": "Codigo",
+            "examples": [
+              "altitud"
+            ]
+          },
+          "parametros": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parametros",
+            "examples": [
+              {
+                "metros": 3706
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "codigo"
+        ],
+        "title": "AvisoPublico",
+        "description": "Un aviso, sin redactar.\n\nLa interfaz lo convierte en frase con ``t('avisos.' + codigo, parametros)``."
+      },
+      "CalendarioPublico": {
+        "properties": {
+          "anio": {
+            "type": "integer",
+            "title": "Anio"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "festividades": {
+            "items": {
+              "$ref": "#/components/schemas/FestividadPublica"
+            },
+            "type": "array",
+            "title": "Festividades"
+          }
+        },
+        "type": "object",
+        "required": [
+          "anio",
+          "total",
+          "festividades"
+        ],
+        "title": "CalendarioPublico",
+        "description": "Las festividades de un año."
+      },
+      "CambioDeEstadoPublico": {
+        "properties": {
+          "estado_anterior": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estado Anterior"
+          },
+          "estado_nuevo": {
+            "type": "string",
+            "title": "Estado Nuevo"
+          },
+          "rol_de_quien_cambio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rol De Quien Cambio"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "ocurrido_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ocurrido En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado_nuevo",
+          "ocurrido_en"
+        ],
+        "title": "CambioDeEstadoPublico",
+        "description": "Un movimiento de la solicitud, con quién lo hizo y cuándo.\n\nEs la pieza que cierra la brecha 6: sin el historial, la solicitud diría en\nqué estado está pero no cómo llegó ahí."
+      },
+      "CambioSolicitado": {
+        "properties": {
+          "nuevo_estado": {
+            "type": "string",
+            "enum": [
+              "enviada",
+              "en_revision",
+              "contrapropuesta",
+              "confirmada",
+              "rechazada",
+              "cancelada"
+            ],
+            "title": "Nuevo Estado"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "precio_acordado_soles": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio Acordado Soles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nuevo_estado"
+        ],
+        "title": "CambioSolicitado",
+        "description": "Lo que un proveedor (o el visitante) pide hacer con una solicitud."
+      },
+      "CatalogoDeOpciones": {
+        "properties": {
+          "intereses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Intereses"
+          },
+          "movilidades": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Movilidades"
+          },
+          "ritmos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ritmos"
+          },
+          "distritos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Distritos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intereses",
+          "movilidades",
+          "ritmos",
+          "distritos"
+        ],
+        "title": "CatalogoDeOpciones",
+        "description": "Valores que el frontend necesita para dibujar el asistente.\n\nSe sirven desde el backend en vez de escribirlos en el frontend para que\nexista una sola fuente de verdad: si mañana se añade un interés, aparece\nsolo en la interfaz."
+      },
+      "ColeccionGeoJSON": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "FeatureCollection",
+            "title": "Type",
+            "default": "FeatureCollection"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/RasgoGeoJSON"
+            },
+            "type": "array",
+            "title": "Features"
+          }
+        },
+        "type": "object",
+        "required": [
+          "features"
+        ],
+        "title": "ColeccionGeoJSON",
+        "description": "Colección de rasgos GeoJSON, lista para pintar en el mapa.\n\nSe usa GeoJSON y no un formato propio porque es el estándar que entienden\nLeaflet y prácticamente cualquier herramienta geográfica, sin conversión."
+      },
+      "ConsultaDisponibilidad": {
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "numero_personas": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Numero Personas"
+          },
+          "hora": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fecha",
+          "numero_personas"
+        ],
+        "title": "ConsultaDisponibilidad",
+        "description": "Pregunta si un servicio se puede pedir para una fecha y unas personas."
+      },
+      "DatosPreferencia": {
+        "properties": {
+          "fecha_inicio": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Inicio"
+          },
+          "fecha_fin": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Fin"
+          },
+          "distrito_origen": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Distrito Origen"
+          },
+          "presupuesto_soles": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              }
+            ],
+            "title": "Presupuesto Soles"
+          },
+          "intereses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Intereses"
+          },
+          "movilidad": {
+            "type": "string",
+            "enum": [
+              "caminando",
+              "transporte_publico",
+              "taxi",
+              "combinado"
+            ],
+            "title": "Movilidad"
+          },
+          "requiere_accesibilidad": {
+            "type": "boolean",
+            "title": "Requiere Accesibilidad",
+            "default": false
+          },
+          "ritmo": {
+            "type": "string",
+            "enum": [
+              "relajado",
+              "moderado",
+              "intenso"
+            ],
+            "title": "Ritmo"
+          },
+          "idioma": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ],
+            "title": "Idioma",
+            "default": "es"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fecha_inicio",
+          "fecha_fin",
+          "distrito_origen",
+          "presupuesto_soles",
+          "intereses",
+          "movilidad",
+          "ritmo"
+        ],
+        "title": "DatosPreferencia",
+        "description": "Lo que el visitante responde en el asistente de seis pasos."
+      },
+      "DistribucionPublica": {
+        "properties": {
+          "positivas": {
+            "type": "integer",
+            "title": "Positivas"
+          },
+          "neutras": {
+            "type": "integer",
+            "title": "Neutras"
+          },
+          "negativas": {
+            "type": "integer",
+            "title": "Negativas"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "porcentaje_positivo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Porcentaje Positivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "positivas",
+          "neutras",
+          "negativas",
+          "total"
+        ],
+        "title": "DistribucionPublica",
+        "description": "Cuántas valoraciones hay de cada signo."
+      },
+      "EstadoDelAsistente": {
+        "properties": {
+          "disponible": {
+            "type": "boolean",
+            "title": "Disponible"
+          },
+          "modelo": {
+            "type": "string",
+            "title": "Modelo"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disponible",
+          "modelo"
+        ],
+        "title": "EstadoDelAsistente",
+        "description": "Si el asistente se puede usar, y si no, por qué."
+      },
+      "FestividadPublica": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Inicio"
+          },
+          "fecha_fin": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Fin"
+          },
+          "tipo": {
+            "type": "string",
+            "title": "Tipo"
+          },
+          "distritos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Distritos"
+          },
+          "es_movil": {
+            "type": "boolean",
+            "title": "Es Movil"
+          },
+          "fuente": {
+            "type": "string",
+            "title": "Fuente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "fecha_inicio",
+          "fecha_fin",
+          "tipo",
+          "es_movil",
+          "fuente"
+        ],
+        "title": "FestividadPublica",
+        "description": "Una festividad del calendario del valle."
+      },
+      "FuncionUsada": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "argumentos": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Argumentos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "FuncionUsada",
+        "description": "Qué función se ejecutó y con qué argumentos.\n\nVa en la respuesta para que la conversación sea **auditable**: se puede\ncomprobar que lo que dijo el asistente sale de datos del catálogo y no de\nsu imaginación."
+      },
+      "GeometriaPunto": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "Point",
+            "title": "Type",
+            "default": "Point"
+          },
+          "coordinates": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Coordinates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coordinates"
+        ],
+        "title": "GeometriaPunto",
+        "description": "Geometría de un punto en formato GeoJSON."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IndicadorCatalogo": {
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fecha"
+          },
+          "total_recursos": {
+            "type": "integer",
+            "title": "Total Recursos"
+          },
+          "validados": {
+            "type": "integer",
+            "title": "Validados"
+          },
+          "vigentes": {
+            "type": "integer",
+            "title": "Vigentes"
+          },
+          "con_coordenadas": {
+            "type": "integer",
+            "title": "Con Coordenadas"
+          },
+          "porcentaje_validado": {
+            "type": "number",
+            "title": "Porcentaje Validado"
+          },
+          "porcentaje_vigente": {
+            "type": "number",
+            "title": "Porcentaje Vigente"
+          },
+          "porcentaje_con_coordenadas": {
+            "type": "number",
+            "title": "Porcentaje Con Coordenadas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fecha",
+          "total_recursos",
+          "validados",
+          "vigentes",
+          "con_coordenadas",
+          "porcentaje_validado",
+          "porcentaje_vigente",
+          "porcentaje_con_coordenadas"
+        ],
+        "title": "IndicadorCatalogo",
+        "description": "Indicador del Incremento 1: oferta con información validada y vigente."
+      },
+      "IndicadorDelIncremento": {
+        "properties": {
+          "incremento": {
+            "type": "integer",
+            "title": "Incremento"
+          },
+          "valor": {
+            "type": "string",
+            "title": "Valor",
+            "default": ""
+          },
+          "valor_traducible": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AvisoPublico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AvisoPublico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hay_dato": {
+            "type": "boolean",
+            "title": "Hay Dato",
+            "default": true
+          },
+          "sin_dato_porque": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AvisoPublico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "incremento"
+        ],
+        "title": "IndicadorDelIncremento",
+        "description": "Un indicador cualquiera, en la forma en que lo muestra el tablero.\n\nExiste para que los seis incrementos se puedan enseñar juntos aunque cada\nuno mida algo distinto. El campo ``valor`` es un texto y no un número\nporque algunos son porcentajes, otros conteos y otros medias, y forzarlos\ntodos a `float` obligaría a la interfaz a saber cuál es cuál."
+      },
+      "ListaDePreferencias": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "elementos": {
+            "items": {
+              "$ref": "#/components/schemas/PreferenciaPublica"
+            },
+            "type": "array",
+            "title": "Elementos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "elementos"
+        ],
+        "title": "ListaDePreferencias",
+        "description": "Las preferencias guardadas de un usuario, para la página Mis viajes."
+      },
+      "MensajeDeConversacion": {
+        "properties": {
+          "rol": {
+            "type": "string",
+            "pattern": "^(user|assistant)$",
+            "title": "Rol"
+          },
+          "contenido": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Contenido"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rol",
+          "contenido"
+        ],
+        "title": "MensajeDeConversacion",
+        "description": "Un turno de la conversación."
+      },
+      "PaginaDeRecursos": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Recursos que cumplen los filtros, no solo los de esta página"
+          },
+          "pagina": {
+            "type": "integer",
+            "title": "Pagina"
+          },
+          "tamano_pagina": {
+            "type": "integer",
+            "title": "Tamano Pagina"
+          },
+          "elementos": {
+            "items": {
+              "$ref": "#/components/schemas/RecursoResumen"
+            },
+            "type": "array",
+            "title": "Elementos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "pagina",
+          "tamano_pagina",
+          "elementos"
+        ],
+        "title": "PaginaDeRecursos",
+        "description": "Una página del listado de recursos.\n\nSe devuelve el total además de los elementos para que el frontend pueda\ndibujar el paginador sin tener que pedir el conteo aparte."
+      },
+      "ParadaPublica": {
+        "properties": {
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          },
+          "recurso_id": {
+            "type": "integer",
+            "title": "Recurso Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria"
+          },
+          "latitud": {
+            "type": "number",
+            "title": "Latitud"
+          },
+          "longitud": {
+            "type": "number",
+            "title": "Longitud"
+          },
+          "altitud_msnm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Altitud Msnm"
+          },
+          "hora_llegada": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Llegada"
+          },
+          "hora_salida": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Salida"
+          },
+          "duracion_visita_min": {
+            "type": "integer",
+            "title": "Duracion Visita Min"
+          },
+          "puntaje_relativo": {
+            "type": "integer",
+            "title": "Puntaje Relativo"
+          },
+          "traslado": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrasladoPublico"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "orden",
+          "recurso_id",
+          "nombre",
+          "distrito",
+          "latitud",
+          "longitud",
+          "hora_llegada",
+          "hora_salida",
+          "duracion_visita_min",
+          "puntaje_relativo"
+        ],
+        "title": "ParadaPublica",
+        "description": "Una parada del itinerario, con su horario y cómo se llega a ella."
+      },
+      "PeticionAlAsistente": {
+        "properties": {
+          "mensajes": {
+            "items": {
+              "$ref": "#/components/schemas/MensajeDeConversacion"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Mensajes"
+          },
+          "idioma": {
+            "type": "string",
+            "pattern": "^(es|en)$",
+            "title": "Idioma",
+            "default": "es"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mensajes"
+        ],
+        "title": "PeticionAlAsistente",
+        "description": "La conversación completa hasta ahora.\n\nSe manda entera en cada petición y no se guarda en el servidor: el\nasistente no tiene memoria propia. Es deliberado —una conversación es de\nquien la tiene, no del sistema— y además evita tener que expirar sesiones."
+      },
+      "PreferenciaPublica": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "usuario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usuario Id"
+          },
+          "fecha_inicio": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Inicio"
+          },
+          "fecha_fin": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Fin"
+          },
+          "duracion_dias": {
+            "type": "integer",
+            "title": "Duracion Dias"
+          },
+          "distrito_origen": {
+            "type": "string",
+            "title": "Distrito Origen"
+          },
+          "presupuesto_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Presupuesto Soles"
+          },
+          "intereses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Intereses"
+          },
+          "movilidad": {
+            "type": "string",
+            "title": "Movilidad"
+          },
+          "requiere_accesibilidad": {
+            "type": "boolean",
+            "title": "Requiere Accesibilidad"
+          },
+          "idioma": {
+            "type": "string",
+            "title": "Idioma"
+          },
+          "ritmo": {
+            "type": "string",
+            "title": "Ritmo"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "usuario_id",
+          "fecha_inicio",
+          "fecha_fin",
+          "duracion_dias",
+          "distrito_origen",
+          "presupuesto_soles",
+          "intereses",
+          "movilidad",
+          "requiere_accesibilidad",
+          "idioma",
+          "ritmo",
+          "creado_en"
+        ],
+        "title": "PreferenciaPublica",
+        "description": "Una preferencia de viaje tal como se devuelve al frontend."
+      },
+      "ProveedorPublico": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "telefono": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telefono"
+          },
+          "correo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correo"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "es_demostracion": {
+            "type": "boolean",
+            "title": "Es Demostracion"
+          },
+          "ruc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ruc"
+          },
+          "direccion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion"
+          },
+          "pagina_web": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pagina Web"
+          },
+          "clase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clase"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria"
+          },
+          "certificado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificado"
+          },
+          "fuente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fuente"
+          },
+          "fecha_corte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Corte"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "distrito",
+          "es_demostracion"
+        ],
+        "title": "ProveedorPublico",
+        "description": "Quién ofrece el servicio."
+      },
+      "PuntoEnElTiempoPublico": {
+        "properties": {
+          "periodo": {
+            "type": "string",
+            "title": "Periodo"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "puntuacion_media": {
+            "type": "number",
+            "title": "Puntuacion Media"
+          },
+          "positivas": {
+            "type": "integer",
+            "title": "Positivas"
+          },
+          "negativas": {
+            "type": "integer",
+            "title": "Negativas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "periodo",
+          "total",
+          "puntuacion_media",
+          "positivas",
+          "negativas"
+        ],
+        "title": "PuntoEnElTiempoPublico",
+        "description": "La media de un mes, para dibujar la evolución."
+      },
+      "RasgoGeoJSON": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "Feature",
+            "title": "Type",
+            "default": "Feature"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/GeometriaPunto"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Properties"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geometry",
+          "properties"
+        ],
+        "title": "RasgoGeoJSON",
+        "description": "Un recurso turístico expresado como rasgo («feature») de GeoJSON."
+      },
+      "RecomendacionPublica": {
+        "properties": {
+          "recurso_id": {
+            "type": "integer",
+            "title": "Recurso Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "provincia": {
+            "type": "string",
+            "title": "Provincia"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria"
+          },
+          "latitud": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitud"
+          },
+          "longitud": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitud"
+          },
+          "distancia_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancia Km"
+          },
+          "puntaje_afinidad": {
+            "type": "number",
+            "title": "Puntaje Afinidad"
+          },
+          "puntaje_relativo": {
+            "type": "integer",
+            "title": "Puntaje Relativo"
+          },
+          "terminos_decisivos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Terminos Decisivos"
+          },
+          "intereses_cubiertos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Intereses Cubiertos"
+          },
+          "afluencia": {
+            "$ref": "#/components/schemas/AfluenciaEstimada"
+          },
+          "generado_por": {
+            "type": "string",
+            "enum": [
+              "modelo",
+              "reglas"
+            ],
+            "title": "Generado Por"
+          },
+          "dias_de_celebracion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dias De Celebracion"
+          },
+          "meses_de_celebracion": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Meses De Celebracion"
+          },
+          "esta_en_temporada": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Esta En Temporada"
+          },
+          "tipo_de_ingreso": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo De Ingreso"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recurso_id",
+          "nombre",
+          "provincia",
+          "distrito",
+          "puntaje_afinidad",
+          "puntaje_relativo",
+          "afluencia",
+          "generado_por"
+        ],
+        "title": "RecomendacionPublica",
+        "description": "Un recurso recomendado, con la explicación de por qué lo fue."
+      },
+      "RecursoDescartadoPublico": {
+        "properties": {
+          "recurso_id": {
+            "type": "integer",
+            "title": "Recurso Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "motivo": {
+            "$ref": "#/components/schemas/AvisoPublico"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recurso_id",
+          "nombre",
+          "motivo"
+        ],
+        "title": "RecursoDescartadoPublico",
+        "description": "Un recurso que no pasó los filtros duros, con su motivo."
+      },
+      "RecursoDetalle": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "codigo_mincetur": {
+            "type": "string",
+            "title": "Codigo Mincetur"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "provincia": {
+            "type": "string",
+            "title": "Provincia"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria"
+          },
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo"
+          },
+          "latitud": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitud"
+          },
+          "longitud": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitud"
+          },
+          "esta_validado": {
+            "type": "boolean",
+            "title": "Esta Validado"
+          },
+          "esta_vigente": {
+            "type": "boolean",
+            "title": "Esta Vigente"
+          },
+          "fecha_corte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Corte"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          },
+          "subtipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtipo"
+          },
+          "url_ficha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url Ficha"
+          },
+          "altitud_msnm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Altitud Msnm"
+          },
+          "descripcion_es": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion Es"
+          },
+          "descripcion_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion En"
+          },
+          "duracion_visita_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duracion Visita Min"
+          },
+          "motivos_invalidez": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivos Invalidez"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "codigo_mincetur",
+          "nombre",
+          "provincia",
+          "distrito",
+          "esta_validado",
+          "esta_vigente"
+        ],
+        "title": "RecursoDetalle",
+        "description": "Todos los datos de un recurso, para la página de detalle."
+      },
+      "RecursoResumen": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "codigo_mincetur": {
+            "type": "string",
+            "title": "Codigo Mincetur"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "provincia": {
+            "type": "string",
+            "title": "Provincia"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "categoria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categoria"
+          },
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo"
+          },
+          "latitud": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitud"
+          },
+          "longitud": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitud"
+          },
+          "esta_validado": {
+            "type": "boolean",
+            "title": "Esta Validado"
+          },
+          "esta_vigente": {
+            "type": "boolean",
+            "title": "Esta Vigente"
+          },
+          "fecha_corte": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha Corte"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "codigo_mincetur",
+          "nombre",
+          "provincia",
+          "distrito",
+          "esta_validado",
+          "esta_vigente"
+        ],
+        "title": "RecursoResumen",
+        "description": "Datos de un recurso para el listado en tarjetas.\n\nSe devuelve una versión reducida a propósito: el listado puede traer\ncientos de recursos y mandar la descripción completa de cada uno haría la\nrespuesta innecesariamente pesada."
+      },
+      "RecursoValoradoPublico": {
+        "properties": {
+          "recurso_id": {
+            "type": "integer",
+            "title": "Recurso Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "distrito": {
+            "type": "string",
+            "title": "Distrito"
+          },
+          "total_valoraciones": {
+            "type": "integer",
+            "title": "Total Valoraciones"
+          },
+          "puntuacion_media": {
+            "type": "number",
+            "title": "Puntuacion Media"
+          },
+          "temas_frecuentes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Temas Frecuentes"
+          },
+          "es_fiable": {
+            "type": "boolean",
+            "title": "Es Fiable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "recurso_id",
+          "nombre",
+          "distrito",
+          "total_valoraciones",
+          "puntuacion_media",
+          "es_fiable"
+        ],
+        "title": "RecursoValoradoPublico",
+        "description": "Un recurso con su valoración media."
+      },
+      "RespuestaDelAsistentePublica": {
+        "properties": {
+          "mensaje": {
+            "type": "string",
+            "title": "Mensaje"
+          },
+          "funciones_usadas": {
+            "items": {
+              "$ref": "#/components/schemas/FuncionUsada"
+            },
+            "type": "array",
+            "title": "Funciones Usadas"
+          },
+          "preferencia_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferencia Id"
+          },
+          "esta_disponible": {
+            "type": "boolean",
+            "title": "Esta Disponible",
+            "default": true
+          },
+          "aviso": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviso"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mensaje"
+        ],
+        "title": "RespuestaDelAsistentePublica",
+        "description": "Lo que el asistente contesta."
+      },
+      "RespuestaDisponibilidad": {
+        "properties": {
+          "servicio_id": {
+            "type": "integer",
+            "title": "Servicio Id"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "numero_personas": {
+            "type": "integer",
+            "title": "Numero Personas"
+          },
+          "hay_disponibilidad": {
+            "type": "boolean",
+            "title": "Hay Disponibilidad"
+          },
+          "motivos": {
+            "items": {
+              "$ref": "#/components/schemas/AvisoPublico"
+            },
+            "type": "array",
+            "title": "Motivos"
+          },
+          "plazas_libres": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plazas Libres"
+          }
+        },
+        "type": "object",
+        "required": [
+          "servicio_id",
+          "fecha",
+          "numero_personas",
+          "hay_disponibilidad"
+        ],
+        "title": "RespuestaDisponibilidad",
+        "description": "Si se puede pedir, y si no, todos los motivos.\n\nSe devuelven **todos** los motivos y no solo el primero: decirle a alguien\n«no hay sitio» y, cuando lo arregla, «además llegas tarde», es la clase de\ntrato que hace abandonar un formulario."
+      },
+      "RespuestaItinerario": {
+        "properties": {
+          "itinerario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itinerario Id"
+          },
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "generado_por": {
+            "type": "string",
+            "enum": [
+              "modelo",
+              "reglas"
+            ],
+            "title": "Generado Por"
+          },
+          "paradas": {
+            "items": {
+              "$ref": "#/components/schemas/ParadaPublica"
+            },
+            "type": "array",
+            "title": "Paradas"
+          },
+          "tiempo_total_min": {
+            "type": "integer",
+            "title": "Tiempo Total Min"
+          },
+          "costo_min_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costo Min Soles"
+          },
+          "costo_max_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Costo Max Soles"
+          },
+          "distancia_total_km": {
+            "type": "number",
+            "title": "Distancia Total Km"
+          },
+          "subida_total_m": {
+            "type": "number",
+            "title": "Subida Total M"
+          },
+          "esfuerzo": {
+            "type": "string",
+            "enum": [
+              "suave",
+              "moderado",
+              "exigente"
+            ],
+            "title": "Esfuerzo"
+          },
+          "hay_tramos_estimados": {
+            "type": "boolean",
+            "title": "Hay Tramos Estimados"
+          },
+          "avisos": {
+            "items": {
+              "$ref": "#/components/schemas/AvisoPublico"
+            },
+            "type": "array",
+            "title": "Avisos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id",
+          "fecha",
+          "titulo",
+          "generado_por",
+          "tiempo_total_min",
+          "costo_min_soles",
+          "costo_max_soles",
+          "distancia_total_km",
+          "subida_total_m",
+          "esfuerzo",
+          "hay_tramos_estimados"
+        ],
+        "title": "RespuestaItinerario",
+        "description": "El itinerario de un día, con sus totales y sus avisos."
+      },
+      "RespuestaRecomendacion": {
+        "properties": {
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "fecha_de_referencia": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha De Referencia"
+          },
+          "generado_por": {
+            "type": "string",
+            "enum": [
+              "modelo",
+              "reglas"
+            ],
+            "title": "Generado Por"
+          },
+          "total_evaluados": {
+            "type": "integer",
+            "title": "Total Evaluados"
+          },
+          "total_recomendados": {
+            "type": "integer",
+            "title": "Total Recomendados"
+          },
+          "total_descartados": {
+            "type": "integer",
+            "title": "Total Descartados"
+          },
+          "recomendaciones": {
+            "items": {
+              "$ref": "#/components/schemas/RecomendacionPublica"
+            },
+            "type": "array",
+            "title": "Recomendaciones"
+          },
+          "descartados": {
+            "items": {
+              "$ref": "#/components/schemas/RecursoDescartadoPublico"
+            },
+            "type": "array",
+            "title": "Descartados"
+          },
+          "avisos": {
+            "items": {
+              "$ref": "#/components/schemas/AvisoPublico"
+            },
+            "type": "array",
+            "title": "Avisos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id",
+          "fecha_de_referencia",
+          "generado_por",
+          "total_evaluados",
+          "total_recomendados",
+          "total_descartados",
+          "recomendaciones"
+        ],
+        "title": "RespuestaRecomendacion",
+        "description": "Todo lo que devuelve una recomendación.\n\nIncluye a propósito lo que se descartó y por qué: es lo que permite\nexplicarle al visitante por qué no ve un sitio que esperaba, y lo que\nconvierte el proceso en auditable en vez de en una caja negra."
+      },
+      "RespuestaSesion": {
+        "properties": {
+          "token_de_acceso": {
+            "type": "string",
+            "title": "Token De Acceso"
+          },
+          "tipo_de_token": {
+            "type": "string",
+            "const": "bearer",
+            "title": "Tipo De Token",
+            "default": "bearer"
+          },
+          "expira_en_minutos": {
+            "type": "integer",
+            "title": "Expira En Minutos"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioPublico"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token_de_acceso",
+          "expira_en_minutos",
+          "usuario"
+        ],
+        "title": "RespuestaSesion",
+        "description": "Lo que devuelven el registro y el inicio de sesión."
+      },
+      "ResumenDeCoordinacion": {
+        "properties": {
+          "total_solicitudes": {
+            "type": "integer",
+            "title": "Total Solicitudes"
+          },
+          "confirmadas": {
+            "type": "integer",
+            "title": "Confirmadas"
+          },
+          "rechazadas": {
+            "type": "integer",
+            "title": "Rechazadas"
+          },
+          "pendientes": {
+            "type": "integer",
+            "title": "Pendientes"
+          },
+          "interacciones_medias_hasta_confirmar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interacciones Medias Hasta Confirmar"
+          },
+          "horas_medias_hasta_confirmar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Horas Medias Hasta Confirmar"
+          },
+          "canales_para_confirmar": {
+            "type": "integer",
+            "title": "Canales Para Confirmar",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_solicitudes",
+          "confirmadas",
+          "rechazadas",
+          "pendientes"
+        ],
+        "title": "ResumenDeCoordinacion",
+        "description": "El indicador del Incremento 5, calculado sobre lo que hay registrado."
+      },
+      "ResumenDeEvidenciaPublico": {
+        "properties": {
+          "total_itinerarios": {
+            "type": "integer",
+            "title": "Total Itinerarios"
+          },
+          "itinerarios_con_valoracion": {
+            "type": "integer",
+            "title": "Itinerarios Con Valoracion"
+          },
+          "porcentaje_con_valoracion": {
+            "type": "number",
+            "title": "Porcentaje Con Valoracion"
+          },
+          "total_valoraciones": {
+            "type": "integer",
+            "title": "Total Valoraciones"
+          },
+          "con_comentario": {
+            "type": "integer",
+            "title": "Con Comentario"
+          },
+          "puntuacion_media": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Puntuacion Media"
+          },
+          "sentimiento": {
+            "$ref": "#/components/schemas/DistribucionPublica"
+          },
+          "temas": {
+            "items": {
+              "$ref": "#/components/schemas/TemaPublico"
+            },
+            "type": "array",
+            "title": "Temas"
+          },
+          "mejor_valorados": {
+            "items": {
+              "$ref": "#/components/schemas/RecursoValoradoPublico"
+            },
+            "type": "array",
+            "title": "Mejor Valorados"
+          },
+          "peor_valorados": {
+            "items": {
+              "$ref": "#/components/schemas/RecursoValoradoPublico"
+            },
+            "type": "array",
+            "title": "Peor Valorados"
+          },
+          "evolucion": {
+            "items": {
+              "$ref": "#/components/schemas/PuntoEnElTiempoPublico"
+            },
+            "type": "array",
+            "title": "Evolucion"
+          },
+          "analizadas_por_modelo": {
+            "type": "integer",
+            "title": "Analizadas Por Modelo"
+          },
+          "analizadas_por_reglas": {
+            "type": "integer",
+            "title": "Analizadas Por Reglas"
+          },
+          "avisos": {
+            "items": {
+              "$ref": "#/components/schemas/AvisoPublico"
+            },
+            "type": "array",
+            "title": "Avisos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_itinerarios",
+          "itinerarios_con_valoracion",
+          "porcentaje_con_valoracion",
+          "total_valoraciones",
+          "con_comentario",
+          "sentimiento",
+          "analizadas_por_modelo",
+          "analizadas_por_reglas"
+        ],
+        "title": "ResumenDeEvidenciaPublico",
+        "description": "Todo lo que el tablero del gestor necesita."
+      },
+      "ResumenFiltros": {
+        "properties": {
+          "provincias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Provincias"
+          },
+          "distritos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Distritos"
+          },
+          "categorias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categorias"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provincias",
+          "distritos",
+          "categorias"
+        ],
+        "title": "ResumenFiltros",
+        "description": "Valores disponibles para poblar los desplegables de filtro."
+      },
+      "SaludComponente": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "operativo",
+              "no_disponible"
+            ],
+            "title": "Estado"
+          },
+          "detalle": {
+            "type": "string",
+            "title": "Detalle",
+            "description": "Version, mensaje de error o dato util para diagnosticar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado",
+          "detalle"
+        ],
+        "title": "SaludComponente",
+        "description": "Estado de uno de los componentes de los que depende la plataforma."
+      },
+      "SaludGeneral": {
+        "properties": {
+          "aplicacion": {
+            "type": "string",
+            "title": "Aplicacion"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "entorno": {
+            "type": "string",
+            "title": "Entorno"
+          },
+          "estado_general": {
+            "type": "string",
+            "enum": [
+              "operativo",
+              "degradado"
+            ],
+            "title": "Estado General",
+            "description": "Es 'degradado' si algun componente no responde"
+          },
+          "api": {
+            "$ref": "#/components/schemas/SaludComponente"
+          },
+          "base_datos": {
+            "$ref": "#/components/schemas/SaludComponente"
+          },
+          "ollama": {
+            "$ref": "#/components/schemas/SaludComponente"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aplicacion",
+          "version",
+          "entorno",
+          "estado_general",
+          "api",
+          "base_datos",
+          "ollama"
+        ],
+        "title": "SaludGeneral",
+        "description": "Respuesta completa de GET /api/salud."
+      },
+      "ServicioNuevo": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Nombre"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "transporte",
+              "alimentacion",
+              "hospedaje",
+              "guiado",
+              "taller",
+              "artesania"
+            ],
+            "title": "Tipo"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "recurso_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurso Id"
+          },
+          "capacidad_maxima": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Capacidad Maxima"
+          },
+          "duracion_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10080.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duracion Min"
+          },
+          "antelacion_minima_horas": {
+            "type": "integer",
+            "maximum": 8760.0,
+            "minimum": 0.0,
+            "title": "Antelacion Minima Horas",
+            "default": 24
+          },
+          "precio_min_soles": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Precio Min Soles"
+          },
+          "precio_max_soles": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Precio Max Soles"
+          },
+          "unidad_precio": {
+            "type": "string",
+            "enum": [
+              "por_persona",
+              "por_grupo",
+              "por_noche",
+              "por_hora"
+            ],
+            "title": "Unidad Precio",
+            "default": "por_persona"
+          },
+          "fecha_referencia": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Referencia"
+          },
+          "idiomas": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idiomas"
+          },
+          "es_accesible": {
+            "type": "boolean",
+            "title": "Es Accesible",
+            "default": false
+          },
+          "esta_publicado": {
+            "type": "boolean",
+            "title": "Esta Publicado",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "tipo",
+          "capacidad_maxima",
+          "precio_min_soles",
+          "precio_max_soles",
+          "fecha_referencia"
+        ],
+        "title": "ServicioNuevo",
+        "description": "Lo que un proveedor publica."
+      },
+      "ServicioPublico": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "transporte",
+              "alimentacion",
+              "hospedaje",
+              "guiado",
+              "taller",
+              "artesania"
+            ],
+            "title": "Tipo"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "proveedor": {
+            "$ref": "#/components/schemas/ProveedorPublico"
+          },
+          "recurso_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurso Id"
+          },
+          "capacidad_maxima": {
+            "type": "integer",
+            "title": "Capacidad Maxima"
+          },
+          "duracion_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duracion Min"
+          },
+          "antelacion_minima_horas": {
+            "type": "integer",
+            "title": "Antelacion Minima Horas"
+          },
+          "precio_min_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Min Soles"
+          },
+          "precio_max_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Max Soles"
+          },
+          "unidad_precio": {
+            "type": "string",
+            "enum": [
+              "por_persona",
+              "por_grupo",
+              "por_noche",
+              "por_hora"
+            ],
+            "title": "Unidad Precio"
+          },
+          "fecha_referencia": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Referencia"
+          },
+          "idiomas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idiomas"
+          },
+          "es_accesible": {
+            "type": "boolean",
+            "title": "Es Accesible"
+          },
+          "disponibilidad": {
+            "items": {
+              "$ref": "#/components/schemas/TramoDisponible"
+            },
+            "type": "array",
+            "title": "Disponibilidad"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "tipo",
+          "proveedor",
+          "capacidad_maxima",
+          "antelacion_minima_horas",
+          "precio_min_soles",
+          "precio_max_soles",
+          "unidad_precio",
+          "fecha_referencia",
+          "es_accesible"
+        ],
+        "title": "ServicioPublico",
+        "description": "Un servicio publicado, con lo que hace falta para decidir si sirve."
+      },
+      "SolicitudInicioSesion": {
+        "properties": {
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "title": "Correo"
+          },
+          "contrasena": {
+            "type": "string",
+            "title": "Contrasena"
+          }
+        },
+        "type": "object",
+        "required": [
+          "correo",
+          "contrasena"
+        ],
+        "title": "SolicitudInicioSesion",
+        "description": "Credenciales para iniciar sesión."
+      },
+      "SolicitudItinerario": {
+        "properties": {
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha"
+          },
+          "hora_inicio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Inicio"
+          },
+          "hora_fin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Fin"
+          },
+          "guardar": {
+            "type": "boolean",
+            "title": "Guardar",
+            "default": false
+          },
+          "titulo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id"
+        ],
+        "title": "SolicitudItinerario",
+        "description": "Petición para armar el itinerario de un día."
+      },
+      "SolicitudNueva": {
+        "properties": {
+          "servicio_id": {
+            "type": "integer",
+            "title": "Servicio Id"
+          },
+          "fecha_servicio": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Servicio"
+          },
+          "hora_servicio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Servicio"
+          },
+          "numero_personas": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Numero Personas"
+          },
+          "nombre_contacto": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Nombre Contacto"
+          },
+          "telefono_contacto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telefono Contacto"
+          },
+          "correo_contacto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correo Contacto"
+          },
+          "mensaje": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mensaje"
+          },
+          "itinerario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itinerario Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "servicio_id",
+          "fecha_servicio",
+          "numero_personas",
+          "nombre_contacto"
+        ],
+        "title": "SolicitudNueva",
+        "description": "Lo que el visitante manda al proveedor."
+      },
+      "SolicitudPublica": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "servicio_id": {
+            "type": "integer",
+            "title": "Servicio Id"
+          },
+          "servicio_nombre": {
+            "type": "string",
+            "title": "Servicio Nombre"
+          },
+          "proveedor_nombre": {
+            "type": "string",
+            "title": "Proveedor Nombre"
+          },
+          "proveedor_telefono": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proveedor Telefono"
+          },
+          "proveedor_es_demostracion": {
+            "type": "boolean",
+            "title": "Proveedor Es Demostracion"
+          },
+          "itinerario_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itinerario Id"
+          },
+          "fecha_servicio": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Servicio"
+          },
+          "hora_servicio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Servicio"
+          },
+          "numero_personas": {
+            "type": "integer",
+            "title": "Numero Personas"
+          },
+          "nombre_contacto": {
+            "type": "string",
+            "title": "Nombre Contacto"
+          },
+          "telefono_contacto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telefono Contacto"
+          },
+          "correo_contacto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correo Contacto"
+          },
+          "mensaje": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mensaje"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "enviada",
+              "en_revision",
+              "contrapropuesta",
+              "confirmada",
+              "rechazada",
+              "cancelada"
+            ],
+            "title": "Estado"
+          },
+          "precio_acordado_soles": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio Acordado Soles"
+          },
+          "respuesta_proveedor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Respuesta Proveedor"
+          },
+          "precio_min_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Min Soles"
+          },
+          "precio_max_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Max Soles"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          },
+          "actualizado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Actualizado En"
+          },
+          "interacciones": {
+            "type": "integer",
+            "title": "Interacciones"
+          },
+          "historial": {
+            "items": {
+              "$ref": "#/components/schemas/CambioDeEstadoPublico"
+            },
+            "type": "array",
+            "title": "Historial"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "servicio_id",
+          "servicio_nombre",
+          "proveedor_nombre",
+          "proveedor_es_demostracion",
+          "fecha_servicio",
+          "numero_personas",
+          "nombre_contacto",
+          "estado",
+          "precio_min_soles",
+          "precio_max_soles",
+          "creado_en",
+          "actualizado_en",
+          "interacciones"
+        ],
+        "title": "SolicitudPublica",
+        "description": "Una solicitud con todo lo acordado y todo lo ocurrido."
+      },
+      "SolicitudRecomendacion": {
+        "properties": {
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "limite": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Limite",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id"
+        ],
+        "title": "SolicitudRecomendacion",
+        "description": "Petición de recomendaciones para una preferencia ya guardada."
+      },
+      "SolicitudRegistro": {
+        "properties": {
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "title": "Correo"
+          },
+          "contrasena": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Contrasena",
+            "description": "Al menos 8 caracteres"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "idioma_preferido": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ],
+            "title": "Idioma Preferido",
+            "default": "es"
+          }
+        },
+        "type": "object",
+        "required": [
+          "correo",
+          "contrasena",
+          "nombre"
+        ],
+        "title": "SolicitudRegistro",
+        "description": "Datos para crear una cuenta nueva."
+      },
+      "SolicitudReordenar": {
+        "properties": {
+          "preferencia_id": {
+            "type": "integer",
+            "title": "Preferencia Id"
+          },
+          "fecha": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fecha"
+          },
+          "hora_inicio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Inicio"
+          },
+          "hora_fin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hora Fin"
+          },
+          "guardar": {
+            "type": "boolean",
+            "title": "Guardar",
+            "default": false
+          },
+          "titulo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo"
+          },
+          "recursos_en_orden": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Recursos En Orden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "preferencia_id",
+          "recursos_en_orden"
+        ],
+        "title": "SolicitudReordenar",
+        "description": "Nuevo orden de las paradas, para recalcular tras arrastrarlas.\n\nHereda de :class:`SolicitudItinerario` en vez de ser un segundo modelo de\ncuerpo, para que la petición sea un único objeto JSON plano. Con dos\nmodelos, FastAPI los anidaría bajo sus nombres de parámetro y el cliente\ntendría que enviar ``{\"solicitud\": {...}, \"orden\": {...}}``, que no se\nparece a nada de lo que envía el resto de la API."
+      },
+      "TableroDeIndicadores": {
+        "properties": {
+          "indicadores": {
+            "items": {
+              "$ref": "#/components/schemas/IndicadorDelIncremento"
+            },
+            "type": "array",
+            "title": "Indicadores"
+          },
+          "generado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generado_en"
+        ],
+        "title": "TableroDeIndicadores",
+        "description": "Los seis indicadores del proyecto en un solo lugar."
+      },
+      "TemaPublico": {
+        "properties": {
+          "tema": {
+            "type": "string",
+            "title": "Tema"
+          },
+          "menciones": {
+            "type": "integer",
+            "title": "Menciones"
+          },
+          "positivas": {
+            "type": "integer",
+            "title": "Positivas"
+          },
+          "neutras": {
+            "type": "integer",
+            "title": "Neutras"
+          },
+          "negativas": {
+            "type": "integer",
+            "title": "Negativas"
+          },
+          "porcentaje_negativo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Porcentaje Negativo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tema",
+          "menciones",
+          "positivas",
+          "neutras",
+          "negativas"
+        ],
+        "title": "TemaPublico",
+        "description": "Cuánto se menciona un tema, y con qué signo."
+      },
+      "TramoDisponible": {
+        "properties": {
+          "dia_semana": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Dia Semana"
+          },
+          "hora_inicio": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Inicio"
+          },
+          "hora_fin": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Fin"
+          },
+          "cupo": {
+            "type": "integer",
+            "title": "Cupo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dia_semana",
+          "hora_inicio",
+          "hora_fin",
+          "cupo"
+        ],
+        "title": "TramoDisponible",
+        "description": "Un tramo horario en el que el servicio atiende."
+      },
+      "TramoNuevo": {
+        "properties": {
+          "dia_semana": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Dia Semana"
+          },
+          "hora_inicio": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Inicio"
+          },
+          "hora_fin": {
+            "type": "string",
+            "format": "time",
+            "title": "Hora Fin"
+          },
+          "cupo": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Cupo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dia_semana",
+          "hora_inicio",
+          "hora_fin",
+          "cupo"
+        ],
+        "title": "TramoNuevo",
+        "description": "Un tramo de disponibilidad que publica el proveedor."
+      },
+      "TrasladoPublico": {
+        "properties": {
+          "modo": {
+            "type": "string",
+            "enum": [
+              "caminando",
+              "combi",
+              "colectivo",
+              "taxi"
+            ],
+            "title": "Modo"
+          },
+          "minutos": {
+            "type": "integer",
+            "title": "Minutos"
+          },
+          "distancia_km": {
+            "type": "number",
+            "title": "Distancia Km"
+          },
+          "desnivel_m": {
+            "type": "number",
+            "title": "Desnivel M"
+          },
+          "precio_min_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Min Soles"
+          },
+          "precio_max_soles": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Precio Max Soles"
+          },
+          "es_estimado": {
+            "type": "boolean",
+            "title": "Es Estimado"
+          },
+          "fuente": {
+            "type": "string",
+            "title": "Fuente"
+          },
+          "fecha_referencia": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha Referencia"
+          },
+          "origen_del_calculo": {
+            "type": "string",
+            "enum": [
+              "red_vial",
+              "linea_recta"
+            ],
+            "title": "Origen Del Calculo"
+          },
+          "trazado": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Trazado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "modo",
+          "minutos",
+          "distancia_km",
+          "desnivel_m",
+          "precio_min_soles",
+          "precio_max_soles",
+          "es_estimado",
+          "fuente",
+          "fecha_referencia",
+          "origen_del_calculo"
+        ],
+        "title": "TrasladoPublico",
+        "description": "El desplazamiento desde la parada anterior hasta esta."
+      },
+      "UsuarioPublico": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "correo": {
+            "type": "string",
+            "title": "Correo"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "rol": {
+            "type": "string",
+            "title": "Rol"
+          },
+          "idioma_preferido": {
+            "type": "string",
+            "title": "Idioma Preferido"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "correo",
+          "nombre",
+          "rol",
+          "idioma_preferido",
+          "creado_en"
+        ],
+        "title": "UsuarioPublico",
+        "description": "Datos de un usuario que sí se pueden mostrar.\n\nNótese lo que NO está aquí: el hash de la contraseña. Al declarar un\nesquema de salida explícito, es imposible que se filtre por accidente\naunque alguien devuelva el objeto completo del modelo."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValoracionNueva": {
+        "properties": {
+          "itinerario_id": {
+            "type": "integer",
+            "title": "Itinerario Id"
+          },
+          "puntuacion": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Puntuacion"
+          },
+          "comentario": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comentario"
+          },
+          "recurso_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurso Id"
+          },
+          "servicio_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Servicio Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "itinerario_id",
+          "puntuacion"
+        ],
+        "title": "ValoracionNueva",
+        "description": "Lo que el visitante manda al cerrar su itinerario."
+      },
+      "ValoracionPublica": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "itinerario_id": {
+            "type": "integer",
+            "title": "Itinerario Id"
+          },
+          "recurso_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurso Id"
+          },
+          "recurso_nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurso Nombre"
+          },
+          "servicio_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Servicio Id"
+          },
+          "servicio_nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Servicio Nombre"
+          },
+          "puntuacion": {
+            "type": "integer",
+            "title": "Puntuacion"
+          },
+          "comentario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comentario"
+          },
+          "sentimiento": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "positivo",
+                  "neutro",
+                  "negativo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentimiento"
+          },
+          "confianza_sentimiento": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confianza Sentimiento"
+          },
+          "temas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Temas"
+          },
+          "analizado_por": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "modelo",
+                  "reglas"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analizado Por"
+          },
+          "version_del_analisis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Del Analisis"
+          },
+          "creado_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Creado En"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "itinerario_id",
+          "puntuacion",
+          "creado_en"
+        ],
+        "title": "ValoracionPublica",
+        "description": "Una valoración con lo que la persona puso y lo que el sistema entendió."
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "description": "Token JWT de la sesión",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

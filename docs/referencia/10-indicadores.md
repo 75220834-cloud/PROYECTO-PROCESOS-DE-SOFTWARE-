@@ -85,7 +85,7 @@ puntuar. Y decirlo así es más honesto que presentarlo como un logro del modelo
 | | |
 |---|---|
 | **Brecha** | 4 — sin geografía ni costo |
-| **Valor** | **4 de 4 perfiles**, peor caso medido **5,05 s de 10 s** |
+| **Valor** | **4 de 4 perfiles**, peor caso medido **6,52 s de 10 s** *(25-09-2026; el reloj varía entre 6 y 7 s de una ejecución a otra)* |
 | **Dónde** | `rutas/valoraciones.py::_indicador_4_itinerarios` |
 
 **⚠️ También sustituye al del plan.**

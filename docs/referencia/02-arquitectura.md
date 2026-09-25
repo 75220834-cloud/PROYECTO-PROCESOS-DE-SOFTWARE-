@@ -77,8 +77,8 @@ graph LR
 | `utilidades/` | Guiones que se ejecutan a mano: cargar datos, sembrar, verificar. | Nada que la API necesite en caliente. |
 
 **Por qué importa esta separación:** los servicios se prueban sin levantar la
-API, y la IA se prueba sin base de datos. De las 549 pruebas del backend, 267
-no tocan PostgreSQL.
+API, y la IA se prueba sin base de datos. De las 550 pruebas del backend, 296
+no tocan PostgreSQL (medido el 25-09-2026).
 
 ---
 

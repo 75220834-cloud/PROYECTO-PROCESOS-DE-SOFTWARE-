@@ -1,0 +1,8 @@
+app\utilidades\verificar_fase4.py          87     87     0%   15-226
+---------------------------------------------------------------------
+TOTAL                                    4556   1211    73%
+Coverage XML written to file coverage.xml
+Required test coverage of 60.0% reached. Total coverage: 73.42%
+=========== 549 passed, 1 skipped, 5 warnings in 526.80s (0:08:46) ============
+
+[exited with code 0]

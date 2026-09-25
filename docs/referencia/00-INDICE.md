@@ -4,7 +4,7 @@ Esto es el **mapa completo del proyecto**. Está escrito para que nadie —ni un
 persona nueva, ni yo en una sesión futura— tenga que volver a auditar 24 000
 líneas de código para saber qué hay, cómo funciona y por qué se hizo así.
 
-**Última actualización:** 4 de septiembre de 2026
+**Última actualización:** 25 de septiembre de 2026
 **Estado del proyecto:** terminado (las 8 fases del plan, 0–7)
 
 ---
@@ -60,6 +60,7 @@ cada push, que es lo que se va a poner en rojo si algo se rompe.
 | 15 | [15-historial-de-fallos.md](15-historial-de-fallos.md) | Todos los fallos encontrados, cómo se encontraron y cómo se arreglaron. Es lo que demuestra que esto se probó de verdad. |
 | 16 | [16-pendientes-y-limitaciones.md](16-pendientes-y-limitaciones.md) | Lo que no está hecho, lo que no se puede hacer con los datos que hay, y las ideas descartadas con su motivo. |
 | 17 | [17-integracion-y-despliegue.md](17-integracion-y-despliegue.md) | Cómo se comprueba el proyecto a mano y de forma automática, los dos procedimientos comparados, y qué haría falta para desplegarlo de verdad. |
+| 18 | [18-analisis-estatico-sonarqube.md](18-analisis-estatico-sonarqube.md) | El primer análisis real de SonarQube: bugs, code smells, deuda técnica, duplicación y Quality Gate, y los dos fallos de configuración que salieron al ejecutarlo. |
 
 ---
 

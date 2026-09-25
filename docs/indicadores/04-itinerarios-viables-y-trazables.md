@@ -83,7 +83,12 @@ El script arma un itinerario para cuatro perfiles deliberadamente distintos
 —distinto distrito de origen, distinta movilidad, distinto ritmo— sobre el
 catálogo real de 295 recursos, y comprueba las seis condiciones en cada uno.
 
-## Medición del 29 de agosto de 2026
+## Medición del 29 de agosto de 2026 — histórica
+
+> ⚠️ Esta medición se tomó **antes** de que la carga de las fichas web trajera
+> los 208 horarios de atención. Se conserva porque era correcta ese día y porque
+> la comparación con la de septiembre es informativa. **La vigente es la de
+> abajo.**
 
 | Perfil | Paradas | Tiempo | Costo máx. | Presupuesto | Tramos reales / estimados |
 |---|---|---|---|---|---|
@@ -94,6 +99,42 @@ catálogo real de 295 recursos, y comprueba las seis condiciones en cada uno.
 
 **Resultado: 4 de 4 (100 %).**
 Tiempo máximo **5,05 s** frente al tope de 10 s. Tiempo medio 2,74 s.
+
+---
+
+## Medición del 25 de septiembre de 2026 — la vigente
+
+| Perfil | Paradas | Tiempo |
+|---|---|---|
+| Huancayo, cultura, transporte público | 5 | **6,52 s** |
+| Huancayo, naturaleza, taxi | 3 | 3,98 s |
+| Chupaca, artesanía, caminando | 3 | 2,39 s |
+| Jauja, todo, ritmo intenso | 4 | 4,56 s |
+
+**Resultado: 4 de 4 (100 %).**
+Tiempo máximo **6,52 s** frente al tope de 10 s. Tiempo medio **4,36 s**.
+
+### Qué cambió respecto de agosto, y por qué
+
+**No es solo que los tiempos subieran: cambió el número de paradas de tres de los
+cuatro perfiles.** Huancayo-naturaleza pasó de 1 parada a 3, Chupaca de 1 a 3 y
+Jauja de 7 a 4.
+
+La causa no es el optimizador: son los **208 horarios de atención** que la carga
+de las fichas web del MINCETUR trajo a la base el 30 de agosto. En agosto la
+tabla `horario_atencion` estaba vacía, así que la restricción de horario no
+mordía y el día se llenaba solo con el presupuesto y el tiempo. Ahora sí muerde:
+hay recursos que ya no entran porque cierran antes, y otros que sí entran porque
+se descartaron por otro motivo.
+
+**Los tiempos también subieron** (peor caso 5,05 → 6,52 s, media 2,74 → 4,36 s),
+en parte por lo mismo —hay más restricciones que evaluar— y en parte porque son
+medidas de reloj en una laptop. Tres ejecuciones distintas del mismo guion dieron
+peores casos de **9,77 s, 6,75 s y 6,52 s**, así que conviene citar el peor caso
+como *del orden de 6–7 s*, no como una cifra exacta.
+
+Lo que no cambió, y es lo que el indicador afirma: **los 4 perfiles producen
+itinerario y el peor caso sigue por debajo del tope de 10 s.**
 
 Los tiempos varían unas décimas entre ejecuciones: el optimizador agota su
 límite de búsqueda de 2 segundos y el resto depende de cuántos tramos haya que

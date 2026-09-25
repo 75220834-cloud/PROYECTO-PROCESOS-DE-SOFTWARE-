@@ -91,8 +91,16 @@ entrada tiene su prueba de regresión.
 | `test_asistente.py` | Las 5 funciones, **sin necesitar Ollama** | sí |
 | `test_fichas_y_temporada.py` | Lector de fichas, horarios, fechas de fiestas | no |
 
-**267 de las 549 no tocan PostgreSQL.** Es consecuencia de la separación por
+**296 de las 550 no tocan PostgreSQL.** Es consecuencia de la separación por
 capas: la IA y los cálculos se prueban solos.
+
+Medido el 25 de septiembre de 2026 apuntando la configuración a un host
+inexistente, para que ninguna conexión sea posible: `296 passed, 254 skipped`.
+Es reproducible con
+
+```bash
+cd backend && POSTGRES_HOST=no.existe.invalid .venv/Scripts/python.exe -m pytest -q -o addopts=""
+```
 
 ---
 

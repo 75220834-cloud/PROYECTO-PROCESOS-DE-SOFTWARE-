@@ -114,7 +114,7 @@ el tiempo y costo de desplazamiento.*
 | **Endpoints** | 4 de itinerarios |
 | **Pantallas** | `/preferencias/:id/itinerario` |
 | **Pruebas** | `test_ruteo.py`, `test_rutas_itinerarios.py`, `test_tiempo_recorrido.py`, `test_costos.py` |
-| **Indicador** | 4 de 4 perfiles, peor caso 5,05 s de 10 s |
+| **Indicador** | 4 de 4 perfiles, peor caso 6,52 s de 10 s *(medido el 25-09-2026; varía entre 6 y 7 s según la ejecución)* |
 
 **Es el incremento con más piezas:** OR-Tools para el orden, OpenStreetMap para
 las distancias, Copernicus para el desnivel, Tobler para el tiempo a pie, y una

@@ -72,3 +72,8 @@ desktop.ini
 # Docker y calidad
 # ---------------------------------------------------------------------------
 .scannerwork/
+
+# Artefactos de las pruebas de extremo a extremo (Playwright).
+test-results/
+playwright-report/
+frontend/e2e-resultados.json

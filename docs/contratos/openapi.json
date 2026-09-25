@@ -175,7 +175,7 @@
           "catalogo"
         ],
         "summary": "Valores para los filtros",
-        "description": "Devuelve las provincias, distritos y categorías que existen en el catálogo.\n\nSe sacan de los datos y no de una lista fija en el código: si el\ninventario incorpora una categoría nueva, el filtro aparece solo.",
+        "description": "Devuelve las provincias, distritos y categorías que existen en el catálogo.\n\n\n\nSe sacan de los datos y no de una lista fija en el código: si el\n\ninventario incorpora una categoría nueva, el filtro aparece solo.",
         "operationId": "obtener_filtros_api_recursos_filtros_get",
         "responses": {
           "200": {
@@ -197,7 +197,7 @@
           "catalogo"
         ],
         "summary": "Recursos en formato GeoJSON",
-        "description": "Devuelve los recursos con coordenadas, listos para pintar en el mapa.\n\nSolo se incluyen los que tienen ubicación: un marcador sin coordenada no\nse puede dibujar, y ponerlo en el centro del distrito sería inventar.",
+        "description": "Devuelve los recursos con coordenadas, listos para pintar en el mapa.\n\n\n\nSolo se incluyen los que tienen ubicación: un marcador sin coordenada no\n\nse puede dibujar, y ponerlo en el centro del distrito sería inventar.",
         "operationId": "obtener_recursos_para_el_mapa_api_recursos_mapa_get",
         "parameters": [
           {
@@ -319,6 +319,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -338,7 +348,7 @@
           "catalogo"
         ],
         "summary": "Indicador del Incremento 1",
-        "description": "Devuelve la última validación ejecutada.\n\nEs el indicador del Incremento 1: *porcentaje de oferta con información\nvalidada y vigente*. Los números salen de la tabla, no se recalculan al\nvuelo, para que reflejen el estado del catálogo cuando se validó.",
+        "description": "Devuelve la última validación ejecutada.\n\n\n\nEs el indicador del Incremento 1: *porcentaje de oferta con información\n\nvalidada y vigente*. Los números salen de la tabla, no se recalculan al\n\nvuelo, para que reflejen el estado del catálogo cuando se validó.",
         "operationId": "obtener_indicador_del_catalogo_api_indicadores_catalogo_get",
         "responses": {
           "200": {
@@ -347,6 +357,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IndicadorCatalogo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -360,7 +380,7 @@
           "autenticacion"
         ],
         "summary": "Crea una cuenta",
-        "description": "Registra un usuario nuevo y le abre la sesión de inmediato.\n\nSe devuelve el token junto con la cuenta creada para que el visitante no\ntenga que iniciar sesión otra vez justo después de registrarse.\n\nTodas las cuentas creadas aquí son de rol *visitante*. Los roles de\noperador, proveedor y gestor los asigna un administrador: si se pudieran\nelegir al registrarse, cualquiera se haría gestor.",
+        "description": "Registra un usuario nuevo y le abre la sesión de inmediato.\n\n\n\nSe devuelve el token junto con la cuenta creada para que el visitante no\n\ntenga que iniciar sesión otra vez justo después de registrarse.\n\n\n\nTodas las cuentas creadas aquí son de rol *visitante*. Los roles de\n\noperador, proveedor y gestor los asigna un administrador: si se pudieran\n\nelegir al registrarse, cualquiera se haría gestor.",
         "operationId": "registrar_api_autenticacion_registro_post",
         "requestBody": {
           "content": {
@@ -379,6 +399,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RespuestaSesion"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El estado actual no permite esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -425,6 +455,16 @@
               }
             }
           },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -444,7 +484,7 @@
           "autenticacion"
         ],
         "summary": "Datos de la sesión actual",
-        "description": "Devuelve los datos del usuario con la sesión abierta.\n\nEl frontend lo usa al cargar para saber si el token guardado sigue siendo\nválido, sin tener que pedir la contraseña otra vez.",
+        "description": "Devuelve los datos del usuario con la sesión abierta.\n\n\n\nEl frontend lo usa al cargar para saber si el token guardado sigue siendo\n\nválido, sin tener que pedir la contraseña otra vez.",
         "operationId": "obtener_sesion_actual_api_autenticacion_yo_get",
         "responses": {
           "200": {
@@ -453,6 +493,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UsuarioPublico"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -471,7 +531,7 @@
           "preferencias"
         ],
         "summary": "Valores para el asistente",
-        "description": "Devuelve los valores que el asistente necesita para dibujar sus pasos.\n\nLos distritos salen del catálogo real, no de una lista escrita a mano: el\nvisitante solo puede elegir como origen un distrito donde de verdad hay\nrecursos turísticos registrados.",
+        "description": "Devuelve los valores que el asistente necesita para dibujar sus pasos.\n\n\n\nLos distritos salen del catálogo real, no de una lista escrita a mano: el\n\nvisitante solo puede elegir como origen un distrito donde de verdad hay\n\nrecursos turísticos registrados.",
         "operationId": "obtener_opciones_api_preferencias_opciones_get",
         "responses": {
           "200": {
@@ -505,6 +565,26 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -518,7 +598,7 @@
           "preferencias"
         ],
         "summary": "Guarda una preferencia de viaje",
-        "description": "Registra lo que el visitante quiere de su viaje.\n\n**Funciona sin cuenta.** Si no hay sesión iniciada, la preferencia se\nguarda con ``usuario_id`` nulo y el frontend conserva su identificador en\nel navegador. Es la regla del proyecto: no se pide registrarse para\nempezar, solo para guardar.",
+        "description": "Registra lo que el visitante quiere de su viaje.\n\n\n\n**Funciona sin cuenta.** Si no hay sesión iniciada, la preferencia se\n\nguarda con ``usuario_id`` nulo y el frontend conserva su identificador en\n\nel navegador. Es la regla del proyecto: no se pide registrarse para\n\nempezar, solo para guardar.",
         "operationId": "crear_preferencia_api_preferencias_post",
         "requestBody": {
           "content": {
@@ -594,6 +674,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -611,7 +701,7 @@
           "preferencias"
         ],
         "summary": "Actualiza una preferencia",
-        "description": "Cambia una preferencia ya guardada.\n\nSirve para el botón «Cambiar preferencias» de la pantalla de resultados,\nsin obligar a rehacer el asistente desde cero.",
+        "description": "Cambia una preferencia ya guardada.\n\n\n\nSirve para el botón «Cambiar preferencias» de la pantalla de resultados,\n\nsin obligar a rehacer el asistente desde cero.",
         "operationId": "actualizar_preferencia_api_preferencias__id_preferencia__put",
         "security": [
           {
@@ -650,6 +740,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -669,7 +769,7 @@
           "preferencias"
         ],
         "summary": "Asocia a tu cuenta una preferencia creada sin ella",
-        "description": "Convierte en propia una preferencia que se creó sin cuenta.\n\nEs el cierre del recorrido que promete el proyecto: el visitante arma su\nviaje sin registrarse y, si al final quiere conservarlo, crea la cuenta y\nreclama lo que ya había hecho, sin repetir el asistente.\n\nUna preferencia que ya tiene dueño no se puede reclamar.",
+        "description": "Convierte en propia una preferencia que se creó sin cuenta.\n\n\n\nEs el cierre del recorrido que promete el proyecto: el visitante arma su\n\nviaje sin registrarse y, si al final quiere conservarlo, crea la cuenta y\n\nreclama lo que ya había hecho, sin repetir el asistente.\n\n\n\nUna preferencia que ya tiene dueño no se puede reclamar.",
         "operationId": "reclamar_preferencia_api_preferencias__id_preferencia__reclamar_post",
         "security": [
           {
@@ -698,6 +798,36 @@
               }
             }
           },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -717,7 +847,7 @@
           "recomendaciones"
         ],
         "summary": "Recomienda recursos para una preferencia de viaje",
-        "description": "Devuelve los recursos ordenados por afinidad, con su explicación.\n\n**Funciona sin cuenta**, igual que el asistente de preferencias: si la\npreferencia se creó sin sesión, cualquiera con su identificador puede\npedir recomendaciones para ella.\n\nQué vía se usa lo deciden las variables ``USAR_MODELO_RECOMENDACION`` y\n``USAR_MODELO_AFLUENCIA`` del ``.env``. El campo ``generado_por`` de la\nrespuesta deja constancia de cuál se usó en cada caso.",
+        "description": "Devuelve los recursos ordenados por afinidad, con su explicación.\n\n\n\n**Funciona sin cuenta**, igual que el asistente de preferencias: si la\n\npreferencia se creó sin sesión, cualquiera con su identificador puede\n\npedir recomendaciones para ella.\n\n\n\nQué vía se usa lo deciden las variables ``USAR_MODELO_RECOMENDACION`` y\n\n``USAR_MODELO_AFLUENCIA`` del ``.env``. El campo ``generado_por`` de la\n\nrespuesta deja constancia de cuál se usó en cada caso.",
         "operationId": "obtener_recomendaciones_api_recomendaciones_post",
         "requestBody": {
           "content": {
@@ -736,6 +866,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RespuestaRecomendacion"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -764,7 +904,7 @@
           "recomendaciones"
         ],
         "summary": "Qué ocurre un día concreto en el valle",
-        "description": "Devuelve la afluencia esperada y las fiestas activas de un día.\n\nAlimenta la etiqueta «hoy hay fiesta en X» de la interfaz.",
+        "description": "Devuelve la afluencia esperada y las fiestas activas de un día.\n\n\n\nAlimenta la etiqueta «hoy hay fiesta en X» de la interfaz.",
         "operationId": "consultar_dia_api_calendario_dia__fecha__get",
         "parameters": [
           {
@@ -822,7 +962,7 @@
           "recomendaciones"
         ],
         "summary": "Festividades del Valle del Mantaro en un año",
-        "description": "Devuelve todas las fiestas del año, móviles y fijas.\n\nLas móviles se calculan con el algoritmo de la Pascua, así que este\nendpoint responde correctamente para cualquier año, pasado o futuro, sin\ntener que cargar nada previamente.",
+        "description": "Devuelve todas las fiestas del año, móviles y fijas.\n\n\n\nLas móviles se calculan con el algoritmo de la Pascua, así que este\n\nendpoint responde correctamente para cualquier año, pasado o futuro, sin\n\ntener que cargar nada previamente.",
         "operationId": "consultar_calendario_api_calendario__anio__get",
         "parameters": [
           {
@@ -865,7 +1005,7 @@
           "itinerarios"
         ],
         "summary": "Arma el itinerario de un día para una preferencia",
-        "description": "Recomienda, ordena y horaria las paradas de un día.\n\nQué vía se usa lo decide ``USAR_MODELO_RECOMENDACION`` del ``.env``: con\n``true`` optimiza con OR-Tools, con ``false`` usa el vecino más cercano. El\ncampo ``generado_por`` de la respuesta deja constancia de cuál fue.",
+        "description": "Recomienda, ordena y horaria las paradas de un día.\n\n\n\nQué vía se usa lo decide ``USAR_MODELO_RECOMENDACION`` del ``.env``: con\n\n``true`` optimiza con OR-Tools, con ``false`` usa el vecino más cercano. El\n\ncampo ``generado_por`` de la respuesta deja constancia de cuál fue.",
         "operationId": "armar_itinerario_api_itinerarios_post",
         "security": [
           {
@@ -893,6 +1033,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -910,7 +1060,7 @@
           "itinerarios"
         ],
         "summary": "Lista los itinerarios guardados del usuario",
-        "description": "Devuelve los itinerarios del usuario que ha iniciado sesión.\n\nSin cuenta devuelve una lista vacía: un itinerario sin dueño no se puede\nrecuperar por listado, solo por su identificador. Devolver todos los\nanónimos convertiría la lista en el historial de viaje de desconocidos.",
+        "description": "Devuelve los itinerarios del usuario que ha iniciado sesión.\n\n\n\nSin cuenta devuelve una lista vacía: un itinerario sin dueño no se puede\n\nrecuperar por listado, solo por su identificador. Devolver todos los\n\nanónimos convertiría la lista en el historial de viaje de desconocidos.",
         "operationId": "listar_itinerarios_api_itinerarios_get",
         "security": [
           {
@@ -966,7 +1116,7 @@
           "itinerarios"
         ],
         "summary": "Recalcula el itinerario con el orden que eligió el visitante",
-        "description": "Rehace horarios, traslados y totales respetando el orden pedido.\n\n**No reoptimiza.** Si el visitante arrastró una parada al primer puesto, se\nqueda en el primer puesto. Lo que se recalcula son las consecuencias: a qué\nhora se llega a cada sitio, cuánto cuesta llegar y si el día sigue cabiendo.",
+        "description": "Rehace horarios, traslados y totales respetando el orden pedido.\n\n\n\n**No reoptimiza.** Si el visitante arrastró una parada al primer puesto, se\n\nqueda en el primer puesto. Lo que se recalcula son las consecuencias: a qué\n\nhora se llega a cada sitio, cuánto cuesta llegar y si el día sigue cabiendo.",
         "operationId": "reordenar_itinerario_api_itinerarios_reordenar_post",
         "requestBody": {
           "content": {
@@ -985,6 +1135,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RespuestaItinerario"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -1013,7 +1173,7 @@
           "itinerarios"
         ],
         "summary": "Recupera un itinerario guardado",
-        "description": "Devuelve un itinerario guardado con sus paradas.\n\nLos itinerarios sin dueño son accesibles por identificador, igual que las\npreferencias sin cuenta: es lo que permite compartir un plan con quien va a\nviajar contigo sin obligarle a registrarse.",
+        "description": "Devuelve un itinerario guardado con sus paradas.\n\n\n\nLos itinerarios sin dueño son accesibles por identificador, igual que las\n\npreferencias sin cuenta: es lo que permite compartir un plan con quien va a\n\nviajar contigo sin obligarle a registrarse.",
         "operationId": "consultar_itinerario_api_itinerarios__itinerario_id__get",
         "security": [
           {
@@ -1044,6 +1204,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1063,7 +1233,7 @@
           "coordinación"
         ],
         "summary": "Servicios ofrecidos por los proveedores",
-        "description": "Devuelve los servicios publicados, con su capacidad y su precio.\n\n**Es lo que cierra la brecha 5**: hasta ahora, saber si un proveedor podía\natender a doce personas un sábado exigía llamar. Aquí está escrito.",
+        "description": "Devuelve los servicios publicados, con su capacidad y su precio.\n\n\n\n**Es lo que cierra la brecha 5**: hasta ahora, saber si un proveedor podía\n\natender a doce personas un sábado exigía llamar. Aquí está escrito.",
         "operationId": "listar_servicios_api_servicios_get",
         "parameters": [
           {
@@ -1192,6 +1362,26 @@
               }
             }
           },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1234,6 +1424,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1253,7 +1453,7 @@
           "coordinación"
         ],
         "summary": "Comprueba si un servicio se puede pedir para esa fecha",
-        "description": "Responde si se puede pedir, y si no, **todos** los motivos.\n\nSe consulta antes de enviar la solicitud para que el visitante no descubra\nque no hay sitio después de rellenar el formulario entero.",
+        "description": "Responde si se puede pedir, y si no, **todos** los motivos.\n\n\n\nSe consulta antes de enviar la solicitud para que el visitante no descubra\n\nque no hay sitio después de rellenar el formulario entero.",
         "operationId": "comprobar_disponibilidad_api_servicios__servicio_id__disponibilidad_post",
         "parameters": [
           {
@@ -1283,6 +1483,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RespuestaDisponibilidad"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -1344,6 +1554,36 @@
               }
             }
           },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1363,7 +1603,7 @@
           "coordinación"
         ],
         "summary": "Solicita un servicio a su proveedor",
-        "description": "Crea la solicitud y **registra su primer estado**.\n\nFunciona sin cuenta, igual que el resto del recorrido del visitante: por\neso se piden nombre y contacto en el propio formulario.\n\nSe comprueba la disponibilidad antes de crearla. Aceptar una solicitud que\nya se sabe imposible sería hacerle perder el tiempo a las dos partes.",
+        "description": "Crea la solicitud y **registra su primer estado**.\n\n\n\nFunciona sin cuenta, igual que el resto del recorrido del visitante: por\n\neso se piden nombre y contacto en el propio formulario.\n\n\n\nSe comprueba la disponibilidad antes de crearla. Aceptar una solicitud que\n\nya se sabe imposible sería hacerle perder el tiempo a las dos partes.",
         "operationId": "crear_solicitud_api_solicitudes_post",
         "security": [
           {
@@ -1391,6 +1631,26 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El estado actual no permite esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1408,7 +1668,7 @@
           "coordinación"
         ],
         "summary": "Solicitudes que puedes ver",
-        "description": "Devuelve las solicitudes según el rol de quien pregunta.\n\n- **Operador y administrador:** todas.\n- **Proveedor:** solo las de sus servicios.\n- **Visitante y gestor:** solo las suyas.\n\nExige sesión: sin cuenta no hay listado, porque no habría forma de saber\ncuáles son «las tuyas» sin enseñar las de otros.",
+        "description": "Devuelve las solicitudes según el rol de quien pregunta.\n\n\n\n- **Operador y administrador:** todas.\n\n- **Proveedor:** solo las de sus servicios.\n\n- **Visitante y gestor:** solo las suyas.\n\n\n\nExige sesión: sin cuenta no hay listado, porque no habría forma de saber\n\ncuáles son «las tuyas» sin enseñar las de otros.",
         "operationId": "listar_solicitudes_api_solicitudes_get",
         "security": [
           {
@@ -1460,6 +1720,26 @@
               }
             }
           },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1479,7 +1759,7 @@
           "coordinación"
         ],
         "summary": "Una solicitud con su historial completo",
-        "description": "Devuelve la solicitud y **todo lo que le ha pasado**.\n\nLas solicitudes creadas sin cuenta son accesibles por identificador, igual\nque los itinerarios: es lo que permite a quien pidió sin registrarse seguir\nel estado de lo que pidió.",
+        "description": "Devuelve la solicitud y **todo lo que le ha pasado**.\n\n\n\nLas solicitudes creadas sin cuenta son accesibles por identificador, igual\n\nque los itinerarios: es lo que permite a quien pidió sin registrarse seguir\n\nel estado de lo que pidió.",
         "operationId": "consultar_solicitud_api_solicitudes__solicitud_id__get",
         "security": [
           {
@@ -1508,6 +1788,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1527,7 +1817,7 @@
           "coordinación"
         ],
         "summary": "Mueve una solicitud de estado",
-        "description": "Cambia el estado y deja constancia de quién lo hizo y cuándo.\n\nLas reglas viven en ``servicios/coordinacion.py``, no aquí: qué\ntransiciones son válidas y quién puede provocarlas son reglas de negocio, y\nrepartirlas entre los endpoints sería garantizar que algún día no\ncoincidan.",
+        "description": "Cambia el estado y deja constancia de quién lo hizo y cuándo.\n\n\n\nLas reglas viven en ``servicios/coordinacion.py``, no aquí: qué\n\ntransiciones son válidas y quién puede provocarlas son reglas de negocio, y\n\nrepartirlas entre los endpoints sería garantizar que algún día no\n\ncoincidan.",
         "operationId": "mover_solicitud_api_solicitudes__solicitud_id__estado_post",
         "security": [
           {
@@ -1566,6 +1856,36 @@
               }
             }
           },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El estado actual no permite esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1585,7 +1905,7 @@
           "coordinación"
         ],
         "summary": "Indicador del Incremento 5",
-        "description": "Cuántas interacciones hacen falta para confirmar un servicio.\n\nSe calcula sobre lo registrado, no sobre una estimación. Si todavía no hay\nninguna solicitud confirmada, las medias van a ``null`` y no a cero: una\nmedia de cero casos no es cero, es que no hay dato.",
+        "description": "Cuántas interacciones hacen falta para confirmar un servicio.\n\n\n\nSe calcula sobre lo registrado, no sobre una estimación. Si todavía no hay\n\nninguna solicitud confirmada, las medias van a ``null`` y no a cero: una\n\nmedia de cero casos no es cero, es que no hay dato.",
         "operationId": "indicador_de_coordinacion_api_indicadores_coordinacion_get",
         "responses": {
           "200": {
@@ -1607,7 +1927,7 @@
           "coordinación"
         ],
         "summary": "Directorio de prestadores del valle",
-        "description": "Los prestadores turísticos de las cuatro provincias de la ruta.\n\nPor defecto devuelve solo los **reales**: los 162 que están en el\nDirectorio Nacional de Prestadores de Servicios Turísticos Calificados del\nMINCETUR, con su RUC, su categoría oficial y su número de certificado.\n\nEstán certificados por el Estado, pero **no tienen convenio con este\nproyecto**. No se les inventa capacidad ni horarios, porque eso no está\npublicado: se les enseña para que el visitante los encuentre y los llame\nél mismo.\n\nCon ``solo_reales=false`` entran también los cinco de demostración, que son\nlos que tienen servicios publicados y permiten enseñar el ciclo completo de\nsolicitud y confirmación.",
+        "description": "Los prestadores turísticos de las cuatro provincias de la ruta.\n\n\n\nPor defecto devuelve solo los **reales**: los 162 que están en el\n\nDirectorio Nacional de Prestadores de Servicios Turísticos Calificados del\n\nMINCETUR, con su RUC, su categoría oficial y su número de certificado.\n\n\n\nEstán certificados por el Estado, pero **no tienen convenio con este\n\nproyecto**. No se les inventa capacidad ni horarios, porque eso no está\n\npublicado: se les enseña para que el visitante los encuentre y los llame\n\nél mismo.\n\n\n\nCon ``solo_reales=false`` entran también los cinco de demostración, que son\n\nlos que tienen servicios publicados y permiten enseñar el ciclo completo de\n\nsolicitud y confirmación.",
         "operationId": "listar_proveedores_api_proveedores_get",
         "parameters": [
           {
@@ -1687,7 +2007,7 @@
           "coordinación"
         ],
         "summary": "La ficha de proveedor de quien ha iniciado sesión",
-        "description": "Devuelve el proveedor que administra el usuario actual.\n\nLo usa el panel para saber si hay algo que gestionar antes de pintarlo.",
+        "description": "Devuelve el proveedor que administra el usuario actual.\n\n\n\nLo usa el panel para saber si hay algo que gestionar antes de pintarlo.",
         "operationId": "mi_proveedor_api_proveedores_mio_get",
         "responses": {
           "200": {
@@ -1696,6 +2016,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProveedorPublico"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -1727,6 +2077,26 @@
                   },
                   "type": "array",
                   "title": "Response Mis Servicios Api Proveedores Mio Servicios Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Hace falta iniciar sesión",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El rol no tiene permiso, o el recurso es ajeno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
                 }
               }
             }
@@ -1781,6 +2151,16 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1800,7 +2180,7 @@
           "valoraciones"
         ],
         "summary": "Valora una experiencia ya vivida",
-        "description": "Guarda la valoración y **analiza el comentario en el momento**.\n\nEl análisis se hace al guardar y no al consultar, por dos razones que están\nexplicadas en el modelo: reproducibilidad —si el modelo cambia de versión,\nlas valoraciones viejas no deben cambiar de sentimiento retroactivamente— y\ncoste —el modelo tarda cerca de un segundo por texto, y un tablero con\ndoscientas valoraciones tardaría minutos en pintarse—.\n\nQué vía se usa lo decide ``USAR_MODELO_SENTIMIENTO`` del ``.env``. Con el\nmodelo apagado, o si no está disponible, se analiza con las reglas y el\ncampo ``analizado_por`` lo dice.\n\n**Funciona sin cuenta**, igual que el resto del recorrido: obligar a\nregistrarse justo al final del viaje perdería la valoración.",
+        "description": "Guarda la valoración y **analiza el comentario en el momento**.\n\n\n\nEl análisis se hace al guardar y no al consultar, por dos razones que están\n\nexplicadas en el modelo: reproducibilidad —si el modelo cambia de versión,\n\nlas valoraciones viejas no deben cambiar de sentimiento retroactivamente— y\n\ncoste —el modelo tarda cerca de un segundo por texto, y un tablero con\n\ndoscientas valoraciones tardaría minutos en pintarse—.\n\n\n\nQué vía se usa lo decide ``USAR_MODELO_SENTIMIENTO`` del ``.env``. Con el\n\nmodelo apagado, o si no está disponible, se analiza con las reglas y el\n\ncampo ``analizado_por`` lo dice.\n\n\n\n**Funciona sin cuenta**, igual que el resto del recorrido: obligar a\n\nregistrarse justo al final del viaje perdería la valoración.",
         "operationId": "crear_valoracion_api_valoraciones_post",
         "security": [
           {
@@ -1828,6 +2208,26 @@
               }
             }
           },
+          "404": {
+            "description": "No existe, o no es accesible para quien pregunta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El estado actual no permite esta operación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDeLaApi"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -1845,7 +2245,7 @@
           "valoraciones"
         ],
         "summary": "Valoraciones de un itinerario",
-        "description": "Devuelve lo que ya se valoró de un itinerario.\n\nLo usa la interfaz para no volver a pedir lo que la persona ya puntuó.",
+        "description": "Devuelve lo que ya se valoró de un itinerario.\n\n\n\nLo usa la interfaz para no volver a pedir lo que la persona ya puntuó.",
         "operationId": "listar_valoraciones_api_valoraciones_get",
         "parameters": [
           {
@@ -1928,7 +2328,7 @@
           "valoraciones"
         ],
         "summary": "Los indicadores de los seis incrementos",
-        "description": "Reúne los seis indicadores del proyecto.\n\n**Cada uno lleva su salvedad.** No es adorno: cuatro de los seis miden algo\ndistinto de lo que su nombre sugiere a primera vista, y un tablero que\nenseñe seis números sin decir qué no dicen es peor que no tenerlo.",
+        "description": "Reúne los seis indicadores del proyecto.\n\n\n\n**Cada uno lleva su salvedad.** No es adorno: cuatro de los seis miden algo\n\ndistinto de lo que su nombre sugiere a primera vista, y un tablero que\n\nenseñe seis números sin decir qué no dicen es peor que no tenerlo.",
         "operationId": "obtener_tablero_api_indicadores_tablero_get",
         "responses": {
           "200": {
@@ -2419,6 +2819,27 @@
         "title": "DatosPreferencia",
         "description": "Lo que el visitante responde en el asistente de seis pasos."
       },
+      "DetalleConCodigo": {
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "title": "Codigo",
+            "description": "Código del error. La interfaz lo traduce con `avisos.<codigo>`.",
+            "examples": [
+              "sin_recurso",
+              "servicio_ajeno",
+              "ya_valoraste"
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "codigo"
+        ],
+        "title": "DetalleConCodigo",
+        "description": "El detalle de un error que sí sigue la regla del código."
+      },
       "DistribucionPublica": {
         "properties": {
           "positivas": {
@@ -2458,6 +2879,27 @@
         ],
         "title": "DistribucionPublica",
         "description": "Cuántas valoraciones hay de cada signo."
+      },
+      "ErrorDeLaApi": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetalleConCodigo"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorDeLaApi",
+        "description": "La respuesta de error del API.\n\n`detail` es un objeto con `codigo` en la mayoría de los casos, y una cadena\nen los cinco sitios que todavía mandan prosa (ver el docstring del módulo)."
       },
       "EstadoDelAsistente": {
         "properties": {

@@ -121,7 +121,10 @@ paths:
       description: 'Devuelve las provincias, distritos y categorías que existen en el catálogo.
 
 
+
+
         Se sacan de los datos y no de una lista fija en el código: si el
+
 
         inventario incorpora una categoría nueva, el filtro aparece solo.'
       operationId: obtener_filtros_api_recursos_filtros_get
@@ -140,7 +143,10 @@ paths:
       description: 'Devuelve los recursos con coordenadas, listos para pintar en el mapa.
 
 
+
+
         Solo se incluyen los que tienen ubicación: un marcador sin coordenada no
+
 
         se puede dibujar, y ponerlo en el centro del distrito sería inventar.'
       operationId: obtener_recursos_para_el_mapa_api_recursos_mapa_get
@@ -211,6 +217,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecursoDetalle'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -225,9 +237,13 @@ paths:
       description: 'Devuelve la última validación ejecutada.
 
 
+
+
         Es el indicador del Incremento 1: *porcentaje de oferta con información
 
+
         validada y vigente*. Los números salen de la tabla, no se recalculan al
+
 
         vuelo, para que reflejen el estado del catálogo cuando se validó.'
       operationId: obtener_indicador_del_catalogo_api_indicadores_catalogo_get
@@ -238,6 +254,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IndicadorCatalogo'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
   /api/autenticacion/registro:
     post:
       tags:
@@ -246,14 +268,21 @@ paths:
       description: 'Registra un usuario nuevo y le abre la sesión de inmediato.
 
 
+
+
         Se devuelve el token junto con la cuenta creada para que el visitante no
+
 
         tenga que iniciar sesión otra vez justo después de registrarse.
 
 
+
+
         Todas las cuentas creadas aquí son de rol *visitante*. Los roles de
 
+
         operador, proveedor y gestor los asigna un administrador: si se pudieran
+
 
         elegir al registrarse, cualquiera se haría gestor.'
       operationId: registrar_api_autenticacion_registro_post
@@ -270,6 +299,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaSesion'
+        '409':
+          description: El estado actual no permite esta operación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -296,6 +331,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaSesion'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -310,7 +351,10 @@ paths:
       description: 'Devuelve los datos del usuario con la sesión abierta.
 
 
+
+
         El frontend lo usa al cargar para saber si el token guardado sigue siendo
+
 
         válido, sin tener que pedir la contraseña otra vez.'
       operationId: obtener_sesion_actual_api_autenticacion_yo_get
@@ -321,6 +365,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UsuarioPublico'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
       security:
       - HTTPBearer: []
   /api/preferencias/opciones:
@@ -331,9 +387,13 @@ paths:
       description: 'Devuelve los valores que el asistente necesita para dibujar sus pasos.
 
 
+
+
         Los distritos salen del catálogo real, no de una lista escrita a mano: el
 
+
         visitante solo puede elegir como origen un distrito donde de verdad hay
+
 
         recursos turísticos registrados.'
       operationId: obtener_opciones_api_preferencias_opciones_get
@@ -358,6 +418,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListaDePreferencias'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
       security:
       - HTTPBearer: []
     post:
@@ -367,11 +439,16 @@ paths:
       description: 'Registra lo que el visitante quiere de su viaje.
 
 
+
+
         **Funciona sin cuenta.** Si no hay sesión iniciada, la preferencia se
+
 
         guarda con ``usuario_id`` nulo y el frontend conserva su identificador en
 
+
         el navegador. Es la regla del proyecto: no se pide registrarse para
+
 
         empezar, solo para guardar.'
       operationId: crear_preferencia_api_preferencias_post
@@ -419,6 +496,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreferenciaPublica'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -432,7 +515,10 @@ paths:
       description: 'Cambia una preferencia ya guardada.
 
 
+
+
         Sirve para el botón «Cambiar preferencias» de la pantalla de resultados,
+
 
         sin obligar a rehacer el asistente desde cero.'
       operationId: actualizar_preferencia_api_preferencias__id_preferencia__put
@@ -458,6 +544,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreferenciaPublica'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -472,11 +564,17 @@ paths:
       description: 'Convierte en propia una preferencia que se creó sin cuenta.
 
 
+
+
         Es el cierre del recorrido que promete el proyecto: el visitante arma su
+
 
         viaje sin registrarse y, si al final quiere conservarlo, crea la cuenta y
 
+
         reclama lo que ya había hecho, sin repetir el asistente.
+
+
 
 
         Una preferencia que ya tiene dueño no se puede reclamar.'
@@ -497,6 +595,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PreferenciaPublica'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -511,16 +627,24 @@ paths:
       description: 'Devuelve los recursos ordenados por afinidad, con su explicación.
 
 
+
+
         **Funciona sin cuenta**, igual que el asistente de preferencias: si la
 
+
         preferencia se creó sin sesión, cualquiera con su identificador puede
+
 
         pedir recomendaciones para ella.
 
 
+
+
         Qué vía se usa lo deciden las variables ``USAR_MODELO_RECOMENDACION`` y
 
+
         ``USAR_MODELO_AFLUENCIA`` del ``.env``. El campo ``generado_por`` de la
+
 
         respuesta deja constancia de cuál se usó en cada caso.'
       operationId: obtener_recomendaciones_api_recomendaciones_post
@@ -537,6 +661,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaRecomendacion'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -551,6 +681,8 @@ paths:
       - recomendaciones
       summary: Qué ocurre un día concreto en el valle
       description: 'Devuelve la afluencia esperada y las fiestas activas de un día.
+
+
 
 
         Alimenta la etiqueta «hoy hay fiesta en X» de la interfaz.'
@@ -595,9 +727,13 @@ paths:
       description: 'Devuelve todas las fiestas del año, móviles y fijas.
 
 
+
+
         Las móviles se calculan con el algoritmo de la Pascua, así que este
 
+
         endpoint responde correctamente para cualquier año, pasado o futuro, sin
+
 
         tener que cargar nada previamente.'
       operationId: consultar_calendario_api_calendario__anio__get
@@ -629,9 +765,13 @@ paths:
       description: 'Recomienda, ordena y horaria las paradas de un día.
 
 
+
+
         Qué vía se usa lo decide ``USAR_MODELO_RECOMENDACION`` del ``.env``: con
 
+
         ``true`` optimiza con OR-Tools, con ``false`` usa el vecino más cercano. El
+
 
         campo ``generado_por`` de la respuesta deja constancia de cuál fue.'
       operationId: armar_itinerario_api_itinerarios_post
@@ -650,6 +790,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaItinerario'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -663,9 +809,13 @@ paths:
       description: 'Devuelve los itinerarios del usuario que ha iniciado sesión.
 
 
+
+
         Sin cuenta devuelve una lista vacía: un itinerario sin dueño no se puede
 
+
         recuperar por listado, solo por su identificador. Devolver todos los
+
 
         anónimos convertiría la lista en el historial de viaje de desconocidos.'
       operationId: listar_itinerarios_api_itinerarios_get
@@ -706,9 +856,13 @@ paths:
       description: 'Rehace horarios, traslados y totales respetando el orden pedido.
 
 
+
+
         **No reoptimiza.** Si el visitante arrastró una parada al primer puesto, se
 
+
         queda en el primer puesto. Lo que se recalcula son las consecuencias: a qué
+
 
         hora se llega a cada sitio, cuánto cuesta llegar y si el día sigue cabiendo.'
       operationId: reordenar_itinerario_api_itinerarios_reordenar_post
@@ -725,6 +879,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaItinerario'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -741,9 +901,13 @@ paths:
       description: 'Devuelve un itinerario guardado con sus paradas.
 
 
+
+
         Los itinerarios sin dueño son accesibles por identificador, igual que las
 
+
         preferencias sin cuenta: es lo que permite compartir un plan con quien va a
+
 
         viajar contigo sin obligarle a registrarse.'
       operationId: consultar_itinerario_api_itinerarios__itinerario_id__get
@@ -765,6 +929,12 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Consultar Itinerario Api Itinerarios  Itinerario Id  Get
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -779,7 +949,10 @@ paths:
       description: 'Devuelve los servicios publicados, con su capacidad y su precio.
 
 
+
+
         **Es lo que cierra la brecha 5**: hasta ahora, saber si un proveedor podía
+
 
         atender a doce personas un sábado exigía llamar. Aquí está escrito.'
       operationId: listar_servicios_api_servicios_get
@@ -859,6 +1032,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServicioPublico'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -885,6 +1070,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServicioPublico'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -899,7 +1090,10 @@ paths:
       description: 'Responde si se puede pedir, y si no, **todos** los motivos.
 
 
+
+
         Se consulta antes de enviar la solicitud para que el visitante no descubra
+
 
         que no hay sitio después de rellenar el formulario entero.'
       operationId: comprobar_disponibilidad_api_servicios__servicio_id__disponibilidad_post
@@ -923,6 +1117,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaDisponibilidad'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -957,6 +1157,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServicioPublico'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -971,12 +1189,18 @@ paths:
       description: 'Crea la solicitud y **registra su primer estado**.
 
 
+
+
         Funciona sin cuenta, igual que el resto del recorrido del visitante: por
+
 
         eso se piden nombre y contacto en el propio formulario.
 
 
+
+
         Se comprueba la disponibilidad antes de crearla. Aceptar una solicitud que
+
 
         ya se sabe imposible sería hacerle perder el tiempo a las dos partes.'
       operationId: crear_solicitud_api_solicitudes_post
@@ -995,6 +1219,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SolicitudPublica'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '409':
+          description: El estado actual no permite esta operación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -1008,14 +1244,21 @@ paths:
       description: 'Devuelve las solicitudes según el rol de quien pregunta.
 
 
+
+
         - **Operador y administrador:** todas.
 
+
         - **Proveedor:** solo las de sus servicios.
+
 
         - **Visitante y gestor:** solo las suyas.
 
 
+
+
         Exige sesión: sin cuenta no hay listado, porque no habría forma de saber
+
 
         cuáles son «las tuyas» sin enseñar las de otros.'
       operationId: listar_solicitudes_api_solicitudes_get
@@ -1049,6 +1292,18 @@ paths:
                 items:
                   $ref: '#/components/schemas/SolicitudPublica'
                 title: Response Listar Solicitudes Api Solicitudes Get
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -1063,9 +1318,13 @@ paths:
       description: 'Devuelve la solicitud y **todo lo que le ha pasado**.
 
 
+
+
         Las solicitudes creadas sin cuenta son accesibles por identificador, igual
 
+
         que los itinerarios: es lo que permite a quien pidió sin registrarse seguir
+
 
         el estado de lo que pidió.'
       operationId: consultar_solicitud_api_solicitudes__solicitud_id__get
@@ -1085,6 +1344,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SolicitudPublica'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -1099,11 +1364,16 @@ paths:
       description: 'Cambia el estado y deja constancia de quién lo hizo y cuándo.
 
 
+
+
         Las reglas viven en ``servicios/coordinacion.py``, no aquí: qué
+
 
         transiciones son válidas y quién puede provocarlas son reglas de negocio, y
 
+
         repartirlas entre los endpoints sería garantizar que algún día no
+
 
         coincidan.'
       operationId: mover_solicitud_api_solicitudes__solicitud_id__estado_post
@@ -1129,6 +1399,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SolicitudPublica'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '409':
+          description: El estado actual no permite esta operación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -1143,9 +1431,13 @@ paths:
       description: 'Cuántas interacciones hacen falta para confirmar un servicio.
 
 
+
+
         Se calcula sobre lo registrado, no sobre una estimación. Si todavía no hay
 
+
         ninguna solicitud confirmada, las medias van a ``null`` y no a cero: una
+
 
         media de cero casos no es cero, es que no hay dato.'
       operationId: indicador_de_coordinacion_api_indicadores_coordinacion_get
@@ -1164,25 +1456,38 @@ paths:
       description: 'Los prestadores turísticos de las cuatro provincias de la ruta.
 
 
+
+
         Por defecto devuelve solo los **reales**: los 162 que están en el
 
+
         Directorio Nacional de Prestadores de Servicios Turísticos Calificados del
+
 
         MINCETUR, con su RUC, su categoría oficial y su número de certificado.
 
 
+
+
         Están certificados por el Estado, pero **no tienen convenio con este
+
 
         proyecto**. No se les inventa capacidad ni horarios, porque eso no está
 
+
         publicado: se les enseña para que el visitante los encuentre y los llame
+
 
         él mismo.
 
 
+
+
         Con ``solo_reales=false`` entran también los cinco de demostración, que son
 
+
         los que tienen servicios publicados y permiten enseñar el ciclo completo de
+
 
         solicitud y confirmación.'
       operationId: listar_proveedores_api_proveedores_get
@@ -1234,6 +1539,8 @@ paths:
       description: 'Devuelve el proveedor que administra el usuario actual.
 
 
+
+
         Lo usa el panel para saber si hay algo que gestionar antes de pintarlo.'
       operationId: mi_proveedor_api_proveedores_mio_get
       responses:
@@ -1243,6 +1550,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProveedorPublico'
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
       security:
       - HTTPBearer: []
   /api/proveedores/mio/servicios:
@@ -1262,6 +1587,18 @@ paths:
                   $ref: '#/components/schemas/ServicioPublico'
                 type: array
                 title: Response Mis Servicios Api Proveedores Mio Servicios Get
+        '401':
+          description: Hace falta iniciar sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '403':
+          description: El rol no tiene permiso, o el recurso es ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
       security:
       - HTTPBearer: []
   /api/servicios/{servicio_id}/plazas:
@@ -1294,6 +1631,12 @@ paths:
                 type: object
                 additionalProperties: true
                 title: Response Plazas Libres Api Servicios  Servicio Id  Plazas Get
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -1308,25 +1651,38 @@ paths:
       description: 'Guarda la valoración y **analiza el comentario en el momento**.
 
 
+
+
         El análisis se hace al guardar y no al consultar, por dos razones que están
+
 
         explicadas en el modelo: reproducibilidad —si el modelo cambia de versión,
 
+
         las valoraciones viejas no deben cambiar de sentimiento retroactivamente— y
 
+
         coste —el modelo tarda cerca de un segundo por texto, y un tablero con
+
 
         doscientas valoraciones tardaría minutos en pintarse—.
 
 
+
+
         Qué vía se usa lo decide ``USAR_MODELO_SENTIMIENTO`` del ``.env``. Con el
 
+
         modelo apagado, o si no está disponible, se analiza con las reglas y el
+
 
         campo ``analizado_por`` lo dice.
 
 
+
+
         **Funciona sin cuenta**, igual que el resto del recorrido: obligar a
+
 
         registrarse justo al final del viaje perdería la valoración.'
       operationId: crear_valoracion_api_valoraciones_post
@@ -1345,6 +1701,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValoracionPublica'
+        '404':
+          description: No existe, o no es accesible para quien pregunta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
+        '409':
+          description: El estado actual no permite esta operación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDeLaApi'
         '422':
           description: Validation Error
           content:
@@ -1356,6 +1724,8 @@ paths:
       - valoraciones
       summary: Valoraciones de un itinerario
       description: 'Devuelve lo que ya se valoró de un itinerario.
+
+
 
 
         Lo usa la interfaz para no volver a pedir lo que la persona ya puntuó.'
@@ -1416,9 +1786,13 @@ paths:
       description: 'Reúne los seis indicadores del proyecto.
 
 
+
+
         **Cada uno lleva su salvedad.** No es adorno: cuatro de los seis miden algo
 
+
         distinto de lo que su nombre sugiere a primera vista, y un tablero que
+
 
         enseñe seis números sin decir qué no dicen es peor que no tenerlo.'
       operationId: obtener_tablero_api_indicadores_tablero_get
@@ -1801,6 +2175,22 @@ components:
       - ritmo
       title: DatosPreferencia
       description: Lo que el visitante responde en el asistente de seis pasos.
+    DetalleConCodigo:
+      properties:
+        codigo:
+          type: string
+          title: Codigo
+          description: Código del error. La interfaz lo traduce con `avisos.<codigo>`.
+          examples:
+          - sin_recurso
+          - servicio_ajeno
+          - ya_valoraste
+      additionalProperties: true
+      type: object
+      required:
+      - codigo
+      title: DetalleConCodigo
+      description: El detalle de un error que sí sigue la regla del código.
     DistribucionPublica:
       properties:
         positivas:
@@ -1828,6 +2218,23 @@ components:
       - total
       title: DistribucionPublica
       description: Cuántas valoraciones hay de cada signo.
+    ErrorDeLaApi:
+      properties:
+        detail:
+          anyOf:
+          - $ref: '#/components/schemas/DetalleConCodigo'
+          - type: string
+          title: Detail
+      type: object
+      required:
+      - detail
+      title: ErrorDeLaApi
+      description: 'La respuesta de error del API.
+
+
+        `detail` es un objeto con `codigo` en la mayoría de los casos, y una cadena
+
+        en los cinco sitios que todavía mandan prosa (ver el docstring del módulo).'
     EstadoDelAsistente:
       properties:
         disponible:

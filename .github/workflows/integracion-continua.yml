@@ -186,7 +186,7 @@ jobs:
       # Clona el repositorio en la máquina. Sin esto no hay nada que probar.
       # ---------------------------------------------------------------------
       - name: Descargar el código del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ---------------------------------------------------------------------
       # PASO 2 — Preparar Python
@@ -200,7 +200,7 @@ jobs:
       # casi todo el tiempo de este paso.
       # ---------------------------------------------------------------------
       - name: Preparar Python 3.14
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.14"
           cache: pip
@@ -385,7 +385,7 @@ jobs:
       # alguien la añade para ir más rápido, esa prueba se cae.
       # ---------------------------------------------------------------------
       - name: Descargar el código del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ---------------------------------------------------------------------
       # PASO 2 — Preparar Node
@@ -394,7 +394,7 @@ jobs:
       # entre ejecuciones, apoyándose en el package-lock.json.
       # ---------------------------------------------------------------------
       - name: Preparar Node 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "24"
           cache: npm

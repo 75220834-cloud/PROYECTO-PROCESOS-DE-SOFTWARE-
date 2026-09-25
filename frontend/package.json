@@ -9,7 +9,9 @@
     "probar": "vitest run",
     "probar_observando": "vitest",
     "revisar": "eslint .",
-    "formatear": "prettier --write \"src/**/*.{ts,tsx,css,json}\""
+    "formatear": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "e2e": "playwright test",
+    "e2e_informe": "playwright show-report"
   },
   "type": "module",
   "dependencies": {
@@ -29,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

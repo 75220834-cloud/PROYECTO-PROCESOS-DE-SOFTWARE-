@@ -13,8 +13,12 @@ cd frontend && node capturar-pantallas.mjs
 ```
 
 ```bash
-cd frontend && node capturar-cobertura.mjs
+cd frontend && SONAR_CONTRASENA=la_del_contenedor node capturar-cobertura.mjs
 ```
+
+La contraseña de SonarQube se pasa por entorno y **no está escrita en el
+guion**: es un contenedor local y efímero, pero la regla 1.9 del proyecto
+—«nada de secretos en el código»— no admite excepciones por comodidad.
 
 ---
 

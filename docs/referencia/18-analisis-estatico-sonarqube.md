@@ -77,6 +77,23 @@ toca ningún número. Tras normalizar, la cobertura importada pasó de 13,4 % a
 | Complejidad ciclomática | **1 883** |
 | Complejidad cognitiva | **1 181** |
 
+### ⚠️ Las «0 vulnerabilidades» valen menos de lo que parecen
+
+El propio tablero lo avisa, y hay que citarlo junto al número:
+
+> **Limited security analysis.** SonarQube Community Build does not scan for
+> critical injection vulnerabilities (SQL injection, XSS, and more).
+
+**La edición community no busca inyección SQL ni XSS.** Así que el «0
+vulnerabilidades» y la calificación **A** de seguridad **no significan que el
+proyecto esté libre de inyección**: significan que esta herramienta, en esta
+edición, no la buscó.
+
+Lo que sostiene el argumento de que no hay inyección SQL no es SonarQube: es que
+**todo el acceso a datos pasa por SQLAlchemy con consultas parametrizadas**, y no
+hay concatenación de cadenas para construir SQL. Eso se puede enseñar leyendo
+`servicios/` — y es lo que hay que decir en la defensa, no el A de Sonar.
+
 ### Quality Gate: **OK** — pero léase la letra pequeña
 
 El Quality Gate pasó, **evaluando una sola condición**:

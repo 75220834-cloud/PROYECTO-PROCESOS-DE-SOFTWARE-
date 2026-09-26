@@ -103,34 +103,52 @@ esperada de una fecha.
 # Las funciones que el modelo puede pedir
 # ---------------------------------------------------------------------------
 
+#: Las cinco categorías del inventario del MINCETUR, escritas **exactamente**
+#: como vienen en la columna `categoria` de la base.
+#:
+#: Van en constantes y no sueltas dentro del diccionario de abajo por dos
+#: motivos. El práctico: cada una se repetía entre cuatro y ocho veces, y un
+#: dedazo en una sola de esas copias produciría un filtro que no casa con nada
+#: y devuelve cero resultados —que es justo el escenario que empuja al modelo a
+#: inventarse un lugar (ver el fallo 3 del ADR-014)—. El otro: así se ve de un
+#: vistazo que son cinco y cuáles, que en el diccionario se pierde entre las
+#: veinte entradas.
+CATEGORIA_SITIOS_NATURALES = "1. SITIOS NATURALES"
+CATEGORIA_MANIFESTACIONES_CULTURALES = "2. MANIFESTACIONES CULTURALES"
+CATEGORIA_FOLCLORE = "3. FOLCLORE"
+CATEGORIA_REALIZACIONES_TECNICAS = (
+    "4. REALIZACIONES TÉCNICAS, CIENTÍFICAS Y ARTÍSTICAS CONTEMPORÁNEAS"
+)
+CATEGORIA_ACONTECIMIENTOS_PROGRAMADOS = "5. ACONTECIMIENTOS PROGRAMADOS"
+
 #: Cómo se llaman de verdad las categorías en el inventario del MINCETUR.
 #:
-#: Son cinco y vienen con su número delante. El modelo nunca las escribe así:
-#: escribe «iglesias», «cultural» o directamente el código de interés
-#: «iglesias_conventos». Esta tabla traduce lo que el modelo dice a lo que la
-#: base de datos guarda. Lo que no esté aquí no filtra —ver `_buscar_recursos`.
+#: El modelo nunca las escribe así: escribe «iglesias», «cultural» o
+#: directamente el código de interés «iglesias_conventos». Esta tabla traduce
+#: lo que el modelo dice a lo que la base de datos guarda. Lo que no esté aquí
+#: no filtra —ver `_buscar_recursos`.
 _CATEGORIA_DEL_INVENTARIO: dict[str, str] = {
-    "1": "1. SITIOS NATURALES",
-    "sitios naturales": "1. SITIOS NATURALES",
-    "naturaleza": "1. SITIOS NATURALES",
-    "natural": "1. SITIOS NATURALES",
-    "2": "2. MANIFESTACIONES CULTURALES",
-    "manifestaciones culturales": "2. MANIFESTACIONES CULTURALES",
-    "cultural": "2. MANIFESTACIONES CULTURALES",
-    "culturales": "2. MANIFESTACIONES CULTURALES",
-    "arqueologia": "2. MANIFESTACIONES CULTURALES",
-    "iglesias": "2. MANIFESTACIONES CULTURALES",
-    "iglesias_conventos": "2. MANIFESTACIONES CULTURALES",
-    "3": "3. FOLCLORE",
-    "folclore": "3. FOLCLORE",
-    "artesania": "3. FOLCLORE",
-    "gastronomia": "3. FOLCLORE",
-    "4": "4. REALIZACIONES TÉCNICAS, CIENTÍFICAS Y ARTÍSTICAS CONTEMPORÁNEAS",
-    "realizaciones tecnicas": "4. REALIZACIONES TÉCNICAS, CIENTÍFICAS Y ARTÍSTICAS CONTEMPORÁNEAS",
-    "5": "5. ACONTECIMIENTOS PROGRAMADOS",
-    "acontecimientos programados": "5. ACONTECIMIENTOS PROGRAMADOS",
-    "ferias_fiestas": "5. ACONTECIMIENTOS PROGRAMADOS",
-    "fiestas": "5. ACONTECIMIENTOS PROGRAMADOS",
+    "1": CATEGORIA_SITIOS_NATURALES,
+    "sitios naturales": CATEGORIA_SITIOS_NATURALES,
+    "naturaleza": CATEGORIA_SITIOS_NATURALES,
+    "natural": CATEGORIA_SITIOS_NATURALES,
+    "2": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "manifestaciones culturales": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "cultural": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "culturales": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "arqueologia": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "iglesias": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "iglesias_conventos": CATEGORIA_MANIFESTACIONES_CULTURALES,
+    "3": CATEGORIA_FOLCLORE,
+    "folclore": CATEGORIA_FOLCLORE,
+    "artesania": CATEGORIA_FOLCLORE,
+    "gastronomia": CATEGORIA_FOLCLORE,
+    "4": CATEGORIA_REALIZACIONES_TECNICAS,
+    "realizaciones tecnicas": CATEGORIA_REALIZACIONES_TECNICAS,
+    "5": CATEGORIA_ACONTECIMIENTOS_PROGRAMADOS,
+    "acontecimientos programados": CATEGORIA_ACONTECIMIENTOS_PROGRAMADOS,
+    "ferias_fiestas": CATEGORIA_ACONTECIMIENTOS_PROGRAMADOS,
+    "fiestas": CATEGORIA_ACONTECIMIENTOS_PROGRAMADOS,
 }
 
 #: Palabras que no aportan nada a la búsqueda y que, exigidas, la estropean.

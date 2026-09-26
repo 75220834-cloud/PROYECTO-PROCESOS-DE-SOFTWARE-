@@ -74,7 +74,7 @@ def _revisar_ollama(configuracion: Configuracion) -> SaludComponente:
     )
 
 
-@enrutador.get("/salud", response_model=SaludGeneral, summary="Estado de la plataforma")
+@enrutador.get("/salud", summary="Estado de la plataforma")
 def consultar_salud(sesion: SesionBD, configuracion: ConfiguracionInyectada) -> SaludGeneral:
     """Devuelve el estado de la API, de la base de datos y de Ollama.
 

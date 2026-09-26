@@ -61,6 +61,9 @@ cada push, que es lo que se va a poner en rojo si algo se rompe.
 | 16 | [16-pendientes-y-limitaciones.md](16-pendientes-y-limitaciones.md) | Lo que no está hecho, lo que no se puede hacer con los datos que hay, y las ideas descartadas con su motivo. |
 | 17 | [17-integracion-y-despliegue.md](17-integracion-y-despliegue.md) | Cómo se comprueba el proyecto a mano y de forma automática, los dos procedimientos comparados, y qué haría falta para desplegarlo de verdad. |
 | 18 | [18-analisis-estatico-sonarqube.md](18-analisis-estatico-sonarqube.md) | El primer análisis real de SonarQube: bugs, code smells, deuda técnica, duplicación y Quality Gate, y los dos fallos de configuración que salieron al ejecutarlo. |
+| 19 | [19-matriz-de-registro-de-pruebas.md](19-matriz-de-registro-de-pruebas.md) | Una fila por archivo de prueba, con su nivel en la pirámide, casos, resultado y si necesita PostgreSQL. Los números salen de los informes de las cuatro herramientas. |
+| 20 | [20-registro-de-defectos.md](20-registro-de-defectos.md) | Los 28 defectos en tabla formal: severidad, dónde se detectó, estado, commit y prueba de regresión. Con la densidad por KLOC. |
+| 21 | [21-trazabilidad-adr-brecha-prueba.md](21-trazabilidad-adr-brecha-prueba.md) | El tramo central de la matriz de trazabilidad: qué ADR sostiene cada brecha, qué pruebas la verifican, qué endpoint la expone y qué indicador la mide. |
 
 ---
 

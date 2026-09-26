@@ -57,15 +57,22 @@ toca ningún número. Tras normalizar, la cobertura importada pasó de 13,4 % a
 
 ### Fiabilidad, seguridad y mantenibilidad
 
-| Métrica | Valor | Calificación |
-|---|---|---|
-| **Bugs** | **1** | Fiabilidad: **C** |
-| **Vulnerabilidades** | **0** | Seguridad: **A** |
-| **Puntos calientes de seguridad** | **0** | — |
-| **Code smells** | **178** | Mantenibilidad: **A** |
-| **Deuda técnica** | **885 min = 14 h 45 min** | Ratio de deuda: **0,2 %** |
-| **Duplicación** | **0,0 %** (0 bloques duplicados) | — |
-| **Cobertura importada** | **68,1 %** (líneas 68,1 %, ramas 68,3 %) | — |
+| Métrica | 1.ª ejecución | **Tras las correcciones** | Calificación |
+|---|---|---|---|
+| **Bugs** | 1 | **0** | Fiabilidad: **A** |
+| **Vulnerabilidades** | 0 | **0** | Seguridad: **A** |
+| **Puntos calientes de seguridad** | 0 | **0** | — |
+| **Code smells** | 178 | **133** | Mantenibilidad: **A** |
+| **CRITICAL** | 21 | **16** | — |
+| **BLOCKER** | 0 | **0** | — |
+| **Deuda técnica** | 885 min | **751 min = 12 h 31 min** | Ratio: **0,2 %** |
+| **Duplicación** | 0,0 % | **0,0 %** | — |
+| **Cobertura importada** | 68,1 % | **68,2 %** | — |
+
+Las correcciones fueron tres, y están detalladas más abajo: extraer cinco
+literales duplicados a constantes, quitar 38 `response_model` redundantes, y
+marcar el falso positivo como *won't fix*. **−45 code smells y −134 minutos de
+deuda.**
 
 ### Tamaño medido por SonarQube
 
@@ -94,19 +101,40 @@ Lo que sostiene el argumento de que no hay inyección SQL no es SonarQube: es qu
 hay concatenación de cadenas para construir SQL. Eso se puede enseñar leyendo
 `servicios/` — y es lo que hay que decir en la defensa, no el A de Sonar.
 
-### Quality Gate: **OK** — pero léase la letra pequeña
+### Quality Gate propio, sobre el CÓDIGO TOTAL
 
-El Quality Gate pasó, **evaluando una sola condición**:
+El perfil «Sonar way» que viene por omisión **solo mide código nuevo**, y en un
+primer análisis eso se cumple trivialmente porque no hay línea base. Un Quality
+Gate que pasa sin evaluar nada no dice nada.
+
+Se creó una puerta propia, `RutaVivaMantaro`, con tres condiciones sobre el
+**código total** —no sobre el nuevo—, y se asignó al proyecto:
 
 | Condición | Estado | Actual | Umbral |
 |---|---|---|---|
-| `new_violations` | OK | 0 | 0 |
+| `coverage` (código total) | **OK** | **68,2 %** | ≥ 60 % |
+| `duplicated_lines_density` (total) | **OK** | **0,0 %** | ≤ 3 % |
+| `blocker_violations` | **OK** | **0** | = 0 |
+| `new_coverage` \* | OK | 100,0 % | ≥ 80 % |
+| `new_duplicated_lines_density` \* | OK | 0,0 % | ≤ 3 % |
+| `new_violations` \* | OK | 0 | = 0 |
 
-Es el perfil «Sonar way», que mide **código nuevo**. En un primer análisis no hay
-línea base contra la que comparar, así que «0 violaciones nuevas» se cumple
-trivialmente. **El Quality Gate en verde aquí no significa que el código esté
-limpio: significa que no hay nada que comparar todavía.** A partir del segundo
-análisis sí empezará a decir algo.
+\* SonarQube añade solas las tres condiciones de «Clean as You Code» al crear una
+puerta. No se quitaron: miden algo distinto y complementario.
+
+**ESTADO: OK en las seis.**
+
+#### La primera vez falló, y el motivo es instructivo
+
+Con la puerta recién creada, `new_violations` daba **6** y la puerta salía en
+ERROR. Las seis eran `python:S8409` —`response_model` redundante— en líneas que
+**yo había tocado ese mismo día** al añadir los `responses=`. No eran defectos
+nuevos: eran seis de los 44 preexistentes que pasaron a contar como «código
+nuevo» porque se editó su línea.
+
+> **Tocar una línea convierte sus problemas viejos en problemas nuevos.** Es
+> exactamente lo que «Clean as You Code» busca, y hay que saberlo antes de
+> prometer que una puerta va a estar en verde.
 
 ---
 
@@ -220,3 +248,64 @@ una captura en [`docs/capturas/13_sonarqube.png`](../capturas/13_sonarqube.png).
 - [12 — Pruebas y calidad](12-pruebas-y-calidad.md)
 - [17 — Integración y despliegue](17-integracion-y-despliegue.md)
 - [15 — Historial de fallos](15-historial-de-fallos.md)
+
+---
+
+## Las tres correcciones aplicadas, y lo que se aceptó
+
+### Corregido — 5 literales duplicados (`python:S1192`)
+
+| Dónde | Qué era |
+|---|---|
+| `ia/asistente.py` ×4 | Las categorías del MINCETUR («1. SITIOS NATURALES»…) repetidas entre 4 y 8 veces. Extraídas a `CATEGORIA_*` |
+| `ia/calendario.py` ×1 | «CONTEXTO_PROYECTO.md, sección 9» repetida 5 veces. Extraída a `FUENTE_CONTEXTO` |
+
+**Por qué no es cosmético:** un dedazo en una de esas copias produce un filtro
+que no casa con nada y devuelve cero resultados, que es el escenario que empuja
+al modelo a inventarse un lugar (fallo 3 del ADR-014).
+
+### Corregido — 38 `response_model` redundantes (`python:S8409`)
+
+FastAPI infiere el modelo de la anotación de retorno; declararlo además es
+duplicar. Se quitaron **solo** donde la expresión era idéntica a la anotación,
+comprobado con `ast.unparse`.
+
+**La verificación que hace seguro este cambio:** se generó el contrato OpenAPI
+antes y después y se comparó. **Es idéntico byte a byte.** Si hubiera cambiado
+un solo carácter, el cambio se habría revertido.
+
+### Aceptado — 4 literales de idioma ORM (`python:S1192`)
+
+`"SET NULL"`, `"usuario.id"` y `"all, delete-orphan"` en `modelos/`. Son
+**idiomas de SQLAlchemy**: `ondelete="SET NULL"` se lee solo, y esconderlo tras
+una constante haría el modelo *más* difícil de leer, no menos.
+
+### Aceptado — 12 funciones con complejidad cognitiva alta (`python:S3776`)
+
+| Grupo | Archivos | Decisión |
+|---|---|---|
+| **Guiones de carga (ETL)** | `cargar_fichas` (33), `fichas_mincetur` (31), `verificar_fase4` (33), `cargar_prestadores` (18), `descargar_dem` (18) | **Aceptado.** Son parseadores de una fuente irregular: su ramificación es el problema, no el código. Refactorizarlos arriesga romper una carga difícil de reverificar |
+| **Servicios de negocio** | `ruteo` (28 y 21), `catalogo` (22), `recomendador` (16) | **Aceptado por ahora, declarado como la deuda prioritaria.** `ruteo.py:666` con 28 es la peor |
+| **Asistente** | `asistente` (21 y 16) | **Aceptado.** Es la máquina de llamada a funciones; partirla dispersaría las seis reglas |
+| **TypeScript** | `api.ts` (16) | **Aceptado.** Roza el umbral de 15 |
+
+> **La deuda prioritaria, dicha con el dato delante:** los dos archivos con más
+> complejidad —`cargar_fichas` (33) y `fichas_mincetur` (31)— son exactamente los
+> que produjeron tres de los defectos del registro (D-06, D-07 y D-18, incluido
+> el de las expresiones regulares que **falló en silencio**). La complejidad y el
+> historial de fallos coinciden. Si hubiera tiempo para refactorizar una sola
+> cosa, es esa.
+
+### No corregido a propósito — el falso positivo
+
+`test_seguridad.py:41` está marcado en SonarQube como **won't fix**, con este
+comentario en el propio issue:
+
+> FALSO POSITIVO. La prueba llama dos veces a `hashear_contrasena()` A
+> PROPÓSITO, para comprobar que argon2id genera una sal aleatoria distinta en
+> cada llamada y por tanto dos hashes distintos. […] Si esa aserción fallara,
+> una tabla de hashes precalculados rompería a la vez a todos los usuarios con
+> la misma contraseña.
+
+Al marcarlo, los bugs pasan de 1 a **0** y la fiabilidad de **C** a **A**. No es
+maquillaje: la C se debía enteramente a un falso positivo en una prueba.

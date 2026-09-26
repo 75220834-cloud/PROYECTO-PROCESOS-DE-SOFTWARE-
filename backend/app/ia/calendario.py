@@ -140,6 +140,14 @@ def calcular_fiestas_moviles(anio: int) -> list[Festividad]:
 # Fiestas de fecha fija
 # ---------------------------------------------------------------------------
 
+#: La procedencia de las fiestas que no tienen una fuente externa propia.
+#:
+#: Se declara una vez y se referencia, en vez de repetir la cadena en cada
+#: fila. No es cosmética: la fuente de cada dato es parte del dato en este
+#: proyecto, y cinco copias del mismo texto son cinco sitios donde puede
+#: quedarse una desactualizada mientras las otras dicen lo contrario.
+FUENTE_CONTEXTO = "CONTEXTO_PROYECTO.md, sección 9"
+
 #: Fiestas del Valle del Mantaro con fecha fija, en formato (mes, día inicio,
 #: mes, día fin). Solo se incluyen las de confianza alta documentada en
 #: CONTEXTO_PROYECTO.md; las de confianza baja (aniversarios distritales sin
@@ -161,7 +169,7 @@ _FIESTAS_FIJAS: list[
         (1, 30),
         TipoFestividad.COSTUMBRISTA,
         ("JAUJA", "YAUYOS"),
-        "CONTEXTO_PROYECTO.md, sección 9",
+        FUENTE_CONTEXTO,
     ),
     (
         "Batalla de Carato",
@@ -169,7 +177,7 @@ _FIESTAS_FIJAS: list[
         (4, 19),
         TipoFestividad.CIVICA,
         ("CHUPACA",),
-        "CONTEXTO_PROYECTO.md, sección 9",
+        FUENTE_CONTEXTO,
     ),
     (
         "Fundación española de Jauja",
@@ -177,7 +185,7 @@ _FIESTAS_FIJAS: list[
         (4, 25),
         TipoFestividad.CIVICA,
         ("JAUJA",),
-        "CONTEXTO_PROYECTO.md, sección 9",
+        FUENTE_CONTEXTO,
     ),
     (
         "Fiesta de Santiago",
@@ -185,7 +193,7 @@ _FIESTAS_FIJAS: list[
         (7, 30),
         TipoFestividad.COSTUMBRISTA,
         (),  # se celebra en cerca de 28 distritos del valle
-        "CONTEXTO_PROYECTO.md, sección 9",
+        FUENTE_CONTEXTO,
     ),
     (
         "Virgen de Cocharcas",
@@ -193,7 +201,7 @@ _FIESTAS_FIJAS: list[
         (9, 14),
         TipoFestividad.RELIGIOSA,
         ("SAPALLANGA", "ORCOTUNA", "APATA"),
-        "CONTEXTO_PROYECTO.md, sección 9",
+        FUENTE_CONTEXTO,
     ),
 ]
 

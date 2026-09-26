@@ -82,7 +82,6 @@ class EstadoDelAsistente(BaseModel):
 
 @enrutador.get(
     "/estado",
-    response_model=EstadoDelAsistente,
     summary="Comprueba si el asistente está disponible",
 )
 def consultar_estado(configuracion: ConfiguracionInyectada) -> EstadoDelAsistente:
@@ -103,7 +102,6 @@ def consultar_estado(configuracion: ConfiguracionInyectada) -> EstadoDelAsistent
 
 @enrutador.post(
     "/mensaje",
-    response_model=RespuestaDelAsistentePublica,
     status_code=status.HTTP_200_OK,
     summary="Envía un mensaje al asistente",
 )

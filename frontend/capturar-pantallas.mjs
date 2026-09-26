@@ -157,20 +157,6 @@ await pagina.waitForSelector('.opblock', { timeout: 60000 }).catch(() => {});
 await pagina.waitForTimeout(3000);
 await capturar(pagina, '10_api_docs.png', 'Swagger UI con los 43 endpoints', { completa: true });
 
-// --- 12 · El flujo de GitHub Actions en verde ---------------------------
-// Es una página pública del repositorio. Si no hay internet, se declara.
-try {
-  await pagina.goto(
-    'https://github.com/75220834-cloud/PROYECTO-PROCESOS-DE-SOFTWARE-/actions/runs/33940471717',
-    { waitUntil: 'domcontentloaded', timeout: 45000 },
-  );
-  await pagina.waitForTimeout(6000);
-  await capturar(pagina, '12_github_actions.png', 'La ejecución de integración continua en verde');
-} catch (error) {
-  fallidas.push(`12_github_actions.png — no se pudo abrir GitHub: ${error.message}`);
-  console.log(`  FALLO 12_github_actions.png: ${error.message}`);
-}
-
 await navegador.close();
 
 console.log('\n=== RESUMEN ===');

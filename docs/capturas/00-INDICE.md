@@ -12,6 +12,11 @@ Se regeneran con:
 cd frontend && node capturar-pantallas.mjs
 ```
 
+El primero captura **la aplicación** (necesita backend, frontend y PostGIS
+levantados). El segundo captura la **evidencia externa** —el informe de
+cobertura, el tablero de SonarQube y la ejecución de la integración continua—,
+y para eso no hace falta levantar nada del proyecto.
+
 ```bash
 cd frontend && SONAR_CONTRASENA=la_del_contenedor node capturar-cobertura.mjs
 ```
@@ -39,8 +44,8 @@ guion**: es un contenedor local y efímero, pero la regla 1.9 del proyecto
 | `10_api_docs.png` | Swagger UI en `/docs` con las 43 operaciones | 3200×13666 |
 | `11_cobertura_pytest.png` | Informe HTML de `coverage.py` con el **73 %** *(ver la nota de abajo)* | 3200×4428 |
 | `11_pytest_consola.txt` | La **salida literal** de pytest, en texto | — |
-| `12_github_actions.png` | La ejecución de integración continua **en verde**, 3m 3s | 3200×2000 |
-| `13_sonarqube.png` | El tablero de SonarQube tras el análisis | 3200×2000 |
+| `12_github_actions.png` | La ejecución de integración continua **en verde**, 2m 44s, **sin avisos de obsolescencia** | 3200×2000 |
+| `13_sonarqube.png` | El tablero de SonarQube con el **Quality Gate en verde** sobre el código total | 3200×2000 |
 
 ---
 

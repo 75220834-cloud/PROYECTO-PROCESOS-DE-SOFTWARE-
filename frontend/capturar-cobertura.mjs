@@ -101,6 +101,28 @@ try {
   console.log(`  FALLO 13_sonarqube.png: ${error.message}`);
 }
 
+// --- 12 · El flujo de GitHub Actions en verde ---------------------------
+// Es una página pública del repositorio. Si no hay internet, se declara.
+try {
+  await pagina.goto(
+    'https://github.com/75220834-cloud/PROYECTO-PROCESOS-DE-SOFTWARE-/actions/runs/36214902324',
+    { waitUntil: 'domcontentloaded', timeout: 45000 },
+  );
+  await pagina.waitForTimeout(6000);
+
+  // No se guarda hasta comprobar que la ejecución salió en verde: una captura
+  // de un flujo en rojo presentada como evidencia de que pasa sería justo lo
+  // contrario de una evidencia.
+  await pagina.waitForSelector('text=/Success/i', { timeout: 30000 });
+
+  await pagina.screenshot({ path: resolve(DESTINO, '12_github_actions.png'), fullPage: false });
+  hechas.push('12_github_actions.png — la integración continua en verde');
+  console.log('  OK    12_github_actions.png');
+} catch (error) {
+  fallidas.push(`12_github_actions.png — no se pudo abrir GitHub: ${error.message}`);
+  console.log(`  FALLO 12_github_actions.png: ${error.message}`);
+}
+
 await navegador.close();
 
 console.log('\n=== RESUMEN ===');

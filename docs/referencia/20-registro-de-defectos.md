@@ -58,6 +58,8 @@ viñetas.
 | **D-26** | El contrato OpenAPI declaraba solo 200/201/422 aunque el código lanza 404, 403, 409 y 401 | Mayor | Revisión | **Cerrado** | `9f8d32c` | Sí — el mapa se validó contra el API en vivo |
 | **D-27** | La tarjeta del catálogo muestra «Concepcion» **sin tilde**: no usa el mapeo `provincias` de `es.json` | Menor | Prueba (E2E-01) | **ABIERTO** | — | La E2E compara sin tildes para no fallar por él |
 | **D-28** | Cinco errores del API mandan **prosa en español** en vez de un código, así que no se traducen (contradice el ADR-013) | Mayor | Revisión | **ABIERTO** | — | No |
+| **D-29** | Un viaje de varios días devolvía **el mismo día repetido**: mismos lugares, mismas horas y mismos costos en todas las pestañas | **Crítico** | Uso | **Cerrado** | *(este commit)* | Sí, 4 pruebas |
+| **D-30** | Los 7 archivos de `backend/app/rutas/` estaban guardados con fin de línea `\r` suelto: para git eran **una sola línea** y `diff` y `blame` no servían sobre toda la capa del API | Menor | Revisión | **Cerrado** | *(este commit)* | No — lo detecta `black`, que ya estaba en la CI |
 
 \* **D-02 no tiene un commit propio que se pueda citar.** La corrección con
 `unaccent` viaja dentro de los commits del asistente, y buscarla por mensaje
@@ -73,31 +75,41 @@ equivocado es peor que uno con una celda vacía.
 
 | Severidad | Cantidad |
 |---|---|
-| **Crítico** | **8** |
+| **Crítico** | **9** |
 | **Mayor** | **13** |
-| **Menor** | **7** |
-| **Total** | **28** |
+| **Menor** | **8** |
+| **Total** | **30** |
 
 ### Por estado
 
 | Estado | Cantidad |
 |---|---|
-| **Cerrado** | **26** |
+| **Cerrado** | **28** |
 | **Abierto** | **2** (D-27, D-28) |
 
 ### Por dónde se detectó — el dato que más enseña
 
 | Dónde | Cantidad |
 |---|---|
-| **Verificación** (guiones y comprobaciones a mano) | 11 |
-| **Uso** (abrir la aplicación y usarla) | 6 |
-| **Revisión** (leer el código o la documentación) | 6 |
+| **Verificación** (guiones y comprobaciones a mano) | 13 |
+| **Uso** (abrir la aplicación y usarla) | 8 |
+| **Revisión** (leer el código o la documentación) | 8 |
 | **Prueba automática** | **1** |
 
-> **Una sola de las 28 la encontró una prueba automática.** Y es D-27, que la
-> encontró una prueba E2E escrita ayer. Las 550 pruebas unitarias y de
-> integración del backend no cazaron ninguno de los 28: cazan las regresiones
-> *después*, que es su trabajo, pero no fue así como aparecieron.
+> **Corrección de este desglose.** Hasta el 30 de septiembre esta tabla decía
+> 11 / 6 / 6 / 1, que suma **24** y no los 28 defectos que tenía la tabla de
+> arriba. Era un error de conteo del propio documento, no de la tabla. Los
+> números de ahora están contados fila a fila y suman 30.
+
+> **Una sola de las 30 la encontró una prueba automática.** Y es D-27, que la
+> encontró una prueba E2E. Las pruebas unitarias y de integración del backend no
+> cazaron ninguno de los 30: cazan las regresiones *después*, que es su trabajo,
+> pero no fue así como aparecieron.
+>
+> **D-29 lo encontró el usuario mirando la pantalla**, con 697 pruebas en verde
+> y 66 de ellas sobre el itinerario. Ninguna lo veía porque todas miraban **un
+> día en aislamiento**, y un día en aislamiento era correcto. No faltaban
+> pruebas: faltaba una que mirase dos días a la vez.
 >
 > Es el argumento más fuerte a favor de probar con las manos, y conviene decirlo
 > con el número delante en vez de como intuición.
@@ -111,9 +123,15 @@ autogeneradas— el 25 de septiembre de 2026:
 
 | | Defectos | KLOC | **Densidad** |
 |---|---|---|---|
-| **Global** | **28** | **14,765** | **1,90 def/KLOC** |
-| Backend | 21 | 8,501 | 2,47 def/KLOC |
+| **Global** | **30** | **14,765** | **2,03 def/KLOC** |
+| Backend | 23 | 8,501 | 2,71 def/KLOC |
 | Frontend | 7 | 6,264 | 1,12 def/KLOC |
+
+> **Los KLOC son los del 25 de septiembre y el código ha crecido desde
+> entonces**, así que estas densidades son una **cota superior**: el divisor
+> real es algo mayor. Se prefiere dejarlo dicho a volver a medir con un método
+> distinto del que produjo la cifra original, que haría los dos números
+> incomparables.
 
 Antes de esta semana eran 22 defectos y **1,49 def/KLOC**. Sube a 1,90 porque se
 añaden seis, **no porque el código haya empeorado**: cinco de los seis nuevos se

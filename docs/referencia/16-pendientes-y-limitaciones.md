@@ -58,6 +58,27 @@ tablero lo avisa antes que los números.
 
 **Esto no se arregla generando datos falsos.** Se arregla con uso real.
 
+### Un viaje largo se queda sin lugares que proponer
+
+Desde el [ADR-016](../adr/ADR-016-el-viaje-se-planifica-entero-y-ningun-dia-repite.md),
+los días de un viaje **no repiten** los lugares de los otros. La consecuencia es
+aritmética: un viaje suficientemente largo agota el repertorio.
+
+El tope de candidatos del ruteo es **45** —no es estético: la matriz de
+traslados crece con el cuadrado, y la documentación ya tenía medido que a partir
+de 60 la espera se nota—. Con ritmo intenso eso da para unos **cinco o seis
+días**; con ritmo relajado, bastantes más.
+
+Pasado ese punto, los últimos días salen con menos paradas, o sin ninguna, **y
+la aplicación lo dice** con los avisos `lugares_limitados` y
+`sin_lugares_sin_repetir`. La alternativa sería rellenar repitiendo lo del día 1,
+que es exactamente el defecto que el ADR-016 corrigió.
+
+**Y hay un segundo límite, de tiempo:** el viaje se calcula entero en una
+petición, así que el costo es lineal con los días. Medido: **18,9 s para tres
+días**. Siete días rondarían los 45 s. No hay cálculo en segundo plano ni
+resultados parciales.
+
 ---
 
 ## Lo que no está implementado

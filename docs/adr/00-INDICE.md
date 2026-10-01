@@ -10,7 +10,7 @@ de tomar cada decisión, con las mediciones delante. Los ADR las reexpresan en
 formato estándar; **las notas originales se conservan** porque contienen el
 detalle de cómo se llegó a cada número.
 
-**Última actualización:** 25 de septiembre de 2026
+**Última actualización:** 30 de septiembre de 2026
 
 ---
 
@@ -33,6 +33,7 @@ detalle de cómo se llegó a cada número.
 | [013](ADR-013-los-avisos-viajan-como-codigo-y-parametros.md) | Los avisos viajan del backend como `{codigo, parametros}`; la interfaz redacta la frase | **Mantenibilidad** | 69 códigos con traducción garantizada por prueba; costó una migración a JSONB y reescribir 42 pruebas |
 | [014](ADR-014-el-asistente-es-capa-de-interaccion.md) | El asistente es capa de interacción: no cierra ninguna brecha y no puede inventar datos por arquitectura | **Disponibilidad** | Si Ollama cae no se pierde ninguna capacidad; tarda 25–40 s y no tiene pruebas automáticas del modelo |
 | [015](ADR-015-integracion-continua-y-umbral-de-cobertura.md) | GitHub Actions ejecuta todas las comprobaciones y la cobertura se **exige** con `fail_under = 60` | Mantenibilidad | Verde al primer intento en 3 min 3 s; la CI mide algo menos de cobertura porque no tiene la red vial |
+| [016](ADR-016-el-viaje-se-planifica-entero-y-ningun-dia-repite.md) | El viaje se pide entero y los días se reparten en cascada: ninguno repite los lugares de otro | **Corrección funcional** | Los días dejan de salir idénticos y cambiar de pestaña es instantáneo; a cambio la primera carga tarda 18,9 s para tres días en vez de 5–17 s para uno |
 
 ---
 
@@ -46,15 +47,17 @@ detalle de cómo se llegó a cada número.
 | **Seguridad** | 009 |
 | **Disponibilidad** | 014 |
 | **Rendimiento** | 007 |
+| **Corrección funcional** | 016 |
 | **Portabilidad** | — (aparece como atributo secundario en 015) |
 
 > **Nota honesta sobre la clasificación.** El enunciado propone seis atributos
 > (rendimiento, mantenibilidad, disponibilidad, portabilidad, seguridad,
-> usabilidad). Siete de los quince ADR tienen como atributo principal la
-> **fiabilidad**, que es un atributo de ISO/IEC 25010 pero **no está en esa lista
-> de seis**. Forzarlos a encajar en los seis habría falseado la clasificación: lo
-> que esas siete decisiones protegen es la exactitud y la credibilidad del dato
-> que se muestra, que es el eje del proyecto. Se declara en vez de maquillarse.
+> usabilidad). Siete de los dieciséis ADR tienen como atributo principal la
+> **fiabilidad**, y el ADR-016 la **corrección funcional**: los dos son atributos
+> de ISO/IEC 25010 pero **no están en esa lista de seis**. Forzarlos a encajar en
+> los seis habría falseado la clasificación: lo que esas ocho decisiones protegen
+> es la exactitud y la credibilidad de lo que se muestra, que es el eje del
+> proyecto. Se declara en vez de maquillarse.
 >
 > Ningún ADR tiene la **portabilidad** como atributo principal, y también se dice.
 

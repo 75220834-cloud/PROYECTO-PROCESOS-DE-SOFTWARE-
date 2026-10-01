@@ -77,7 +77,7 @@ graph LR
 | `utilidades/` | Guiones que se ejecutan a mano: cargar datos, sembrar, verificar. | Nada que la API necesite en caliente. |
 
 **Por qué importa esta separación:** los servicios se prueban sin levantar la
-API, y la IA se prueba sin base de datos. De las 550 pruebas del backend, 296
+API, y la IA se prueba sin base de datos. De las 573 pruebas del backend, 304
 no tocan PostgreSQL (medido el 25-09-2026).
 
 ---
@@ -89,7 +89,7 @@ no tocan PostgreSQL (medido el 25-09-2026).
 | Pieza | Versión | Por qué esta |
 |---|---|---|
 | **Python** | 3.14 | Lo pedía el plan. Todas las dependencias se verificaron compatibles antes de fijarlas. |
-| **FastAPI** | ≥0.115 | Genera la documentación OpenAPI sola a partir del código: los 43 endpoints están en `/docs` sin escribir nada aparte. Y valida con Pydantic, que ya hacía falta. |
+| **FastAPI** | ≥0.115 | Genera la documentación OpenAPI sola a partir del código: los 44 endpoints están en `/docs` sin escribir nada aparte. Y valida con Pydantic, que ya hacía falta. |
 | **Pydantic** | v2 | Validación de entrada en todos los endpoints, que es una regla de seguridad del proyecto, no una comodidad. |
 | **SQLAlchemy** | 2.0 | ORM maduro con soporte de tipos geográficos vía GeoAlchemy2. La alternativa, SQL crudo, habría hecho ilegibles las consultas espaciales. |
 | **PostgreSQL + PostGIS** | 16 / 3.4 | **PostGIS es el motivo.** El proyecto calcula distancias reales sobre el elipsoide, índices espaciales GIST y centroides. Ninguna base sin extensión geográfica servía. |
@@ -184,7 +184,7 @@ PROYECTO-PROCESOS-DE-SOFTWARE-/
 │   │   ├── base_datos.py        motor y sesiones
 │   │   ├── modelos/    (8)      las tablas
 │   │   ├── esquemas/   (9)      entrada y salida de la API
-│   │   ├── rutas/      (9)      los 43 endpoints
+│   │   ├── rutas/      (9)      los 44 endpoints
 │   │   ├── servicios/ (13)      la lógica del dominio
 │   │   ├── ia/         (6)      modelos y alternativas por reglas
 │   │   └── utilidades/(12)      guiones de carga y verificación

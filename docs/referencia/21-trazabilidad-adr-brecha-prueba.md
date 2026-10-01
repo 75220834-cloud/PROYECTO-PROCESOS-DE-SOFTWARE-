@@ -71,9 +71,9 @@ Si alguien añadiera un muro de registro, caerían las tres.
 
 | Eslabón | Qué lo sostiene |
 |---|---|
-| **ADR** | [ADR-006](../adr/ADR-006-dos-modos-de-calculo-de-distancia.md) — dos modos de distancia, y se declara cuál se usó<br>[ADR-007](../adr/ADR-007-se-acepta-or-tools-con-recorrido-abierto.md) — OR-Tools con recorrido abierto<br>[ADR-008](../adr/ADR-008-las-tarifas-se-estiman-con-formula-declarada.md) — las tarifas se estiman con fórmula declarada |
-| **Pruebas** | `test_ruteo.py` (33) · `test_tiempo_recorrido.py` (30) · `test_costos.py` (24) · `test_rutas_itinerarios.py` (33) · `LineaDeTiempo.prueba.tsx` (18) · `TotalesDelDia.prueba.tsx` (8) · **`e2e-04-itinerario.spec.ts` (3)** |
-| **Endpoints** | `POST /api/itinerarios` · `POST /api/itinerarios/reordenar` · `GET /api/itinerarios` · `GET /api/itinerarios/{itinerario_id}` |
+| **ADR** | [ADR-006](../adr/ADR-006-dos-modos-de-calculo-de-distancia.md) — dos modos de distancia, y se declara cuál se usó<br>[ADR-007](../adr/ADR-007-se-acepta-or-tools-con-recorrido-abierto.md) — OR-Tools con recorrido abierto<br>[ADR-008](../adr/ADR-008-las-tarifas-se-estiman-con-formula-declarada.md) — las tarifas se estiman con fórmula declarada<br>[ADR-016](../adr/ADR-016-el-viaje-se-planifica-entero-y-ningun-dia-repite.md) — el viaje se planifica entero y ningún día repite |
+| **Pruebas** | `test_ruteo.py` (41) · `test_tiempo_recorrido.py` (30) · `test_costos.py` (24) · `test_rutas_itinerarios.py` (48) · `LineaDeTiempo.prueba.tsx` (18) · `TotalesDelDia.prueba.tsx` (8) · **`e2e-04-itinerario.spec.ts` (4)** |
+| **Endpoints** | `POST /api/itinerarios` · `POST /api/itinerarios/viaje` · `POST /api/itinerarios/reordenar` · `GET /api/itinerarios` · `GET /api/itinerarios/{itinerario_id}` |
 | **Indicador** | **4 — Itinerarios viables y trazables**, `rutas/valoraciones.py::_indicador_4_itinerarios` → **4 de 4 perfiles**, peor caso 6,52 s de 10 s |
 
 **El eslabón que más se nota:** ADR-006 decidió que el sistema **declare siempre
@@ -86,6 +86,14 @@ Esa misma decisión es lo que permite que **la suite pase en la integración
 continua, que no tiene la red vial descargada**: las pruebas afirman sobre el
 campo en vez de dar por hecho que hay red.
 
+**El eslabón que faltaba, y lo que costó:** ninguna de esas pruebas miraba **dos
+días a la vez**, así que un viaje de tres días devolvía tres veces el mismo día
+y las 66 pruebas del itinerario seguían en verde (defecto
+[D-29](20-registro-de-defectos.md)). El ADR-016 cierra el hueco y añade cuatro
+pruebas que comparan días entre sí, una de ellas sobre la pantalla real. Las
+cuatro se comprobaron desactivando el reparto a propósito: con el defecto dentro,
+fallan.
+
 ---
 
 ## Resumen en una tabla
@@ -95,7 +103,7 @@ campo en vez de dar por hecho que hay red.
 | **1** | 001, 002 | 6 | **100** | 5 | 1 | 79,32 % |
 | **2** | 004, 005 | 5 | **115** | 3 | 3 | 100 % |
 | **3** | 003 | 5 | **71** | 9 | 2 | preferencias → itinerario |
-| **4** | 006, 007, 008 | 7 | **149** | 4 | 4 | 4 de 4, peor caso 6,52 s |
+| **4** | 006, 007, 008, 016 | 7 | **173** | 5 | 4 | 4 de 4, peor caso 6,52 s |
 
 ---
 

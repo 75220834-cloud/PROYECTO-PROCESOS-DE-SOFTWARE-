@@ -1,6 +1,6 @@
 # 12 — Pruebas y calidad
 
-**Qué explica este archivo:** las 697 pruebas del proyecto, qué cubre cada
+**Qué explica este archivo:** las 721 pruebas del proyecto, qué cubre cada
 archivo, la filosofía que siguen y las herramientas de calidad que se ejecutan.
 
 ---

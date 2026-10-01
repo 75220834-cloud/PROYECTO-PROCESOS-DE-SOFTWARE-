@@ -265,7 +265,7 @@
   "itinerario": {
     "titulo": "Tu itinerario",
     "calculando": "Armando tu itinerario…",
-    "calculandoDetalle": "Estamos calculando las rutas sobre la red vial real del valle y el desnivel de cada tramo. Tarda unos segundos.",
+    "calculandoDetalle": "Estamos armando todos los días del viaje de una vez, calculando las rutas sobre la red vial real del valle y el desnivel de cada tramo. Se hacen juntos para que ningún día repita los lugares de otro, así que cuantos más días, más tarda.",
     "identificadorInvalido": "Ese identificador de preferencia no es válido.",
     "errorGenerico": "No se pudo armar el itinerario.",
     "volverAResultados": "Volver a las recomendaciones",
@@ -554,6 +554,9 @@
     "sin_horario_algunos": "{{count}} de los {{total}} recursos considerados no tienen horario de atención publicado en el inventario del MINCETUR. Para esos, el itinerario solo garantiza que la visita cabe dentro del día: confirma el horario antes de ir.",
     "sin_coordenadas": "Ninguna de las recomendaciones tiene coordenadas, así que no se puede armar una ruta. El inventario del MINCETUR no georreferencia todos sus recursos.",
     "sin_itinerario_posible": "No se pudo armar ningún itinerario con el tiempo y el presupuesto indicados.",
+    "sin_lugares_sin_repetir": "Este día se queda sin plan: ya no hay más lugares que encajen con lo que pediste y que no estén en los días anteriores. Ningún día repite los lugares de otro, así que antes de rellenarlo con lo mismo preferimos decírtelo. Prueba a acortar el viaje, a marcar más intereses o a cambiar el ritmo.",
+    "lugares_limitados_one": "Este día tiene {{count}} parada en vez de las {{maximo}} que permite tu ritmo: se están acabando los lugares que encajan con lo que pediste y no se repite ninguno de los días anteriores.",
+    "lugares_limitados_other": "Este día tiene {{count}} paradas en vez de las {{maximo}} que permite tu ritmo: se están acabando los lugares que encajan con lo que pediste y no se repite ninguno de los días anteriores.",
     "resuelto_por_reglas": "El optimizador no encontró una solución con estas restricciones, así que el itinerario se armó con la alternativa por reglas (vecino más cercano).",
     "paradas_recortadas_one": "Se quitó {{count}} parada al recalcular los traslados sobre la red vial real: con los tiempos exactos ya no cabía antes de las {{hora}}.",
     "paradas_recortadas_other": "Se quitaron {{count}} paradas al recalcular los traslados sobre la red vial real: con los tiempos exactos ya no cabían antes de las {{hora}}.",

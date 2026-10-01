@@ -1,6 +1,6 @@
 # 04 — La API
 
-**Qué explica este archivo:** los 43 endpoints agrupados por área, cómo se
+**Qué explica este archivo:** los 44 endpoints agrupados por área, cómo se
 autentica, qué permisos hay, qué forma tienen los errores y cómo viajan los
 avisos.
 
@@ -10,7 +10,7 @@ decisiones de diseño.
 
 ---
 
-## Los 43 endpoints
+## Los 44 endpoints
 
 ### Salud (2)
 
@@ -78,6 +78,7 @@ porque el cálculo no es trivial: no es una consulta cacheable.
 | Método | Ruta | Qué hace |
 |---|---|---|
 | `POST` | `/api/itinerarios` | Arma el itinerario de un día |
+| `POST` | `/api/itinerarios/viaje` | Arma **todos** los días del viaje, sin repetir lugares entre ellos |
 | `POST` | `/api/itinerarios/reordenar` | Recalcula con el orden que eligió el visitante |
 | `GET` | `/api/itinerarios` | Los míos guardados |
 | `GET` | `/api/itinerarios/{id}` | Recupera uno |

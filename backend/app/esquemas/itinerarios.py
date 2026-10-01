@@ -32,6 +32,24 @@ class SolicitudItinerario(BaseModel):
     titulo: str | None = Field(default=None, max_length=200)
 
 
+class SolicitudViaje(BaseModel):
+    """Petición para armar **todos** los días del viaje de una vez.
+
+    No lleva fecha, a diferencia de :class:`SolicitudItinerario`: el viaje son
+    todas las fechas de la preferencia, de la de inicio a la de fin. Pedirlos
+    juntos es lo que permite que ningún día repita los lugares de otro, porque
+    el reparto se decide con los días delante.
+    """
+
+    preferencia_id: int
+
+    hora_inicio: time | None = None
+    hora_fin: time | None = None
+
+    #: Si se guardan los días en la base de datos o solo se calculan.
+    guardar: bool = False
+
+
 class TrasladoPublico(BaseModel):
     """El desplazamiento desde la parada anterior hasta esta."""
 
@@ -118,6 +136,20 @@ class RespuestaItinerario(BaseModel):
     #: Avisos que el visitante tiene que leer: tramos estimados, altitud,
     #: esfuerzo del día, horarios desconocidos.
     avisos: list[AvisoPublico] = Field(default_factory=list)
+
+
+class RespuestaViaje(BaseModel):
+    """El viaje completo: un itinerario por cada día, sin lugares repetidos."""
+
+    preferencia_id: int
+    fecha_inicio: date
+    fecha_fin: date
+
+    #: Un día por cada fecha del viaje, en orden. El primero es el mejor día
+    #: posible; cada siguiente es el mejor de lo que no se usó antes. Un día
+    #: puede venir sin paradas si ya no quedaban lugares nuevos, y en ese caso
+    #: trae el aviso que lo explica.
+    dias: list[RespuestaItinerario] = Field(default_factory=list)
 
 
 class SolicitudReordenar(SolicitudItinerario):

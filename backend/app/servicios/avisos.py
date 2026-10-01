@@ -93,6 +93,12 @@ CODIGOS_CONOCIDOS: frozenset[str] = frozenset(
         "paradas_omitidas_al_reordenar",  # las arrastradas ya no se recomiendan
         "ninguna_sigue_recomendada",  # ninguna de las arrastradas vale ya
         "por_encima_del_presupuesto",  # el orden elegido a mano se pasa
+        # --- Viaje de varios días (servicios/ruteo.py::construir_viaje) ---
+        # Los días de un viaje no repiten lugares, así que los últimos pueden
+        # quedarse sin repertorio. Cuando pasa se dice, en vez de rellenar el
+        # día repitiendo lo que ya se propuso.
+        "sin_lugares_sin_repetir",  # al día no le quedó ningún lugar nuevo
+        "lugares_limitados",  # le quedaron menos de los que pedía el ritmo
         # --- Recomendaciones (servicios/recomendador.py) ---
         "presupuesto_alcanza",  # para cuántas visitas da el presupuesto
         "presupuesto_no_alcanza",  # no llega ni para una visita

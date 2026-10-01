@@ -34,10 +34,10 @@ pytest: si al quitar la base un caso se salta, ese caso la necesitaba.
 | U-07 | Unitaria | `pruebas/test_fichas_y_temporada.py` | Lector de fichas, horarios, fechas de fiesta | 30 | PASA | No |
 | U-08 | **Integración-API** | `pruebas/test_rutas_autenticacion.py` | Registro, acceso, errores indistinguibles | 17 | PASA | Sí (todos) |
 | U-09 | **Integración-API** | `pruebas/test_rutas_catalogo.py` | Filtros, paginación, GeoJSON, 404 | 17 | PASA | Sí (todos) |
-| U-10 | **Integración-API** | `pruebas/test_rutas_itinerarios.py` | Armar, reordenar, guardar idempotente, avisos | 33 | PASA (1 saltada) | Sí (todos) |
+| U-10 | **Integración-API** | `pruebas/test_rutas_itinerarios.py` | Armar, reordenar, guardar idempotente, avisos, **el viaje completo sin repetir días** | 48 | PASA (1 saltada) | Sí (todos) |
 | U-11 | **Integración-API** | `pruebas/test_rutas_preferencias.py` | Los seis pasos, sin cuenta, reclamar | 28 | PASA | Sí (todos) |
 | U-12 | **Integración-API** | `pruebas/test_rutas_recomendaciones.py` | Filtros duros, descartes con motivo | 25 | PASA | Sí (todos) |
-| U-13 | Unitaria | `pruebas/test_ruteo.py` | OR-Tools, presupuesto, recorrido abierto | 33 | PASA | No |
+| U-13 | Unitaria | `pruebas/test_ruteo.py` | OR-Tools, presupuesto, recorrido abierto, **reparto del viaje** | 41 | PASA | No |
 | U-14 | **Integración-API** | `pruebas/test_salud.py` | Los tres componentes se reportan | 4 | PASA | No |
 | U-15 | Unitaria | `pruebas/test_seguridad.py` | Hash argon2id, JWT, expiración | 15 | PASA | No |
 | U-16 | Unitaria | `pruebas/test_sentimiento.py` | Las dos vías, negadores, temas, umbral 0,70 | 51 | PASA | No |
@@ -64,7 +64,7 @@ pytest: si al quitar la base un caso se salta, ese caso la necesitaba.
 | E-37 | **E2E** | `frontend/e2e/e2e-01-catalogo.spec.ts` | HU-01: catálogo filtrado y sello de validación | 5 | PASA | Sí |
 | E-38 | **E2E** | `frontend/e2e/e2e-02-preferencias.spec.ts` | HU-03: los seis pasos sin cuenta | 2 | PASA | Sí |
 | E-39 | **E2E** | `frontend/e2e/e2e-03-recomendaciones.spec.ts` | HU-04: el porqué y los descartados | 2 | PASA | Sí |
-| E-40 | **E2E** | `frontend/e2e/e2e-04-itinerario.spec.ts` | HU-05/06: paradas, totales y aviso de estimación | 3 | PASA | Sí |
+| E-40 | **E2E** | `frontend/e2e/e2e-04-itinerario.spec.ts` | HU-05/06: paradas, totales, aviso de estimación y **que cada día traiga otro plan** | 4 | PASA | Sí |
 
 ---
 
@@ -74,20 +74,20 @@ Esto es lo que hay que dibujar:
 
 | Nivel | Casos | Archivos | Herramienta |
 |---|---|---|---|
-| **Unitaria** | **574** | 28 | pytest (426) + vitest (148) |
-| **Integración-API** | **124** | 6 | pytest con `TestClient` de FastAPI |
+| **Unitaria** | **582** | 28 | pytest (434) + vitest (148) |
+| **Integración-API** | **139** | 6 | pytest con `TestClient` de FastAPI |
 | **Carga** | **3 110 peticiones** | 3 | k6 v2.3.0 en Docker |
-| **E2E / UI** | **12** | 4 | Playwright con Edge |
+| **E2E / UI** | **13** | 4 | Playwright con Edge |
 
 ```
                     ╱╲
-                   ╱  ╲      E2E  ·  12 casos  ·  4 archivos
+                   ╱  ╲      E2E  ·  13 casos  ·  4 archivos
                   ╱────╲
                  ╱      ╲    CARGA · 3 110 peticiones · 3 escenarios
                 ╱────────╲
-               ╱          ╲  INTEGRACIÓN-API · 124 casos · 6 archivos
+               ╱          ╲  INTEGRACIÓN-API · 139 casos · 6 archivos
               ╱────────────╲
-             ╱              ╲ UNITARIAS · 574 casos · 28 archivos
+             ╱              ╲ UNITARIAS · 582 casos · 28 archivos
             ╱────────────────╲
 ```
 
@@ -95,8 +95,8 @@ La forma es la correcta: muchas unitarias abajo, pocas E2E arriba.
 
 ### Dos cifras que conviene no confundir
 
-- **698 casos de prueba** en total entre unitarias y de integración (574 + 124).
-  De ellos, **550 son del backend** y **148 del frontend**.
+- **721 casos de prueba** en total entre unitarias y de integración (582 + 139).
+  De ellos, **573 son del backend** y **148 del frontend**.
 - **3 110 peticiones** de carga no son 3 110 «casos»: son peticiones HTTP
   repetidas contra tres endpoints, con **6 556 comprobaciones de contenido**.
   Ponerlas en el mismo eje que un caso unitario exageraría ese nivel.
@@ -105,12 +105,12 @@ La forma es la correcta: muchas unitarias abajo, pocas E2E arriba.
 
 | | Casos |
 |---|---|
-| No necesitan PostgreSQL | **296** |
-| Sí lo necesitan | **254** |
-| **Total backend** | **550** |
+| No necesitan PostgreSQL | **304** |
+| Sí lo necesitan | **269** |
+| **Total backend** | **573** |
 
 Medido ejecutando la suite con la configuración apuntando a un host
-inexistente: `296 passed, 254 skipped`.
+inexistente: `304 passed, 269 skipped`.
 
 ---
 

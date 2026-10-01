@@ -97,6 +97,50 @@ test.describe('E2E-04 · El itinerario del día', () => {
     );
   });
 
+  test('cada día del viaje trae un plan distinto, sin repetir lugares', async ({
+    page,
+    request,
+  }) => {
+    // Es la prueba del defecto que se reportó mirando la pantalla: el Día 2 y
+    // el Día 3 traían **el mismo plan** que el Día 1, con los mismos lugares y
+    // las mismas horas. Pasaba porque cada pestaña pedía su día por separado y
+    // el servidor no podía saber qué había en los otros.
+    const preferencia = await crearPreferencia(request);
+    await page.goto(`/preferencias/${preferencia}/itinerario`);
+
+    await expect(page.getByRole('heading', { name: 'El plan del día' })).toBeVisible({
+      timeout: 120_000,
+    });
+
+    const nombresDelDiaVisible = async () => {
+      const etiquetas = await page.getByLabel(/Parada \d+ de \d+:/).all();
+      return Promise.all(
+        etiquetas.map(async (parada) => (await parada.getAttribute('aria-label')) ?? ''),
+      );
+    };
+
+    const dia1 = await nombresDelDiaVisible();
+    expect(dia1.length, 'el día 1 no trajo paradas').toBeGreaterThan(0);
+
+    // Cambiar de día no pide nada al servidor: los días ya vinieron juntos.
+    await page.getByRole('button', { name: 'Día 2' }).click();
+
+    // Se espera a que la lista cambie de verdad antes de comparar, para no
+    // comparar el día 1 consigo mismo por haber leído demasiado pronto.
+    await expect
+      .poll(async () => (await nombresDelDiaVisible()).join('|'), { timeout: 30_000 })
+      .not.toBe(dia1.join('|'));
+
+    const dia2 = await nombresDelDiaVisible();
+
+    // Lo que de verdad importa: ningún lugar del día 1 reaparece en el día 2.
+    const soloNombre = (etiqueta: string) => etiqueta.replace(/^Parada \d+ de \d+:\s*/, '');
+    const delDia1 = new Set(dia1.map(soloNombre));
+    const repetidos = dia2.map(soloNombre).filter((nombre) => delDia1.has(nombre));
+
+    expect(repetidos, `el día 2 repite lugares del día 1: ${repetidos.join(', ')}`).toEqual([]);
+  });
+
   test('el itinerario se dibuja en el mapa', async ({ page, request }) => {
     const preferencia = await crearPreferencia(request);
     await page.goto(`/preferencias/${preferencia}/itinerario`);

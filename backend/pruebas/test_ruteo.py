@@ -25,13 +25,17 @@ from app.servicios.costos import CostoDeTraslado
 from app.servicios.ruteo import (
     DURACION_DE_RESERVA_MIN,
     DURACION_PREDETERMINADA_MIN,
+    MAXIMO_CANDIDATOS,
     PARADAS_MAXIMAS_POR_RITMO,
+    TOPE_DE_CANDIDATOS_DEL_VIAJE,
     CandidatoARutear,
     _a_hora,
     _a_minutos,
     _es_visitable_ese_dia,
     _ventana_de_atencion,
     armar_horario,
+    candidatos_para_el_viaje,
+    fechas_del_viaje,
     resolver_con_ortools,
     resolver_con_reglas,
 )
@@ -532,3 +536,89 @@ def test_un_ritmo_mas_intenso_permite_mas_paradas():
         < PARADAS_MAXIMAS_POR_RITMO["moderado"]
         < PARADAS_MAXIMAS_POR_RITMO["intenso"]
     )
+
+
+class PreferenciaFalsa:
+    """Lo mínimo que ``fechas_del_viaje`` necesita leer de una preferencia.
+
+    No se usa el modelo real porque estas dos funciones no tocan la base de
+    datos: hacen aritmética con fechas y con el ritmo. Montar PostgreSQL para
+    comprobar una resta de fechas sería comprobar PostgreSQL.
+    """
+
+    def __init__(self, inicio, fin):
+        self.fecha_inicio = inicio
+        self.fecha_fin = fin
+
+
+class TestFechasDelViaje:
+    def test_un_viaje_de_un_dia_tiene_una_fecha(self):
+        assert fechas_del_viaje(PreferenciaFalsa(FECHA, FECHA)) == [FECHA]
+
+    def test_devuelve_todas_las_fechas_en_orden_y_sin_huecos(self):
+        import datetime
+
+        fin = FECHA + datetime.timedelta(days=4)
+
+        fechas = fechas_del_viaje(PreferenciaFalsa(FECHA, fin))
+
+        assert len(fechas) == 5
+        assert fechas[0] == FECHA
+        assert fechas[-1] == fin
+        assert all(
+            (siguiente - anterior).days == 1
+            for anterior, siguiente in zip(fechas, fechas[1:], strict=False)
+        )
+
+    def test_una_fecha_de_fin_anterior_a_la_de_inicio_no_devuelve_lista_vacia(self):
+        """Nunca se devuelven cero días.
+
+        El endpoint ya rechaza las fechas incoherentes, pero si una preferencia
+        corrupta llegara hasta aquí, devolver una lista vacía haría que el viaje
+        no tuviera ni un día y la pantalla se quedaría sin nada que enseñar sin
+        decir por qué. Se devuelve al menos el día de inicio.
+        """
+        import datetime
+
+        anterior = FECHA - datetime.timedelta(days=3)
+
+        assert fechas_del_viaje(PreferenciaFalsa(FECHA, anterior)) == [FECHA]
+
+
+class TestCandidatosParaElViaje:
+    def test_un_dia_no_pide_mas_de_lo_que_pedia_antes(self):
+        """Un viaje de un día tiene que comportarse como siempre.
+
+        El tope de un día está medido y documentado —20 candidatos, 380
+        traslados, menos de un segundo—. Si planificar un viaje de un solo día
+        empezara a pedir más, se estaría cambiando un número medido sin medirlo
+        otra vez.
+        """
+        for ritmo in PARADAS_MAXIMAS_POR_RITMO:
+            assert candidatos_para_el_viaje(1, ritmo) == MAXIMO_CANDIDATOS
+
+    def test_mas_dias_piden_mas_repertorio(self):
+        assert candidatos_para_el_viaje(5, "intenso") > candidatos_para_el_viaje(2, "intenso")
+
+    def test_cubre_lo_que_el_ritmo_consume_en_todos_los_dias(self):
+        """El repertorio tiene que dar para llenar todos los días, con margen.
+
+        Es la condición que evita el defecto por el otro lado: si se pidieran
+        menos candidatos que paradas×días, los últimos días se quedarían sin
+        nada **aunque el catálogo tuviera recursos de sobra**.
+        """
+        for dias in (1, 2, 3):
+            for ritmo, paradas in PARADAS_MAXIMAS_POR_RITMO.items():
+                pedidos = candidatos_para_el_viaje(dias, ritmo)
+
+                assert pedidos >= paradas * dias, (
+                    f"{dias} días a ritmo {ritmo} consumen {paradas * dias} "
+                    f"lugares y solo se piden {pedidos}"
+                )
+
+    def test_nunca_pasa_del_tope_aunque_el_viaje_sea_larguisimo(self):
+        """El tope es un tope. La matriz crece con el cuadrado."""
+        assert candidatos_para_el_viaje(60, "intenso") == TOPE_DE_CANDIDATOS_DEL_VIAJE
+
+    def test_un_viaje_de_cero_dias_sigue_pidiendo_para_uno(self):
+        assert candidatos_para_el_viaje(0, "moderado") == MAXIMO_CANDIDATOS

@@ -45,8 +45,14 @@ export default defineConfig({
   // inestable, y eso hay que verlo, no esconderlo.
   retries: 0,
 
-  // Armar el itinerario tarda entre 5 y 17 segundos según la carga. 90 s deja
-  // margen sin llegar a ocultar un cuelgue.
+  // La pantalla del itinerario arma **el viaje entero**, no un día: se piden
+  // todos juntos porque de uno en uno no se puede evitar que se repitan los
+  // lugares. Medido sobre el viaje de tres días que crean estas pruebas:
+  // 17,2 – 19,3 s por prueba, y 18,9 s la llamada a la API por sí sola.
+  //
+  // El costo es lineal con los días, así que un viaje más largo tardaría más.
+  // Se dejan 90 s: casi cinco veces lo medido, que da margen en una máquina
+  // más lenta sin llegar a ocultar un cuelgue.
   timeout: 90_000,
   expect: { timeout: 20_000 },
 

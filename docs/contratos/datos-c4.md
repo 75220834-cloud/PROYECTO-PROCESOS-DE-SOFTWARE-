@@ -108,7 +108,7 @@ passlib **1.7.4**, python-jose **3.5.0**.
 
 ```
 Navegador               --[HTTP/1.1, HTML + JS + CSS empaquetado]--> Interfaz web :5173
-Interfaz web :5173      --[HTTP/1.1 JSON REST, 43 operaciones; JWT HS256 en cabecera Authorization: Bearer]--> API :8000
+Interfaz web :5173      --[HTTP/1.1 JSON REST, 44 operaciones; JWT HS256 en cabecera Authorization: Bearer]--> API :8000
 API :8000               --[HTTP/1.1 JSON, respuestas con avisos como {codigo, parametros}]--> Interfaz web :5173
 API :8000               --[TCP/5432, protocolo PostgreSQL via psycopg 3, SQL + consultas PostGIS (ST_X, ST_Y, ST_DWithin, indices GIST)]--> Base de datos :5432
 Base de datos :5432     --[filas; geografia como GEOGRAPHY(POINT, 4326)]--> API :8000
@@ -182,7 +182,7 @@ utilidades       --[abren sesion con FabricaDeSesiones]--> (raiz)
 - **`utilidades/` importa `servicios/`** a propósito: los guiones de carga
   reutilizan la validación y el cálculo en vez de duplicarlos, de modo que cargar
   el catálogo aplica exactamente las mismas reglas que el API.
-- **267 de las 550 pruebas no necesitan PostgreSQL** — corregido: **296 de 550**,
+- **267 de las 550 pruebas no necesitan PostgreSQL** — corregido: **304 de 573**,
   medido el 20 de septiembre de 2026. Es consecuencia directa de esta separación:
   `ia/` y los cálculos se prueban solos.
 
@@ -191,7 +191,7 @@ utilidades       --[abren sesion con FabricaDeSesiones]--> (raiz)
 | Elemento | Dónde vive | Por qué está aparte |
 |---|---|---|
 | **11 migraciones Alembic** | `backend/alembic/versions/` | Se ejecutan con `alembic upgrade head`, no se importan desde la aplicación |
-| **19 archivos de prueba** | `backend/pruebas/` | 550 pruebas |
+| **19 archivos de prueba** | `backend/pruebas/` | 573 pruebas |
 | **Cuaderno de experimentos** | `backend/notebooks/` | La medición que sostiene ADR-004 y ADR-005 |
 
 ---

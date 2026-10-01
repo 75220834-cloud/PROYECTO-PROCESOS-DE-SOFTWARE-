@@ -1,6 +1,7 @@
 """Endpoints del itinerario geoespacial (Incremento 4).
 
 - ``POST /api/itinerarios``                   arma el itinerario de un día
+- ``POST /api/itinerarios/viaje``             arma todos los días, sin repetir
 - ``POST /api/itinerarios/reordenar``         recalcula tras arrastrar paradas
 - ``GET  /api/itinerarios/{id}``              recupera uno guardado
 - ``GET  /api/itinerarios``                   lista los del usuario
@@ -21,8 +22,10 @@ from app.esquemas.errores import NO_ENCONTRADO
 from app.esquemas.itinerarios import (
     ParadaPublica,
     RespuestaItinerario,
+    RespuestaViaje,
     SolicitudItinerario,
     SolicitudReordenar,
+    SolicitudViaje,
     TrasladoPublico,
 )
 from app.modelos.itinerario import Itinerario
@@ -34,6 +37,7 @@ from app.servicios.ruteo import (
     ItinerarioCalculado,
     construir_itinerario,
     construir_itinerario_en_orden,
+    construir_viaje,
     guardar_itinerario,
     titulo_por_defecto,
 )
@@ -45,6 +49,15 @@ enrutador = APIRouter(prefix="/api/itinerarios", tags=["itinerarios"])
 #: con las 20 mejores; pedir 40 le da margen para descartar las que no encajan
 #: en el horario o el presupuesto sin quedarse corto de candidatos.
 RECOMENDACIONES_A_CONSIDERAR = 40
+
+#: Cuántas recomendaciones se piden para un **viaje completo**.
+#:
+#: Un viaje necesita más repertorio que un día suelto, porque ningún día puede
+#: repetir los lugares de otro. El tope de candidatos del ruteo es 45, y
+#: alrededor del 20 % del catálogo del MINCETUR no tiene coordenadas y se cae
+#: por el camino: pedir el doble deja margen para llenar ese tope sin que el
+#: último día se quede sin nada por un descarte.
+RECOMENDACIONES_PARA_EL_VIAJE = 90
 
 
 def _preferencia_accesible(sesion: SesionBD, preferencia_id: int, usuario) -> PreferenciaViaje:
@@ -199,6 +212,75 @@ def armar_itinerario(
         itinerario_id = itinerario.id
 
     return _a_respuesta(calculado, preferencia, fecha, titulo, itinerario_id)
+
+
+@enrutador.post(
+    "/viaje",
+    summary="Arma el itinerario de todos los días del viaje, sin repetir lugares",
+    responses=NO_ENCONTRADO,
+)
+def armar_viaje(
+    solicitud: SolicitudViaje,
+    sesion: SesionBD,
+    usuario: UsuarioOpcional,
+    configuracion: ConfiguracionInyectada,
+) -> RespuestaViaje:
+    """Arma de una vez los itinerarios de todos los días de la preferencia.
+
+    ## Por qué un endpoint para el viaje y no uno por día
+
+    Pedir los días de uno en uno **no puede** evitar las repeticiones: cada
+    petición es independiente, el recomendador devuelve lo mismo para la misma
+    preferencia y el optimizador es determinista, así que los días salían
+    idénticos. Para repartir hace falta ver los días juntos, y para verlos
+    juntos hay que pedirlos juntos.
+
+    El endpoint de un día (``POST /api/itinerarios``) sigue existiendo y sin
+    cambios: lo usa el recálculo al reordenar, que trabaja sobre un día
+    concreto y no debe reoptimizar nada.
+    """
+    preferencia = _preferencia_accesible(sesion, solicitud.preferencia_id, usuario)
+
+    recomendacion = recomendar(
+        sesion,
+        preferencia,
+        usar_modelo_recomendacion=configuracion.usar_modelo_recomendacion,
+        usar_modelo_afluencia=configuracion.usar_modelo_afluencia,
+        limite=RECOMENDACIONES_PARA_EL_VIAJE,
+    )
+
+    dias = construir_viaje(
+        sesion,
+        preferencia,
+        recomendacion.recomendaciones,
+        usar_modelo=configuracion.usar_modelo_recomendacion,
+        hora_inicio=solicitud.hora_inicio or HORA_INICIO_PREDETERMINADA,
+        hora_fin=solicitud.hora_fin or HORA_FIN_PREDETERMINADA,
+    )
+
+    respuestas = []
+
+    for dia in dias:
+        titulo = titulo_por_defecto(dia.itinerario.paradas, dia.fecha)
+        itinerario_id = None
+
+        if solicitud.guardar and dia.itinerario.paradas:
+            guardado = guardar_itinerario(
+                sesion, preferencia, dia.itinerario, dia.fecha, titulo, preferencia.usuario_id
+            )
+            sesion.commit()
+            itinerario_id = guardado.id
+
+        respuestas.append(
+            _a_respuesta(dia.itinerario, preferencia, dia.fecha, titulo, itinerario_id)
+        )
+
+    return RespuestaViaje(
+        preferencia_id=preferencia.id,
+        fecha_inicio=preferencia.fecha_inicio,
+        fecha_fin=preferencia.fecha_fin,
+        dias=respuestas,
+    )
 
 
 @enrutador.post(

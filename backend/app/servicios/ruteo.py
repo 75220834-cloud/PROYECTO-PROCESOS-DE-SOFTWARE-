@@ -48,7 +48,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, time
+from datetime import date, time, timedelta
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -160,6 +160,28 @@ PESO_DE_LA_AFINIDAD = 3
 #: la petición empezaría a notarse.
 MAXIMO_CANDIDATOS = 20
 
+#: Tope absoluto de candidatos cuando se planifica un viaje de varios días.
+#:
+#: Un viaje de varios días necesita más repertorio que un día suelto: si al
+#: día 2 solo le quedan los que el día 1 no usó, con 20 candidatos y ritmo
+#: intenso el día 3 se queda sin nada que proponer.
+#:
+#: **Pero no puede crecer sin límite**, y por eso esto es un tope y no una
+#: multiplicación. La matriz crece con el cuadrado: 45 candidatos son 1 980
+#: traslados, que es casi cinco veces el trabajo de un día suelto y sigue
+#: siendo tolerable. El número está puesto aquí, con este comentario, porque la
+#: consecuencia hay que decirla: **un viaje tan largo que no quepa en este tope
+#: tendrá días con menos paradas, y la aplicación lo avisará**. Repetir los
+#: mismos lugares para rellenar sería más cómodo y menos honesto.
+TOPE_DE_CANDIDATOS_DEL_VIAJE = 45
+
+#: Cuántos candidatos de sobra se piden por encima de lo que el ritmo consume.
+#:
+#: El optimizador no usa todos los candidatos que recibe: descarta los que no
+#: caben en el horario o en el presupuesto. Sin margen, un día podría quedarse
+#: corto no por falta de repertorio sino por haber recibido justo lo necesario.
+MARGEN_DE_CANDIDATOS = 6
+
 #: Segundos que se le dan al optimizador.
 #:
 #: **También está medido.** La búsqueda local guiada no demuestra optimalidad,
@@ -231,6 +253,15 @@ class ItinerarioCalculado:
     paradas: list[ParadaCalculada] = field(default_factory=list)
     generado_por: str = "modelo"
     avisos: list[Aviso] = field(default_factory=list)
+
+    #: Cuántos candidatos llegaron al optimizador, ya recortados al tope.
+    #:
+    #: No se publica en el API: existe para que quien planifica un viaje de
+    #: varios días pueda distinguir **por qué** un día salió corto. Si el día
+    #: usó todos los candidatos que tenía, se quedó corto por falta de
+    #: repertorio; si le sobraron, fue por el horario o el presupuesto, y para
+    #: eso ya hay avisos propios.
+    candidatos_considerados: int = 0
 
     tiempo_total_min: int = 0
     costo_min_soles: Decimal = Decimal("0.00")
@@ -863,6 +894,7 @@ def construir_itinerario(
     usar_modelo: bool = True,
     hora_inicio: time = HORA_INICIO_PREDETERMINADA,
     hora_fin: time = HORA_FIN_PREDETERMINADA,
+    maximo_candidatos: int = MAXIMO_CANDIDATOS,
 ) -> ItinerarioCalculado:
     """Construye el itinerario de un día a partir de las recomendaciones.
 
@@ -870,6 +902,10 @@ def construir_itinerario(
     misma variable de configuración que gobierna el recomendador, porque las
     dos son la misma decisión de riesgo: *si el modelo no está disponible o no
     convence, el sistema entrega la alternativa por reglas y sigue en pie*.
+
+    ``maximo_candidatos`` existe para :func:`construir_viaje`, que necesita más
+    repertorio del que basta para un día suelto. Quien pida un día sin indicarlo
+    sigue teniendo el comportamiento medido y documentado de siempre.
     """
     resultado = ItinerarioCalculado(generado_por="modelo" if usar_modelo else "reglas")
 
@@ -884,7 +920,8 @@ def construir_itinerario(
 
     # Se limita el número de candidatos que entran al optimizador: la matriz
     # crece con el cuadrado y por encima de esto la espera deja de compensar.
-    candidatos = sorted(candidatos, key=lambda c: -c.puntaje_relativo)[:MAXIMO_CANDIDATOS]
+    candidatos = sorted(candidatos, key=lambda c: -c.puntaje_relativo)[:maximo_candidatos]
+    resultado.candidatos_considerados = len(candidatos)
 
     # Se cuenta DESPUÉS de recortar: el aviso habla de los recursos que
     # realmente se consideraron, no de los que se descartaron por el camino.
@@ -953,6 +990,132 @@ def construir_itinerario(
     )
 
     return resultado
+
+
+# ---------------------------------------------------------------------------
+# El viaje completo: varios días que no se repiten
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class DiaDelViaje:
+    """Un día del viaje, con su fecha y su itinerario ya calculado."""
+
+    fecha: date
+    itinerario: ItinerarioCalculado
+
+
+def fechas_del_viaje(preferencia: PreferenciaViaje) -> list[date]:
+    """Las fechas del viaje, una por día, de la de inicio a la de fin."""
+    total_dias = (preferencia.fecha_fin - preferencia.fecha_inicio).days + 1
+
+    return [
+        preferencia.fecha_inicio + timedelta(days=desplazamiento)
+        for desplazamiento in range(max(1, total_dias))
+    ]
+
+
+def candidatos_para_el_viaje(dias: int, ritmo: str) -> int:
+    """Cuántos candidatos hace falta pedir para que ningún día repita lugares.
+
+    Lo que consume un viaje es ``paradas por día × días``. Se le suma el margen
+    —el optimizador descarta candidatos que no caben en el horario o en el
+    presupuesto— y se corta en el tope, que es lo que la matriz aguanta.
+    """
+    paradas_por_dia = PARADAS_MAXIMAS_POR_RITMO.get(ritmo, 5)
+    necesarios = paradas_por_dia * max(1, dias) + MARGEN_DE_CANDIDATOS
+
+    return min(TOPE_DE_CANDIDATOS_DEL_VIAJE, max(MAXIMO_CANDIDATOS, necesarios))
+
+
+def construir_viaje(
+    sesion: Session,
+    preferencia: PreferenciaViaje,
+    recomendaciones: list,
+    usar_modelo: bool = True,
+    hora_inicio: time = HORA_INICIO_PREDETERMINADA,
+    hora_fin: time = HORA_FIN_PREDETERMINADA,
+) -> list[DiaDelViaje]:
+    """Construye el itinerario de **todos** los días del viaje, sin repetir.
+
+    ## Por qué esto existe
+
+    Hasta aquí cada día se armaba por separado, y por separado significaba
+    también *sin saber que los otros días existen*: la misma preferencia daba
+    las mismas recomendaciones, el optimizador es determinista, y un viaje de
+    tres días devolvía **tres veces el mismo día**, con los mismos lugares, las
+    mismas horas y los mismos costos. Era un defecto, no una decisión.
+
+    ## Cómo se resuelve
+
+    En cascada, que es además lo que hace una persona al planificar:
+
+    1. El **día 1** se arma con todo el repertorio: es el mejor día posible.
+    2. Los lugares que el día 1 usó **salen del repertorio**.
+    3. El **día 2** se arma con lo que queda: es el mejor día posible de lo que
+       sobra. Y así hasta el último.
+
+    Cada día conserva lo que ya tenía: su propio orden, sus propios horarios
+    —con el horario de atención del día de la semana que le toca— y sus propios
+    totales. Lo único que cambia es que ninguno puede proponer lo que otro ya
+    propuso.
+
+    ## Lo que pasa cuando se acaban los lugares
+
+    No se repite nada para rellenar. El día sale con las paradas que haya —o sin
+    ninguna— y **se avisa de por qué**. Un día con dos paradas y su explicación
+    es más útil que un día con seis que son las del día 1 otra vez.
+    """
+    fechas = fechas_del_viaje(preferencia)
+    paradas_por_dia = PARADAS_MAXIMAS_POR_RITMO.get(preferencia.ritmo, 5)
+    maximo_candidatos = candidatos_para_el_viaje(len(fechas), preferencia.ritmo)
+
+    # El repertorio del que van comiendo los días. Es una copia: la lista que
+    # nos pasaron es del llamador y no es nuestra para vaciarla.
+    disponibles = list(recomendaciones)
+
+    dias: list[DiaDelViaje] = []
+
+    for fecha in fechas:
+        if not disponibles:
+            # No queda nada que no esté ya en un día anterior. Se devuelve el
+            # día vacío con su motivo en vez de repetir lo del día 1.
+            vacio = ItinerarioCalculado(generado_por="modelo" if usar_modelo else "reglas")
+            vacio.avisos.append(aviso("sin_lugares_sin_repetir"))
+            dias.append(DiaDelViaje(fecha=fecha, itinerario=vacio))
+            continue
+
+        itinerario = construir_itinerario(
+            sesion,
+            preferencia,
+            disponibles,
+            fecha,
+            usar_modelo=usar_modelo,
+            hora_inicio=hora_inicio,
+            hora_fin=hora_fin,
+            maximo_candidatos=maximo_candidatos,
+        )
+
+        # El día salió corto **y** se llevó todo lo que tenía: entonces lo que
+        # le faltó fue repertorio, no horas ni dinero. Si le sobraban
+        # candidatos, el motivo es otro y ya tiene su propio aviso.
+        logradas = len(itinerario.paradas)
+        salio_corto = logradas < paradas_por_dia
+        uso_todo_lo_que_tenia = itinerario.candidatos_considerados <= logradas
+
+        if logradas and salio_corto and uso_todo_lo_que_tenia:
+            itinerario.avisos.append(
+                aviso("lugares_limitados", count=logradas, maximo=paradas_por_dia)
+            )
+
+        usados = {parada.candidato.recurso_id for parada in itinerario.paradas}
+
+        if usados:
+            disponibles = [r for r in disponibles if r.recurso_id not in usados]
+
+        dias.append(DiaDelViaje(fecha=fecha, itinerario=itinerario))
+
+    return dias
 
 
 def _explicar_si_el_dia_quedo_corto(

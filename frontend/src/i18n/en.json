@@ -265,7 +265,7 @@
   "itinerario": {
     "titulo": "Your itinerary",
     "calculando": "Building your itinerary…",
-    "calculandoDetalle": "We are computing the routes over the valley's real road network and the elevation of each leg. This takes a few seconds.",
+    "calculandoDetalle": "We are building every day of the trip at once, computing the routes over the valley's real road network and the elevation of each leg. They are built together so that no day repeats another day's places, so the more days, the longer it takes.",
     "identificadorInvalido": "That preference identifier is not valid.",
     "errorGenerico": "The itinerary could not be built.",
     "volverAResultados": "Back to the recommendations",
@@ -554,6 +554,9 @@
     "sin_horario_algunos": "{{count}} of the {{total}} resources considered have no opening hours published in MINCETUR's inventory. For those, the itinerary only guarantees the visit fits within the day: check the opening hours before you go.",
     "sin_coordenadas": "None of the recommendations has coordinates, so no route can be built. MINCETUR's inventory does not georeference all of its resources.",
     "sin_itinerario_posible": "No itinerary could be built within the time and budget you gave.",
+    "sin_lugares_sin_repetir": "This day has no plan: there are no places left that match what you asked for and are not already in an earlier day. No day repeats another day's places, so rather than filling it with the same ones, we are telling you. Try shortening the trip, picking more interests, or changing the pace.",
+    "lugares_limitados_one": "This day has {{count}} stop instead of the {{maximo}} your pace allows: the places that match what you asked for are running out, and no day repeats another day's places.",
+    "lugares_limitados_other": "This day has {{count}} stops instead of the {{maximo}} your pace allows: the places that match what you asked for are running out, and no day repeats another day's places.",
     "resuelto_por_reglas": "The optimiser found no solution under these constraints, so the itinerary was built with the rules-based alternative (nearest neighbour).",
     "paradas_recortadas_one": "{{count}} stop was dropped when travel times were recomputed on the real road network: with exact times it no longer fitted before {{hora}}.",
     "paradas_recortadas_other": "{{count}} stops were dropped when travel times were recomputed on the real road network: with exact times they no longer fitted before {{hora}}.",

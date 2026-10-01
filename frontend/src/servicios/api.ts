@@ -647,6 +647,43 @@ export function armarItinerario(
   );
 }
 
+/** El viaje completo: un itinerario por cada día, sin lugares repetidos. */
+export interface RespuestaViaje {
+  preferencia_id: number;
+  fecha_inicio: string;
+  fecha_fin: string;
+  dias: RespuestaItinerario[];
+}
+
+/**
+ * Arma de una vez los itinerarios de **todos** los días del viaje.
+ *
+ * Se piden juntos porque de uno en uno no se puede evitar que se repitan: cada
+ * petición sería independiente, el recomendador devuelve lo mismo para la misma
+ * preferencia y el optimizador es determinista, así que los días salían
+ * idénticos. Repartir los lugares exige verlos todos a la vez.
+ *
+ * Como efecto secundario, cambiar de día en la pantalla ya no pide nada al
+ * servidor: el día que falta ya está en la respuesta.
+ */
+export function armarViaje(
+  preferenciaId: number,
+  token: string | null,
+  opciones: Omit<OpcionesItinerario, 'fecha' | 'titulo'> = {},
+): Promise<RespuestaViaje> {
+  return enviar<RespuestaViaje>(
+    '/api/itinerarios/viaje',
+    'POST',
+    {
+      preferencia_id: preferenciaId,
+      hora_inicio: opciones.horaInicio,
+      hora_fin: opciones.horaFin,
+      guardar: opciones.guardar ?? false,
+    },
+    token,
+  );
+}
+
 /**
  * Recalcula el itinerario con el orden que eligió el visitante.
  *

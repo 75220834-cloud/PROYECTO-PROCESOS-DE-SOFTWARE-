@@ -666,3 +666,337 @@ class TestGuardarEsIdempotente:
 
         assert primero["itinerario_id"] != segundo["itinerario_id"]
         assert catalogo_del_valle.query(Itinerario).count() == 2
+
+
+def armar_viaje(cliente: TestClient, preferencia_id: int, **extra) -> dict:
+    """Llama al endpoint del viaje completo y devuelve el cuerpo."""
+    respuesta = cliente.post(
+        "/api/itinerarios/viaje", json={"preferencia_id": preferencia_id, **extra}
+    )
+    assert respuesta.status_code == 200, respuesta.text
+    return respuesta.json()
+
+
+class TestArmarViaje:
+    """El viaje completo: un día por fecha, y ningún lugar en dos días.
+
+    ## Por qué existe esta clase
+
+    Hasta aquí el itinerario se pedía día a día, y eso tenía un defecto que
+    ninguna prueba cazaba: cada petición era independiente, el recomendador
+    devuelve lo mismo para la misma preferencia y el optimizador es
+    determinista, así que **un viaje de tres días devolvía tres veces el mismo
+    día**, con los mismos lugares, las mismas horas y los mismos costos.
+
+    Las pruebas que había miraban un día en aislamiento y todas pasaban. La
+    primera prueba de aquí abajo es la que faltaba.
+    """
+
+    def test_devuelve_un_dia_por_cada_fecha_del_viaje(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        cuerpo = armar_viaje(cliente, preferencia.id)
+
+        esperadas = [
+            (preferencia.fecha_inicio + timedelta(days=n)).isoformat()
+            for n in range((preferencia.fecha_fin - preferencia.fecha_inicio).days + 1)
+        ]
+
+        assert [dia["fecha"] for dia in cuerpo["dias"]] == esperadas
+
+    def test_ningun_lugar_aparece_en_dos_dias(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """**La prueba que faltaba.** Es la que falla si vuelve el defecto.
+
+        No comprueba que los días sean distintos —eso podría cumplirse cambiando
+        solo el orden—, sino lo que de verdad importaba: que **ningún recurso se
+        proponga dos veces** en el mismo viaje. Si alguien quitara el reparto,
+        los tres días volverían a traer los mismos lugares y esto caería.
+        """
+        cuerpo = armar_viaje(cliente, preferencia.id)
+
+        vistos: dict[int, str] = {}
+
+        for dia in cuerpo["dias"]:
+            for parada in dia["paradas"]:
+                recurso = parada["recurso_id"]
+
+                assert recurso not in vistos, (
+                    f"«{parada['nombre']}» sale el {dia['fecha']} y ya salía "
+                    f"el {vistos[recurso]}: el viaje está repitiendo lugares"
+                )
+
+                vistos[recurso] = dia["fecha"]
+
+    def test_el_primer_dia_se_lleva_los_mejores(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """El reparto es en cascada, no un troceado arbitrario.
+
+        El día 1 es el mejor día posible; cada siguiente es el mejor de lo que
+        sobró. Así que el mejor puntaje del día 1 no puede ser peor que el del
+        día 2: si lo fuera, el reparto estaría dejando lo bueno para después.
+        """
+        dias = [dia for dia in armar_viaje(cliente, preferencia.id)["dias"] if dia["paradas"]]
+
+        if len(dias) < 2:
+            pytest.skip("el catálogo de prueba no da para dos días con paradas")
+
+        mejores = [max(p["puntaje_relativo"] for p in dia["paradas"]) for dia in dias]
+
+        assert mejores == sorted(mejores, reverse=True)
+
+    def test_cuando_se_agotan_los_lugares_el_dia_lo_dice(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """Un día sin lugares nuevos sale vacío **y con su motivo**.
+
+        El catálogo de estas pruebas tiene seis recursos y el ritmo es moderado,
+        así que un viaje de tres días se queda sin repertorio. Lo que no puede
+        pasar es que se rellene repitiendo lo del día 1 ni que salga vacío sin
+        explicar por qué.
+        """
+        dias = armar_viaje(cliente, preferencia.id)["dias"]
+
+        vacios = [dia for dia in dias if not dia["paradas"]]
+
+        if not vacios:
+            pytest.skip("el catálogo de prueba alcanzó para todos los días")
+
+        for dia in vacios:
+            assert "sin_lugares_sin_repetir" in codigos(dia["avisos"])
+
+    def test_el_aviso_de_repertorio_corto_dice_cuantas_y_cuantas_cabian(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """Si se avisa de que el día salió corto, el aviso trae los dos números."""
+        dias = armar_viaje(cliente, preferencia.id)["dias"]
+
+        con_aviso = [dia for dia in dias if "lugares_limitados" in codigos(dia["avisos"])]
+
+        if not con_aviso:
+            pytest.skip("ningún día se quedó corto por falta de repertorio")
+
+        for dia in con_aviso:
+            parametros = parametros_de(dia["avisos"], "lugares_limitados")
+
+            assert parametros["count"] == len(dia["paradas"])
+            assert parametros["maximo"] > parametros["count"]
+
+    def test_cada_dia_declara_como_se_genero(
+        self, cliente: TestClient, preferencia: PreferenciaViaje
+    ):
+        """La trazabilidad de la regla de oro de la IA, día por día."""
+        for dia in armar_viaje(cliente, preferencia.id)["dias"]:
+            assert dia["generado_por"] in ("modelo", "reglas")
+
+    def test_un_viaje_de_un_solo_dia_devuelve_un_solo_dia(
+        self, cliente: TestClient, catalogo_del_valle: Session
+    ):
+        de_un_dia = PreferenciaViaje(
+            usuario_id=None,
+            fecha_inicio=SABADO,
+            fecha_fin=SABADO,
+            distrito_origen="HUANCAYO",
+            presupuesto_soles=Decimal("450.00"),
+            intereses=["arqueologia", "naturaleza"],
+            movilidad="transporte_publico",
+            requiere_accesibilidad=False,
+            idioma="es",
+            ritmo="moderado",
+        )
+        catalogo_del_valle.add(de_un_dia)
+        catalogo_del_valle.commit()
+        catalogo_del_valle.refresh(de_un_dia)
+
+        cuerpo = armar_viaje(cliente, de_un_dia.id)
+
+        assert len(cuerpo["dias"]) == 1
+        assert cuerpo["dias"][0]["fecha"] == SABADO.isoformat()
+
+    def test_guardar_crea_un_itinerario_por_dia_con_paradas(
+        self, cliente: TestClient, preferencia: PreferenciaViaje, catalogo_del_valle: Session
+    ):
+        cuerpo = armar_viaje(cliente, preferencia.id, guardar=True)
+
+        con_paradas = [dia for dia in cuerpo["dias"] if dia["paradas"]]
+
+        assert con_paradas, "no se armó ningún día con paradas"
+        assert all(dia["itinerario_id"] is not None for dia in con_paradas)
+        assert catalogo_del_valle.query(Itinerario).count() == len(con_paradas)
+
+    def test_los_dias_vacios_no_se_guardan(
+        self, cliente: TestClient, preferencia: PreferenciaViaje, catalogo_del_valle: Session
+    ):
+        """Un día sin paradas no es un itinerario: no se guarda una fila vacía."""
+        cuerpo = armar_viaje(cliente, preferencia.id, guardar=True)
+
+        for dia in cuerpo["dias"]:
+            if not dia["paradas"]:
+                assert dia["itinerario_id"] is None
+
+    def test_una_preferencia_que_no_existe_da_404(self, cliente: TestClient):
+        respuesta = cliente.post("/api/itinerarios/viaje", json={"preferencia_id": 999999})
+
+        assert respuesta.status_code == 404
+        assert respuesta.json()["detail"]["codigo"] == "sin_preferencia"
+
+
+#: Quince recursos naturales repartidos alrededor de Huancayo.
+#:
+#: El catálogo de seis recursos de arriba no da para comprobar lo que de verdad
+#: importa del viaje: **varios días llenos que no se solapan**. Con seis
+#: recursos y el filtro de intereses, el día 1 se lleva lo que hay y los demás
+#: salen vacíos, que es correcto pero deja sin probar el caso normal.
+#:
+#: Las descripciones llevan a propósito palabras de la lista de «naturaleza»
+#: —laguna, paisaje, cerro, río— porque el recomendador puntúa sobre el texto:
+#: unos recursos sin esas palabras no llegarían a ser candidatos y la prueba
+#: comprobaría el filtro en vez del reparto.
+RECURSOS_NATURALES_DE_PRUEBA = [
+    (
+        f"99{100 + numero}",
+        f"Laguna de prueba {numero}",
+        -12.00 - numero * 0.02,
+        -75.18 - numero * 0.01,
+    )
+    for numero in range(15)
+]
+
+
+@pytest.fixture
+def catalogo_amplio(sesion: Session) -> Session:
+    """Quince recursos naturales validados, suficientes para varios días."""
+    for codigo, nombre, lat, lon in RECURSOS_NATURALES_DE_PRUEBA:
+        sesion.add(
+            RecursoTuristico(
+                codigo_mincetur=codigo,
+                nombre=nombre,
+                provincia="Huancayo",
+                distrito="HUANCAYO",
+                categoria="1. SITIOS NATURALES",
+                tipo="Prueba",
+                subtipo="Prueba",
+                descripcion_es=(
+                    f"{nombre}: laguna de aguas claras en un paisaje de cerros, "
+                    "con flora y fauna del valle junto al rio."
+                ),
+                ubicacion=func.ST_GeogFromText(f"SRID=4326;POINT({lon} {lat})"),
+                altitud_msnm=3300,
+                fecha_corte=SABADO,
+                esta_validado=True,
+                esta_vigente=True,
+            )
+        )
+
+    sesion.commit()
+    return sesion
+
+
+@pytest.fixture
+def cliente_amplio(catalogo_amplio: Session) -> TestClient:
+    aplicacion.dependency_overrides[obtener_sesion] = lambda: catalogo_amplio
+
+    with TestClient(aplicacion) as cliente_de_prueba:
+        yield cliente_de_prueba
+
+    aplicacion.dependency_overrides.clear()
+
+
+@pytest.fixture
+def preferencia_de_tres_dias(catalogo_amplio: Session) -> PreferenciaViaje:
+    """Tres días a ritmo relajado: nueve paradas de las quince disponibles."""
+    fila = PreferenciaViaje(
+        usuario_id=None,
+        fecha_inicio=SABADO,
+        fecha_fin=SABADO + timedelta(days=2),
+        distrito_origen="HUANCAYO",
+        presupuesto_soles=Decimal("900.00"),
+        intereses=["naturaleza"],
+        movilidad="taxi",
+        requiere_accesibilidad=False,
+        idioma="es",
+        ritmo="relajado",
+    )
+    catalogo_amplio.add(fila)
+    catalogo_amplio.commit()
+    catalogo_amplio.refresh(fila)
+
+    return fila
+
+
+class TestViajeConRepertorioSuficiente:
+    """El caso normal: tres días llenos, distintos entre sí y sin solaparse.
+
+    Es el escenario que el visitante va a ver de verdad, y el que estaba roto:
+    los tres días salían idénticos. Con quince recursos y ritmo relajado hay
+    repertorio de sobra, así que si dos días coinciden no es por falta de
+    lugares: es porque el reparto no funciona.
+    """
+
+    def test_los_tres_dias_tienen_paradas(
+        self, cliente_amplio: TestClient, preferencia_de_tres_dias: PreferenciaViaje
+    ):
+        dias = armar_viaje(cliente_amplio, preferencia_de_tres_dias.id)["dias"]
+
+        assert len(dias) == 3
+        assert all(dia["paradas"] for dia in dias), [len(d["paradas"]) for d in dias]
+
+    def test_ningun_lugar_se_repite_entre_los_tres_dias(
+        self, cliente_amplio: TestClient, preferencia_de_tres_dias: PreferenciaViaje
+    ):
+        dias = armar_viaje(cliente_amplio, preferencia_de_tres_dias.id)["dias"]
+
+        por_dia = [{p["recurso_id"] for p in dia["paradas"]} for dia in dias]
+        todos = [recurso for conjunto in por_dia for recurso in conjunto]
+
+        assert len(todos) == len(set(todos)), (
+            "hay lugares repetidos entre días: " f"{[sorted(c) for c in por_dia]}"
+        )
+
+    def test_los_dias_no_son_el_mismo_itinerario(
+        self, cliente_amplio: TestClient, preferencia_de_tres_dias: PreferenciaViaje
+    ):
+        """La comprobación directa del defecto, en los términos en que se vio.
+
+        Lo que se reportó no fue «se repite un lugar»: fue que el día 2 y el
+        día 3 eran **el mismo día** que el día 1, con los mismos nombres y los
+        mismos horarios. Esto compara las listas completas.
+        """
+        dias = armar_viaje(cliente_amplio, preferencia_de_tres_dias.id)["dias"]
+
+        listas = [tuple(p["recurso_id"] for p in dia["paradas"]) for dia in dias]
+
+        assert len(set(listas)) == len(listas), f"dos días traen el mismo plan: {listas}"
+
+    def test_ninguno_de_los_dias_avisa_de_falta_de_repertorio(
+        self, cliente_amplio: TestClient, preferencia_de_tres_dias: PreferenciaViaje
+    ):
+        """Con quince recursos para nueve paradas, no debe faltar repertorio.
+
+        Si este aviso saliera aquí, significaría que el reparto está consumiendo
+        más candidatos de los que usa, y los últimos días quedarían pobres sin
+        motivo.
+        """
+        dias = armar_viaje(cliente_amplio, preferencia_de_tres_dias.id)["dias"]
+
+        for dia in dias:
+            emitidos = codigos(dia["avisos"])
+
+            assert "sin_lugares_sin_repetir" not in emitidos
+            assert "lugares_limitados" not in emitidos
+
+    def test_cada_dia_cuadra_sus_propios_horarios(
+        self, cliente_amplio: TestClient, preferencia_de_tres_dias: PreferenciaViaje
+    ):
+        """Repartir no puede estropear lo que cada día ya garantizaba."""
+        dias = armar_viaje(cliente_amplio, preferencia_de_tres_dias.id)["dias"]
+
+        for dia in dias:
+            paradas = dia["paradas"]
+
+            assert [p["orden"] for p in paradas] == list(range(len(paradas)))
+
+            for anterior, siguiente in zip(paradas, paradas[1:], strict=False):
+                assert siguiente["hora_llegada"] >= anterior["hora_salida"]

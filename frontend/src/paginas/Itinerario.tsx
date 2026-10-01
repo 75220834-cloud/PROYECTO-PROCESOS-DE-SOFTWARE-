@@ -20,6 +20,13 @@
  *
  * 3. **Los avisos van arriba y no al final.** Un aviso de que un tramo se
  *    estimó, o de que se va a subir a 4 000 m, no es una nota al pie.
+ *
+ * 4. **El viaje se pide entero, no día a día.** Pedir un día por pestaña
+ *    parecía lo natural y era el origen de un defecto: cada petición era
+ *    independiente, así que el servidor no podía saber qué lugares ya estaban
+ *    en otro día y los tres días salían idénticos. Ahora llegan juntos, cada
+ *    uno con lo que los anteriores no usaron, y cambiar de pestaña es
+ *    instantáneo porque no hay nada que pedir.
  */
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -31,12 +38,7 @@ import LineaDeTiempo from '@/componentes/LineaDeTiempo';
 import MapaItinerario from '@/componentes/MapaItinerario';
 import TotalesDelDia from '@/componentes/TotalesDelDia';
 import { useSesion } from '@/hooks/useSesion';
-import {
-  armarItinerario,
-  obtenerPreferencia,
-  reordenarItinerario,
-  type RespuestaItinerario,
-} from '@/servicios/api';
+import { armarViaje, reordenarItinerario, type RespuestaItinerario } from '@/servicios/api';
 import { formatearFecha } from '@/utilidades/formato';
 import { redactarAviso } from '@/utilidades/avisos';
 import { traducirError } from '@/utilidades/avisos';
@@ -66,26 +68,34 @@ export function Itinerario() {
    */
   const [ordenOptimista, establecerOrdenOptimista] = useState<number[] | null>(null);
 
-  const { data: preferencia } = useQuery({
-    queryKey: ['preferencia', identificador],
-    queryFn: () => obtenerPreferencia(identificador, token),
-    enabled: habilitado,
-  });
-
+  /**
+   * El viaje entero, todos sus días de una vez.
+   *
+   * **La fecha no está en la clave de la consulta a propósito.** Antes había una
+   * petición por día, y eso era exactamente lo que hacía que los días saliesen
+   * repetidos: cada petición era independiente, así que el servidor no podía
+   * saber qué lugares ya estaban en otro día. Ahora se piden juntos, el reparto
+   * se decide con los días delante, y cambiar de pestaña no pide nada: el día
+   * que falta ya está aquí.
+   */
   const {
-    data: calculado,
+    data: viaje,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ['itinerario', identificador, fecha],
-    queryFn: () => armarItinerario(identificador, token, { fecha }),
+    queryKey: ['viaje', identificador],
+    queryFn: () => armarViaje(identificador, token),
     enabled: habilitado,
     retry: false,
     // El ruteo tarda unos segundos: no tiene sentido rehacerlo cada vez que la
     // ventana recupera el foco.
     refetchOnWindowFocus: false,
   });
+
+  /** El día que se está mirando, de los que ya vinieron en la respuesta. */
+  const calculado =
+    viaje?.dias.find((dia) => dia.fecha === fecha) ?? viaje?.dias[0] ?? undefined;
 
   const reordenar = useMutation({
     mutationFn: (recursosEnOrden: number[]) =>
@@ -180,7 +190,12 @@ export function Itinerario() {
     );
   }
 
-  const dias = diasDelViaje(preferencia?.fecha_inicio, preferencia?.fecha_fin);
+  // Las fechas salen de la propia respuesta y no se calculan aquí. Antes se
+  // construían en el navegador sumando días a la fecha de inicio, y había que
+  // cuidar la zona horaria para que no se desplazaran; ahora la lista de días
+  // es la que el servidor usó para repartir los lugares, así que las pestañas
+  // y el reparto no pueden discrepar.
+  const dias = viaje?.dias.map((dia) => dia.fecha) ?? [];
 
   return (
     <main className="mx-auto max-w-contenido px-4 py-10 sm:px-6">
@@ -206,8 +221,11 @@ export function Itinerario() {
         </p>
       </motion.header>
 
-      {/* Selector de día, solo si el viaje dura más de uno. Cada día se
-          optimiza por separado: el visitante duerme entre medias. */}
+      {/* Selector de día, solo si el viaje dura más de uno. Cada día tiene su
+          propio orden y su propio horario —el visitante duerme entre medias—,
+          pero **ninguno repite los lugares de otro**: el servidor los reparte
+          viendo los días juntos. Cambiar de pestaña no pide nada: ya están
+          todos en la respuesta. */}
       {dias.length > 1 && (
         <nav className="mt-5 flex flex-wrap gap-2" aria-label={t('itinerario.elegirDia')}>
           {dias.map((dia, indice) => {
@@ -339,28 +357,3 @@ export function Itinerario() {
   );
 }
 
-/**
- * Devuelve las fechas del viaje, una por día, en formato ISO.
- *
- * Se construyen sumando días a la fecha de inicio en UTC para que no se
- * desplacen por la zona horaria: en Perú (UTC−5), crear una fecha a partir de
- * `2026-09-12` y leer su día local daría el 11.
- */
-function diasDelViaje(inicio?: string, fin?: string): string[] {
-  if (!inicio || !fin) return [];
-
-  const primero = new Date(`${inicio}T12:00:00Z`);
-  const ultimo = new Date(`${fin}T12:00:00Z`);
-
-  const dias: string[] = [];
-
-  for (
-    let dia = new Date(primero);
-    dia <= ultimo && dias.length < 31;
-    dia.setUTCDate(dia.getUTCDate() + 1)
-  ) {
-    dias.push(dia.toISOString().slice(0, 10));
-  }
-
-  return dias;
-}

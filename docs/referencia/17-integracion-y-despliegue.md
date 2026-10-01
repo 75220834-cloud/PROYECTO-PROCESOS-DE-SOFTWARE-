@@ -74,8 +74,8 @@ la máquina automática.
 cd backend && .venv/Scripts/python.exe -m pytest -q
 ```
 
-**550 pruebas.** Tarda **3 minutos y 11 segundos** medidos. Desde este cambio,
-además, falla si la cobertura baja del 60 %.
+**573 pruebas.** Tarda **4 minutos y 46 segundos** medidos en la laptop. Desde
+este cambio, además, falla si la cobertura baja del 60 %.
 
 Última ejecución completa:
 
@@ -191,7 +191,7 @@ Si cualquiera de los dos falla, la ejecución entera sale en rojo.
 | **3 · Instalar dependencias** | **Que el proyecto se instala desde cero.** Si `pyproject.toml` se hubiera quedado sin declarar algo que en la laptop está instalado «de antes», aquí se cae |
 | **4 · Crear las extensiones** | Que `postgis`, `unaccent` y `pg_trgm` se instalan aplicando **el archivo real del repositorio** |
 | **5 · Migraciones de Alembic** | **La cadena entera desde una base vacía.** Esto la laptop no lo comprueba nunca |
-| **6 · pytest con cobertura** | Las 550 pruebas **y** que la cobertura no bajó del 60 % |
+| **6 · pytest con cobertura** | Las 573 pruebas **y** que la cobertura no bajó del 60 % |
 | **7 · ruff** | Imports sin usar, nombres indefinidos, orden de imports, trampas frecuentes |
 | **8 · black --check** | Que el formato es el que black produciría. Va al final a propósito: un fallo de formato no debe esconder uno real |
 
@@ -275,35 +275,41 @@ disparada por el push de `bc17ea7`, **verde al primer intento**.
 
 | Trabajo | Duración | Paso más caro |
 |---|---|---|
-| Backend | **177 s** | Instalar dependencias (55 s) y pruebas (81 s) |
-| Frontend | **31 s** | Pruebas de vitest (7 s) |
-| **Total de la ejecución** | **3 min 3 s** | Los dos trabajos corren a la vez |
+| Backend | **202 s** | Instalar dependencias (44 s) y pruebas (118 s) |
+| Frontend | **31 s** | Pruebas de vitest (9 s) |
+| **Total de la ejecución** | **3 min 26 s** | Los dos trabajos corren a la vez |
 
 Desglose del trabajo del backend, que es el que manda:
 
 | Paso | Tiempo |
 |---|---|
-| Levantar el contenedor de PostGIS | 27 s |
-| Descargar el código | 1 s |
-| Preparar Python 3.14 | 1 s |
-| **Instalar las dependencias** | **55 s** |
-| Crear las extensiones | 1 s |
+| Levantar el contenedor de PostGIS | 26 s |
+| Descargar el código | 3 s |
+| Preparar Python 3.14 | 4 s |
+| **Instalar las dependencias** | **44 s** |
+| Crear las extensiones | < 1 s |
 | **Las 11 migraciones desde vacío** | **1 s** |
-| **Las 550 pruebas con cobertura** | **81 s** |
+| **Las 573 pruebas con cobertura** | **118 s** |
 | ruff | < 1 s |
 | black `--check` | 2 s |
 
 Dos cosas llaman la atención en esa tabla, y las dos son buenas noticias:
 
-**Las pruebas tardan 81 s en GitHub y 191 s en la laptop.** No es que la
+**Las pruebas tardan 118 s en GitHub y 286 s en la laptop.** No es que la
 máquina de GitHub sea el doble de rápida: es que **no tiene la red vial
 descargada**, así que los traslados se calculan en línea recta en vez de
 recorrer un grafo de 28 MB. Es el mismo motivo por el que allí la cobertura
 sale algo más baja.
 
-**Instalar las dependencias cuesta más que ejecutar todas las pruebas.** Esos
-55 s bajarán en las siguientes ejecuciones, porque `cache: pip` guarda las
-descargas de una ejecución a la siguiente.
+**Instalar las dependencias ya no cuesta más que ejecutar las pruebas.** En la
+primera ejecución eran 55 s contra 81 s; ahora son 44 s contra 118 s. Las dos
+cosas se movieron: la instalación baja porque `cache: pip` guarda las descargas
+entre ejecuciones, y las pruebas suben porque son 23 más, entre ellas las del
+viaje de varios días, que arman tres itinerarios en cada caso.
+
+> **Estos números son de la ejecución [36814890817](https://github.com/75220834-cloud/PROYECTO-PROCESOS-DE-SOFTWARE-/actions/runs/36814890817)**,
+> del 1 de octubre de 2026, verde al primer intento. Los anteriores eran de la
+> primera ejecución de la CI, con 550 pruebas.
 
 ---
 

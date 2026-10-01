@@ -182,8 +182,10 @@ utilidades       --[abren sesion con FabricaDeSesiones]--> (raiz)
 - **`utilidades/` importa `servicios/`** a propósito: los guiones de carga
   reutilizan la validación y el cálculo en vez de duplicarlos, de modo que cargar
   el catálogo aplica exactamente las mismas reglas que el API.
-- **267 de las 550 pruebas no necesitan PostgreSQL** — corregido: **304 de 573**,
-  medido el 20 de septiembre de 2026. Es consecuencia directa de esta separación:
+- **Una primera versión de este documento decía «267 de las 550 pruebas no
+  necesitan PostgreSQL»** — corregido: **304 de 573**, medido el 30 de
+  septiembre de 2026 ejecutando la suite contra un host inexistente
+  (`304 passed, 269 skipped`). Es consecuencia directa de esta separación:
   `ia/` y los cálculos se prueban solos.
 
 ### Componentes externos al grafo

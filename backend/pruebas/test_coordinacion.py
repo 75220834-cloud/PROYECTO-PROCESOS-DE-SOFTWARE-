@@ -79,6 +79,7 @@ def crear_servicio(
     cupo: int = 10,
     antelacion: int = 24,
     dias: tuple[int, ...] = (0, 1, 2, 3, 4, 5, 6),
+    publicado: bool = True,
 ) -> Servicio:
     servicio = Servicio(
         proveedor_id=proveedor.id,
@@ -94,7 +95,7 @@ def crear_servicio(
         fecha_referencia=date(2026, 8, 29),
         idiomas="es",
         es_accesible=True,
-        esta_publicado=True,
+        esta_publicado=publicado,
     )
     sesion.add(servicio)
     sesion.flush()
@@ -882,3 +883,380 @@ def test_una_solicitud_puede_venir_de_un_itinerario(
     solicitud = pedir(cliente, escenario["servicio_a"].id, itinerario_id=itinerario.id)
 
     assert solicitud["itinerario_id"] == itinerario.id
+
+
+# ---------------------------------------------------------------------------
+# Filtros del catálogo y del directorio
+#
+# Son `if` de una línea cada uno, y precisamente por eso se les pasa por
+# encima: un filtro que no filtra devuelve la lista completa, que es una
+# respuesta plausible. Estas pruebas comparan contra la lista sin filtrar.
+# ---------------------------------------------------------------------------
+
+
+class TestFiltrosDelCatalogoDeServicios:
+    def test_filtra_por_tipo_de_servicio(self, cliente: TestClient, escenario: dict):
+        de_otro_tipo = cliente.get(f"/api/servicios?tipo={TipoServicio.GUIADO.value}")
+        del_tipo_que_hay = cliente.get(f"/api/servicios?tipo={TipoServicio.TALLER.value}")
+
+        assert de_otro_tipo.json() == []
+        assert len(del_tipo_que_hay.json()) == 2
+
+    def test_filtra_por_distrito_sin_importar_las_mayusculas(
+        self, cliente: TestClient, escenario: dict
+    ):
+        """El visitante escribe «huancayo»; el inventario guarda «HUANCAYO»."""
+        respuesta = cliente.get("/api/servicios?distrito=huancayo")
+
+        nombres = [s["nombre"] for s in respuesta.json()]
+        assert nombres == ["Servicio de A"], "el de Concepcion no debe salir"
+
+    def test_filtra_por_el_recurso_al_que_acompana(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        """Un taller junto a la laguna no sirve a quien va al convento."""
+        from app.modelos.catalogo import RecursoTuristico
+
+        recurso = RecursoTuristico(
+            codigo_mincetur="970001",
+            nombre="Laguna de prueba",
+            provincia="Chupaca",
+            distrito="AHUAC",
+            esta_validado=True,
+            esta_vigente=True,
+        )
+        sesion.add(recurso)
+        sesion.flush()
+
+        escenario["servicio_a"].recurso_id = recurso.id
+        sesion.commit()
+
+        del_recurso = cliente.get(f"/api/servicios?recurso_id={recurso.id}").json()
+        de_otro_recurso = cliente.get(f"/api/servicios?recurso_id={recurso.id + 999}").json()
+
+        assert [s["nombre"] for s in del_recurso] == ["Servicio de A"]
+        assert de_otro_recurso == []
+
+
+class TestDirectorioDeProveedores:
+    def test_por_defecto_solo_salen_los_reales(self, cliente: TestClient, escenario: dict):
+        """Los de demostración no tienen convenio: no se ofrecen como reales."""
+        assert cliente.get("/api/proveedores").json() == []
+
+    def test_con_solo_reales_falso_salen_tambien_los_de_demostracion(
+        self, cliente: TestClient, escenario: dict
+    ):
+        respuesta = cliente.get("/api/proveedores?solo_reales=false")
+
+        assert len(respuesta.json()) == 2
+
+    def test_filtra_por_distrito_de_forma_parcial(self, cliente: TestClient, escenario: dict):
+        """Parcial a propósito: «concep» tiene que encontrar «CONCEPCION».
+
+        Los nombres de distrito del directorio del MINCETUR no siempre llevan
+        tilde ni se escriben igual que los teclea el visitante.
+        """
+        respuesta = cliente.get("/api/proveedores?solo_reales=false&distrito=concep")
+
+        assert [p["nombre"] for p in respuesta.json()] == ["Proveedor B"]
+
+    def test_filtra_por_clase_de_establecimiento(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        escenario["proveedor_a"].clase = "Hotel"
+        escenario["proveedor_b"].clase = "Agencia de Viajes"
+        sesion.commit()
+
+        respuesta = cliente.get("/api/proveedores?solo_reales=false&clase=hotel")
+
+        assert [p["nombre"] for p in respuesta.json()] == ["Proveedor A"]
+
+    def test_un_proveedor_sin_ficha_no_tiene_nada_que_gestionar(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        """Pasa de verdad: una cuenta con rol de proveedor y sin ficha creada.
+
+        El panel lo consulta antes de pintarse. Un error 500 aquí dejaría la
+        pantalla en blanco sin decir qué es lo que falta.
+        """
+        crear_usuario(sesion, "proveedor.sin.ficha@prueba.pe", RolUsuario.PROVEEDOR)
+
+        respuesta = cliente.get(
+            "/api/proveedores/mio",
+            headers=cabeceras(cliente, "proveedor.sin.ficha@prueba.pe"),
+        )
+
+        assert respuesta.status_code == 404
+        assert respuesta.json()["detail"]["codigo"] == "sin_ficha_de_proveedor"
+
+    def test_un_proveedor_sin_ficha_no_puede_publicar_servicios(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        crear_usuario(sesion, "proveedor.sin.ficha@prueba.pe", RolUsuario.PROVEEDOR)
+
+        respuesta = cliente.post(
+            "/api/servicios",
+            json={
+                "nombre": "Taller que no se puede publicar",
+                "tipo": TipoServicio.TALLER.value,
+                "capacidad_maxima": 5,
+                "precio_min_soles": "20.00",
+                "precio_max_soles": "30.00",
+                "fecha_referencia": "2026-08-29",
+            },
+            headers=cabeceras(cliente, "proveedor.sin.ficha@prueba.pe"),
+        )
+
+        assert respuesta.status_code == 403
+        assert respuesta.json()["detail"]["codigo"] == "proveedor_sin_ficha_asociada"
+
+
+# ---------------------------------------------------------------------------
+# Plazas libres de un día concreto
+# ---------------------------------------------------------------------------
+
+
+class TestPlazasLibres:
+    def test_descuenta_lo_que_ya_esta_comprometido(self, cliente: TestClient, escenario: dict):
+        pedir(cliente, escenario["servicio_a"].id, numero_personas=3)
+
+        respuesta = cliente.get(
+            f"/api/servicios/{escenario['servicio_a'].id}/plazas",
+            params={"fecha": SABADO.isoformat()},
+        )
+
+        cuerpo = respuesta.json()
+        assert cuerpo["atiende"] is True
+        assert cuerpo["cupo"] == 10
+        assert cuerpo["libres"] == 7
+
+    def test_un_dia_en_el_que_no_atiende_no_tiene_cupo_que_repartir(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        """«Cero libres» y «no atiende» son cosas distintas, y se dicen distinto.
+
+        Cero libres invita a probar otra fecha del mismo día; no atiende dice
+        que ese día no hay nada que probar.
+        """
+        solo_sabados = crear_servicio(
+            sesion, escenario["proveedor_a"], nombre="Solo sabados", dias=(5,)
+        )
+        un_lunes = SABADO + timedelta(days=2)
+
+        cuerpo = cliente.get(
+            f"/api/servicios/{solo_sabados.id}/plazas",
+            params={"fecha": un_lunes.isoformat()},
+        ).json()
+
+        assert cuerpo["atiende"] is False
+        assert cuerpo["libres"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Un servicio sin publicar
+# ---------------------------------------------------------------------------
+
+
+class TestServicioSinPublicar:
+    def test_se_puede_consultar_pero_se_dice_que_no_esta_publicado(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        """No se esconde con un 404: se explica por qué no se puede pedir.
+
+        El proveedor que lo está preparando necesita comprobar su propio
+        servicio antes de publicarlo, y ver exactamente lo que vería el
+        visitante.
+        """
+        borrador = crear_servicio(
+            sesion, escenario["proveedor_a"], nombre="Borrador", publicado=False
+        )
+
+        cuerpo = cliente.post(
+            f"/api/servicios/{borrador.id}/disponibilidad",
+            json={"fecha": SABADO.isoformat(), "numero_personas": 2},
+        ).json()
+
+        assert cuerpo["hay_disponibilidad"] is False
+        assert "servicio_no_publicado" in codigos(cuerpo["motivos"])
+
+
+# ---------------------------------------------------------------------------
+# Quién puede ver una solicitud
+#
+# Las cuatro reglas del servicio, comprobadas desde la API. La respuesta es un
+# 404 y no un 403 a propósito: contestar «403» a quien pregunta por una
+# solicitud ajena ya le confirma que existe.
+# ---------------------------------------------------------------------------
+
+
+def _solicitud_del_visitante(cliente: TestClient, escenario: dict) -> dict:
+    return pedir(
+        cliente,
+        escenario["servicio_a"].id,
+        _cabeceras=cabeceras(cliente, escenario["correo_visitante"]),
+    )
+
+
+class TestQuienPuedeVerUnaSolicitud:
+    def test_sin_sesion_no_se_ve_la_solicitud_de_una_cuenta(
+        self, cliente: TestClient, escenario: dict
+    ):
+        solicitud = _solicitud_del_visitante(cliente, escenario)
+
+        respuesta = cliente.get(f"/api/solicitudes/{solicitud['id']}")
+
+        assert respuesta.status_code == 404
+        assert respuesta.json()["detail"]["codigo"] == "sin_solicitud"
+
+    def test_una_solicitud_anonima_si_se_recupera_por_su_identificador(
+        self, cliente: TestClient, escenario: dict
+    ):
+        """Quien pidió sin registrarse tiene que poder seguir su estado.
+
+        Es la misma decisión que con los itinerarios: el identificador es la
+        credencial, porque exigir cuenta para consultar lo que ya se pidió sin
+        ella dejaría la solicitud inaccesible para siempre.
+        """
+        solicitud = pedir(cliente, escenario["servicio_a"].id)
+
+        respuesta = cliente.get(f"/api/solicitudes/{solicitud['id']}")
+
+        assert respuesta.status_code == 200
+
+    def test_un_operador_ve_cualquier_solicitud(self, cliente: TestClient, escenario: dict):
+        """Coordinar es su trabajo: sin visión completa no puede hacerlo."""
+        solicitud = _solicitud_del_visitante(cliente, escenario)
+
+        respuesta = cliente.get(
+            f"/api/solicitudes/{solicitud['id']}",
+            headers=cabeceras(cliente, escenario["correo_operador"]),
+        )
+
+        assert respuesta.status_code == 200
+
+    def test_un_visitante_no_ve_la_solicitud_de_otro_visitante(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        solicitud = _solicitud_del_visitante(cliente, escenario)
+        crear_usuario(sesion, "otro.visitante@prueba.pe", RolUsuario.VISITANTE)
+
+        respuesta = cliente.get(
+            f"/api/solicitudes/{solicitud['id']}",
+            headers=cabeceras(cliente, "otro.visitante@prueba.pe"),
+        )
+
+        assert respuesta.status_code == 404
+
+    def test_el_listado_se_puede_filtrar_por_estado(self, cliente: TestClient, escenario: dict):
+        _solicitud_del_visitante(cliente, escenario)
+        cabecera = cabeceras(cliente, escenario["correo_visitante"])
+
+        enviadas = cliente.get("/api/solicitudes?estado=enviada", headers=cabecera).json()
+        confirmadas = cliente.get("/api/solicitudes?estado=confirmada", headers=cabecera).json()
+
+        assert len(enviadas) == 1
+        assert confirmadas == []
+
+
+# ---------------------------------------------------------------------------
+# Quién puede mover una solicitud de estado
+# ---------------------------------------------------------------------------
+
+
+class TestQuienPuedeCambiarElEstado:
+    def test_sin_sesion_se_puede_cancelar(self, cliente: TestClient, escenario: dict):
+        """Echarse atrás es lo único que puede hacer quien pidió sin cuenta."""
+        solicitud = pedir(cliente, escenario["servicio_a"].id)
+
+        respuesta = cliente.post(
+            f"/api/solicitudes/{solicitud['id']}/estado",
+            json={"nuevo_estado": EstadoSolicitud.CANCELADA.value},
+        )
+
+        assert respuesta.status_code == 200
+        assert respuesta.json()["estado"] == EstadoSolicitud.CANCELADA.value
+
+    def test_sin_sesion_no_se_puede_confirmar_una_solicitud(
+        self, cliente: TestClient, escenario: dict
+    ):
+        """Confirmarse a sí mismo una reserva sería volver a no tener acuerdo.
+
+        Que es justo la brecha que el canal de coordinación cierra: el precio y
+        la plaza los confirma el proveedor, no quien los pide.
+        """
+        solicitud = pedir(cliente, escenario["servicio_a"].id)
+
+        respuesta = cliente.post(
+            f"/api/solicitudes/{solicitud['id']}/estado",
+            json={
+                "nuevo_estado": EstadoSolicitud.CONFIRMADA.value,
+                "precio_acordado_soles": "40.00",
+            },
+        )
+
+        assert respuesta.status_code == 403
+        assert "proveedor" in respuesta.json()["detail"]
+
+    def test_un_operador_puede_mover_cualquier_solicitud(
+        self, cliente: TestClient, escenario: dict
+    ):
+        solicitud = _solicitud_del_visitante(cliente, escenario)
+
+        respuesta = cliente.post(
+            f"/api/solicitudes/{solicitud['id']}/estado",
+            json={
+                "nuevo_estado": EstadoSolicitud.CONFIRMADA.value,
+                "precio_acordado_soles": "40.00",
+            },
+            headers=cabeceras(cliente, escenario["correo_operador"]),
+        )
+
+        assert respuesta.status_code == 200
+        assert respuesta.json()["estado"] == EstadoSolicitud.CONFIRMADA.value
+
+    def test_queda_registrado_con_que_rol_se_hizo_el_cambio(
+        self, cliente: TestClient, escenario: dict
+    ):
+        """Un historial sin el rol no sirve para auditar nada."""
+        solicitud = _solicitud_del_visitante(cliente, escenario)
+
+        cliente.post(
+            f"/api/solicitudes/{solicitud['id']}/estado",
+            json={
+                "nuevo_estado": EstadoSolicitud.CONFIRMADA.value,
+                "precio_acordado_soles": "40.00",
+            },
+            headers=cabeceras(cliente, escenario["correo_operador"]),
+        )
+
+        historial = cliente.get(
+            f"/api/solicitudes/{solicitud['id']}",
+            headers=cabeceras(cliente, escenario["correo_operador"]),
+        ).json()["historial"]
+
+        assert historial[-1]["rol_de_quien_cambio"] == RolUsuario.OPERADOR.value
+
+    def test_un_visitante_no_puede_cancelar_la_solicitud_de_otro(
+        self, cliente: TestClient, escenario: dict, sesion: Session
+    ):
+        """Cancelar lo propio sí; lo ajeno no, aunque el estado sea «el suyo»."""
+        solicitud = _solicitud_del_visitante(cliente, escenario)
+        crear_usuario(sesion, "otro.visitante@prueba.pe", RolUsuario.VISITANTE)
+
+        respuesta = cliente.post(
+            f"/api/solicitudes/{solicitud['id']}/estado",
+            json={"nuevo_estado": EstadoSolicitud.CANCELADA.value},
+            headers=cabeceras(cliente, "otro.visitante@prueba.pe"),
+        )
+
+        assert respuesta.status_code == 403
+        assert "no es tuya" in respuesta.json()["detail"]
+
+    def test_mover_una_solicitud_que_no_existe_da_404(self, cliente: TestClient, escenario: dict):
+        respuesta = cliente.post(
+            "/api/solicitudes/999999/estado",
+            json={"nuevo_estado": EstadoSolicitud.CANCELADA.value},
+        )
+
+        assert respuesta.status_code == 404
+        assert respuesta.json()["detail"]["codigo"] == "sin_solicitud"

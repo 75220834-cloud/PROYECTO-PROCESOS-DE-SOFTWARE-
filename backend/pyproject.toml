@@ -112,7 +112,47 @@ addopts = "-v --cov=app --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["app/__init__.py", "*/pruebas/*"]
+
+# Que se EXCLUYE de la medicion, y por que.
+#
+# La cobertura debe medir el codigo que atiende peticiones: el que se ejecuta
+# cuando alguien usa la aplicacion y el que puede romperse sin que nadie lo
+# note hasta produccion. Los diez guiones de abajo no son eso.
+#
+# Son GUIONES DE OPERACION. Se ejecutan a mano, una sola vez, desde una
+# terminal y por una persona que mira la salida: cargan el catalogo del
+# MINCETUR, descargan las 295 fichas web, bajan el modelo de elevacion de
+# Copernicus, construyen el grafo vial de OpenStreetMap o siembran cuentas de
+# demostracion. Todos terminan en `if __name__ == "__main__"`.
+#
+# Medirlos como si fueran logica de negocio DILUYE la señal en vez de
+# informarla: sus 771 lineas son el 64 % de todo lo que faltaba por cubrir, y
+# cubrirlas exigiria simular las respuestas del MINCETUR, de OpenStreetMap y
+# de Copernicus. Esas pruebas comprobarian las imitaciones, no el codigo.
+#
+# **Esta exclusion esta declarada a proposito y se declara tambien en el
+# informe academico.** Subir un numero escondiendo lo que lo baja seria
+# justo lo contrario de lo que este proyecto defiende sobre los datos. Lo que
+# se excluye se nombra uno por uno, para que cualquiera pueda comprobar que
+# no se cuela nada que si atienda peticiones.
+omit = [
+    "app/__init__.py",
+    "*/pruebas/*",
+    # --- Carga de datos desde fuentes oficiales ---
+    "app/utilidades/cargar_calendario.py",
+    "app/utilidades/cargar_catalogo.py",
+    "app/utilidades/cargar_fichas.py",
+    "app/utilidades/cargar_prestadores.py",
+    # --- Descarga y preparacion de datos geoespaciales ---
+    "app/utilidades/descargar_dem.py",
+    "app/utilidades/medir_cobertura_osm.py",
+    "app/utilidades/preparar_red_vial.py",
+    # --- Siembra de datos de demostracion ---
+    "app/utilidades/proveedores_semilla.py",
+    "app/utilidades/usuarios_semilla.py",
+    # --- Verificacion manual de una fase ---
+    "app/utilidades/verificar_fase4.py",
+]
 
 [tool.coverage.report]
 # Umbral que convierte la meta del proyecto en una comprobacion real.

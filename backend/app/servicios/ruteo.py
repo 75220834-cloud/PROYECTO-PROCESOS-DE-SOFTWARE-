@@ -54,6 +54,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.configuracion import obtener_configuracion
 from app.ia.tiempo_recorrido import (
     clasificar_esfuerzo,
     necesita_aviso_de_altitud,
@@ -70,6 +71,11 @@ from app.servicios.avisos import Aviso, aviso
 from app.servicios.costos import CostoDeTraslado, calcular_traslado
 
 registro = logging.getLogger(__name__)
+
+#: Se lee una vez al importar. Los valores por omision son los medidos y
+#: documentados; las variables de entorno solo se usan para recortar en un
+#: servidor con poca CPU.
+_configuracion = obtener_configuracion()
 
 # ---------------------------------------------------------------------------
 # La jornada
@@ -158,7 +164,11 @@ PESO_DE_LA_AFINIDAD = 3
 #: Cuántos candidatos como máximo entran al optimizador. Con 20, la matriz
 #: tiene 380 traslados: se llena en menos de un segundo. Con 60 serían 3 540 y
 #: la petición empezaría a notarse.
-MAXIMO_CANDIDATOS = 20
+#:
+#: Sale de la configuración para poder recortarlo en un servidor con poca CPU
+#: sin tocar el código. El valor por omisión es el medido, así que en local
+#: no cambia nada.
+MAXIMO_CANDIDATOS = _configuracion.maximo_candidatos
 
 #: Tope absoluto de candidatos cuando se planifica un viaje de varios días.
 #:
@@ -173,7 +183,7 @@ MAXIMO_CANDIDATOS = 20
 #: consecuencia hay que decirla: **un viaje tan largo que no quepa en este tope
 #: tendrá días con menos paradas, y la aplicación lo avisará**. Repetir los
 #: mismos lugares para rellenar sería más cómodo y menos honesto.
-TOPE_DE_CANDIDATOS_DEL_VIAJE = 45
+TOPE_DE_CANDIDATOS_DEL_VIAJE = _configuracion.tope_de_candidatos_del_viaje
 
 #: Cuántos candidatos de sobra se piden por encima de lo que el ritmo consume.
 #:
@@ -205,7 +215,7 @@ MARGEN_DE_CANDIDATOS = 6
 #: La diferencia importa: el plan de trabajo exige que un itinerario se calcule
 #: en menos de 10 segundos, y con el límite en 5 el peor perfil medido tardaba
 #: 8,0 s. Eso es poco margen para una máquina más lenta que la de desarrollo.
-SEGUNDOS_DE_BUSQUEDA = 2
+SEGUNDOS_DE_BUSQUEDA = _configuracion.segundos_de_busqueda
 
 
 # ---------------------------------------------------------------------------

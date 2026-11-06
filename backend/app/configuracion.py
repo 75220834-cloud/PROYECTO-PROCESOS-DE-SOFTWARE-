@@ -66,6 +66,29 @@ class Configuracion(BaseSettings):
     usar_modelo_afluencia: bool = True
     usar_modelo_sentimiento: bool = True
 
+    # --- Ajustes del optimizador de rutas ----------------------------------
+    # Los valores por omision son los MEDIDOS y documentados del proyecto, asi
+    # que en local no cambia nada. Existen como variables porque una maquina
+    # de despliegue gratuita da una fraccion de CPU, y ahi conviene recortar
+    # sin tocar las cifras que sostienen los informes.
+
+    #: Segundos que se le dan al optimizador por cada dia.
+    #:
+    #: La medicion del proyecto dice que con estos tamanos de problema el
+    #: solucionador converge en el primer segundo y el resto del limite se
+    #: tira: 1, 2, 3 y 5 segundos dieron el MISMO resultado. Por eso bajarlo
+    #: a 1 en produccion no empeora el itinerario, solo deja de esperar.
+    segundos_de_busqueda: int = 2
+
+    #: Cuantos candidatos entran al optimizador en un itinerario de un dia.
+    maximo_candidatos: int = 20
+
+    #: Tope de candidatos cuando se planifica un viaje de varios dias.
+    #:
+    #: La matriz de traslados crece con el CUADRADO de este numero, asi que es
+    #: la palanca mas efectiva si el servidor va justo.
+    tope_de_candidatos_del_viaje: int = 45
+
     @property
     def lista_de_origenes(self) -> list[str]:
         """Los origenes permitidos, ya separados y sin espacios sobrantes."""

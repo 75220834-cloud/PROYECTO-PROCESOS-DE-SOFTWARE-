@@ -43,6 +43,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from weakref import WeakKeyDictionary
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -196,33 +197,63 @@ def _redondear_a_medio_sol(importe: Decimal) -> Decimal:
     return (medios / 2).quantize(Decimal("0.01"))
 
 
+#: Tarifas ya leídas, por sesión de base de datos.
+#:
+#: ## Por qué existe esto
+#:
+#: ``construir_matriz`` llama a ``calcular_traslado`` **N² veces**, y cada
+#: llamada buscaba su tarifa con una consulta propia. Con 20 candidatos son
+#: 380 consultas por itinerario.
+#:
+#: En desarrollo no se notaba: la base está en ``localhost`` y cada consulta
+#: tarda microsegundos. En el primer despliegue real, con la base en São Paulo
+#: y unos 200 ms de ida y vuelta, **esas 380 consultas costaban unos 76 de los
+#: 85 segundos** que tardaba un itinerario. Y las hacía contra una tabla vacía,
+#: para acabar estimando el precio con la fórmula.
+#:
+#: ## Por qué por sesión y no por proceso
+#:
+#: Una caché de proceso haría que una tarifa recién cargada no se viera hasta
+#: reiniciar, y en las pruebas la memoria de un caso se filtraría al siguiente.
+#: Cada petición trae su propia sesión, así que la caché vive exactamente lo
+#: que dura el cálculo: que es donde está el problema. ``WeakKeyDictionary``
+#: suelta la entrada sola cuando la sesión se cierra.
+_TARIFAS_POR_SESION: WeakKeyDictionary = WeakKeyDictionary()
+
+
+def _clave_de_tarifa(distrito_origen: str, distrito_destino: str, modo: str):
+    """Identifica un trayecto sin importar el sentido.
+
+    El pasaje de Huancayo a Jauja y el de Jauja a Huancayo son el mismo
+    servicio, así que los dos distritos van en un ``frozenset``: el orden deja
+    de contar y no hay que consultar dos veces.
+    """
+    return (modo, frozenset({distrito_origen.upper(), distrito_destino.upper()}))
+
+
+def _tarifas_de_la_sesion(sesion: Session) -> dict:
+    """Lee la tabla de tarifas **una vez** por sesión y la deja indexada."""
+    tabla = _TARIFAS_POR_SESION.get(sesion)
+
+    if tabla is None:
+        tabla = {}
+        for tarifa in sesion.scalars(select(TarifaTransporte)):
+            clave = _clave_de_tarifa(tarifa.distrito_origen, tarifa.distrito_destino, tarifa.modo)
+            # setdefault y no asignación: si hubiera dos filas para el mismo
+            # trayecto se conserva la primera, igual que hacía el `.limit(1)`
+            # de la consulta que esto sustituye.
+            tabla.setdefault(clave, tarifa)
+        _TARIFAS_POR_SESION[sesion] = tabla
+
+    return tabla
+
+
 def _buscar_tarifa_publicada(
     sesion: Session, distrito_origen: str, distrito_destino: str, modo: str
 ) -> TarifaTransporte | None:
-    """Busca una tarifa guardada para ese trayecto, en cualquier sentido.
-
-    Se consulta en los dos sentidos porque el pasaje de Huancayo a Jauja y el
-    de Jauja a Huancayo son el mismo servicio, y guardar las dos filas sería
-    duplicar el mismo dato con el riesgo de que se desactualicen por separado.
-    """
-    origen = distrito_origen.upper()
-    destino = distrito_destino.upper()
-
-    return sesion.scalars(
-        select(TarifaTransporte)
-        .where(
-            TarifaTransporte.modo == modo,
-            (
-                (TarifaTransporte.distrito_origen == origen)
-                & (TarifaTransporte.distrito_destino == destino)
-            )
-            | (
-                (TarifaTransporte.distrito_origen == destino)
-                & (TarifaTransporte.distrito_destino == origen)
-            ),
-        )
-        .limit(1)
-    ).first()
+    """Busca una tarifa guardada para ese trayecto, en cualquier sentido."""
+    clave = _clave_de_tarifa(distrito_origen, distrito_destino, modo)
+    return _tarifas_de_la_sesion(sesion).get(clave)
 
 
 def calcular_traslado(

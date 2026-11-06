@@ -41,6 +41,18 @@ class Configuracion(BaseSettings):
     clave_secreta: str = "clave_insegura_solo_para_desarrollo"
     minutos_expiracion_token: int = 1440
 
+    #: Origenes que pueden llamar al API desde un navegador, separados por comas.
+    #:
+    #: El valor por omision es el frontend de desarrollo, asi que en local no
+    #: hay que configurar nada. Al desplegar se indica el dominio real, porque
+    #: el navegador rechaza las llamadas de un origen que el API no declare.
+    #:
+    #: Es una cadena y no una lista a proposito: pydantic-settings intenta
+    #: interpretar como JSON las variables de entorno de tipo lista, y escribir
+    #: un JSON dentro de un panel de despliegue es una fuente de errores
+    #: tipograficos que no compensa.
+    origenes_permitidos: str = "http://localhost:5173,http://127.0.0.1:5173"
+
     # --- Ollama (asistente conversacional local) ---------------------------
     ollama_url: str = "http://localhost:11434"
     ollama_modelo: str = "qwen2.5:7b-instruct"
@@ -53,6 +65,11 @@ class Configuracion(BaseSettings):
     usar_modelo_recomendacion: bool = True
     usar_modelo_afluencia: bool = True
     usar_modelo_sentimiento: bool = True
+
+    @property
+    def lista_de_origenes(self) -> list[str]:
+        """Los origenes permitidos, ya separados y sin espacios sobrantes."""
+        return [origen.strip() for origen in self.origenes_permitidos.split(",") if origen.strip()]
 
     @property
     def url_base_datos(self) -> str:

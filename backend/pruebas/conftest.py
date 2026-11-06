@@ -70,11 +70,18 @@ def sesion(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
             # por si sola: si manana alguien quita una clave ajena, el CASCADE
             # dejaria datos vivos entre pruebas y los fallos serian de los que
             # solo aparecen segun el orden de ejecucion.
+            #
+            # `festividad` y `afluencia_historica` faltaban en esta lista, y la
+            # omision era silenciosa: ninguna prueba afirmaba totales sobre
+            # ellas, asi que nadie lo noto. En una base de desarrollo con el
+            # calendario cargado hay 69 festividades y 414 filas de afluencia,
+            # y la primera prueba que contara filas en esas tablas habria
+            # fallado por los datos y no por el codigo.
             "TRUNCATE recurso_turistico, horario_atencion, registro_validacion,"
             " usuario, preferencia_viaje, itinerario, parada_itinerario,"
             " tarifa_transporte, proveedor, servicio, disponibilidad_servicio,"
             " solicitud_coordinacion, cambio_de_estado, valoracion,"
-            " registro_de_evidencia CASCADE"
+            " registro_de_evidencia, festividad, afluencia_historica CASCADE"
         )
     )
 

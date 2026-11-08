@@ -8,15 +8,15 @@ from decimal import Decimal
 import pytest
 from fastapi.testclient import TestClient
 
+from pruebas.conftest import codigos, parametros_de
 from src.base_datos import obtener_sesion
 from src.configuracion import Configuracion, obtener_configuracion
+from src.domain.avisos import CODIGOS_CONOCIDOS
 from src.main import aplicacion
 from src.modelos.preferencias import PreferenciaViaje
-from src.servicios.avisos import CODIGOS_CONOCIDOS
 from src.servicios.catalogo import importar_inventario
 from src.servicios.recomendador import ALCANCE_POR_MOVILIDAD_KM, recomendar
 from src.servicios.validacion_catalogo import validar_catalogo
-from pruebas.conftest import codigos, parametros_de
 
 HOY = date.today()
 

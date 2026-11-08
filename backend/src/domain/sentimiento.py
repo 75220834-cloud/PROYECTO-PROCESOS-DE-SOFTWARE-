@@ -47,7 +47,12 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from src.modelos.valoracion import PUNTUACION_MAXIMA, PUNTUACION_MINIMA, Sentimiento, TemaValoracion
+from src.domain.valores.valoracion import (
+    PUNTUACION_MAXIMA,
+    PUNTUACION_MINIMA,
+    Sentimiento,
+    TemaValoracion,
+)
 
 # ---------------------------------------------------------------------------
 # Diccionarios de la alternativa por reglas

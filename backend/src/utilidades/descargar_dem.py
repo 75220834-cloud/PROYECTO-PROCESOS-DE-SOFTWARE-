@@ -15,15 +15,15 @@ import time
 from geoalchemy2 import Geometry
 from sqlalchemy import cast, func, select
 
-from src.base_datos import FabricaDeSesiones
-from src.modelos.catalogo import RecursoTuristico
-from src.servicios.elevacion import (
+from src.adapters.outbound.elevacion_copernicus import (
     MuestreadorDeAltitud,
     descargar_tesela,
     nombre_de_tesela,
     ruta_local_de_tesela,
     teselas_necesarias,
 )
+from src.base_datos import FabricaDeSesiones
+from src.modelos.catalogo import RecursoTuristico
 
 #: Altitudes verificadas en CONTEXTO_PROYECTO.md, sección 9. Sirven para
 #: comprobar que el modelo descargado da valores creíbles antes de fiarse de

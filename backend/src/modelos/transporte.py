@@ -17,7 +17,6 @@ del plan de trabajo, no una decisión de estilo.
 """
 
 from datetime import date, datetime
-from enum import StrEnum
 
 from sqlalchemy import (
     CheckConstraint,
@@ -33,15 +32,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.base_datos import Base
-
-
-class ModoTransporte(StrEnum):
-    """Cómo se cubre un traslado entre dos puntos."""
-
-    CAMINANDO = "caminando"
-    COMBI = "combi"
-    COLECTIVO = "colectivo"
-    TAXI = "taxi"
+from src.domain.valores.transporte import (  # noqa: F401
+    ModoTransporte,
+)
 
 
 class TarifaTransporte(Base):

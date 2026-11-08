@@ -26,9 +26,9 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from pruebas.conftest import necesita_base_de_datos
 from src.modelos.afluencia import AfluenciaHistorica, Festividad
 from src.modelos.catalogo import RecursoTuristico
-from pruebas.conftest import necesita_base_de_datos
 
 pytestmark = necesita_base_de_datos
 

@@ -25,6 +25,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectinload
 
+from src.domain.avisos import Aviso, aviso
 from src.modelos.coordinacion import (
     TRANSICIONES_VALIDAS,
     CambioDeEstado,
@@ -35,7 +36,6 @@ from src.modelos.coordinacion import (
     SolicitudCoordinacion,
 )
 from src.modelos.usuario import RolUsuario, Usuario
-from src.servicios.avisos import Aviso, aviso
 
 
 class ErrorDeCoordinacion(Exception):

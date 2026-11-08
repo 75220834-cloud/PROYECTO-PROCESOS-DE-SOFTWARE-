@@ -55,7 +55,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.configuracion import obtener_configuracion
-from src.ia.tiempo_recorrido import (
+from src.domain.avisos import Aviso, aviso
+from src.domain.tiempo_recorrido import (
     clasificar_esfuerzo,
     necesita_aviso_de_altitud,
 )
@@ -67,7 +68,6 @@ from src.modelos.itinerario import (
     ParadaItinerario,
 )
 from src.modelos.preferencias import PreferenciaViaje
-from src.servicios.avisos import Aviso, aviso
 from src.servicios.costos import CostoDeTraslado, calcular_traslado
 
 registro = logging.getLogger(__name__)

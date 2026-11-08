@@ -23,14 +23,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from pruebas.conftest import codigos, parametros_de
 from src.base_datos import obtener_sesion
 from src.configuracion import Configuracion, obtener_configuracion
+from src.domain.avisos import CODIGOS_CONOCIDOS
 from src.main import aplicacion
 from src.modelos.catalogo import RecursoTuristico
 from src.modelos.itinerario import Itinerario
 from src.modelos.preferencias import PreferenciaViaje
 from src.modelos.valoracion import Valoracion
-from src.servicios.avisos import CODIGOS_CONOCIDOS
 from src.servicios.evidencia import (
     MINIMO_PARA_FIARSE,
     calcular_cobertura,
@@ -38,7 +39,6 @@ from src.servicios.evidencia import (
     obtener_instantaneas,
     resumir_evidencia,
 )
-from pruebas.conftest import codigos, parametros_de
 
 HOY = date(2026, 9, 12)
 

@@ -16,7 +16,7 @@ from datetime import date
 
 import pytest
 
-from src.ia.afinidad import (
+from src.domain.afinidad import (
     RecursoParaPuntuar,
     calcular_afinidad,
     calcular_afinidad_con_modelo,
@@ -25,6 +25,7 @@ from src.ia.afinidad import (
     contiene_termino,
     normalizar,
 )
+from src.domain.avisos import CODIGOS_CONOCIDOS
 from src.ia.afluencia import (
     FILAS_MINIMAS_PARA_ENTRENAR,
     CaracteristicasDelDia,
@@ -34,7 +35,6 @@ from src.ia.afluencia import (
     predecir_afluencia,
     predecir_afluencia_con_reglas,
 )
-from src.servicios.avisos import CODIGOS_CONOCIDOS
 
 # Recursos reales del catálogo, con sus categorías tal como vienen del MINCETUR.
 CATALOGO_DE_PRUEBA = [

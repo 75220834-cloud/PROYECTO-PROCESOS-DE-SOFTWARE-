@@ -33,17 +33,16 @@ import pickle
 
 import pytest
 
-from src.ia.tiempo_recorrido import calcular_tramo_caminando
-from src.modelos.itinerario import OrigenDelCalculo
-from src.servicios.red_vial import (
+from src.adapters.outbound.red_vial_osm import construir_y_guardar, obtener_red_vial
+from src.domain.red_vial import (
     DISTANCIA_MAXIMA_AL_NODO_M,
     FACTOR_DE_RODEO,
     RedVial,
     Traslado,
-    construir_y_guardar,
     distancia_en_linea_recta_m,
-    obtener_red_vial,
 )
+from src.domain.tiempo_recorrido import calcular_tramo_caminando
+from src.domain.valores.itinerario import OrigenDelCalculo
 
 # ---------------------------------------------------------------------------
 # La red de prueba
@@ -520,7 +519,7 @@ def ruta_temporal_del_grafo(tmp_path, monkeypatch):
     de una prueba a la siguiente.
     """
     ruta = tmp_path / "red" / "grafo_de_prueba.pickle"
-    monkeypatch.setattr("src.servicios.red_vial.RUTA_DEL_GRAFO", ruta)
+    monkeypatch.setattr("src.adapters.outbound.red_vial_osm.RUTA_DEL_GRAFO", ruta)
     obtener_red_vial.cache_clear()
 
     yield ruta
@@ -548,12 +547,13 @@ class TestConstruccionYCarga:
             return grafo
 
         monkeypatch.setattr(ox, "graph_from_bbox", descarga_falsa)
-        monkeypatch.setattr(
-            "src.servicios.elevacion.MuestreadorDeAltitud", lambda: _MuestreadorFalso()
-        )
 
+        # La fuente de altitud entra por parámetro, no se parchea: desde que
+        # `construir_y_guardar` recibe el puerto `FuenteDeAltitud`, la prueba
+        # le pasa su propia implementación y no tiene que saber de qué módulo
+        # salía la de verdad.
         limites = (-75.4, -12.3, -75.0, -11.7)
-        red = construir_y_guardar(limites)
+        red = construir_y_guardar(limites, _MuestreadorFalso())
 
         assert limites_recibidos == [(limites, "all", True)]
         assert red.grafo is grafo
@@ -567,11 +567,8 @@ class TestConstruccionYCarga:
         import osmnx as ox
 
         monkeypatch.setattr(ox, "graph_from_bbox", lambda **_: _grafo_de_prueba())
-        monkeypatch.setattr(
-            "src.servicios.elevacion.MuestreadorDeAltitud", lambda: _MuestreadorFalso()
-        )
 
-        construir_y_guardar((-75.4, -12.3, -75.0, -11.7))
+        construir_y_guardar((-75.4, -12.3, -75.0, -11.7), _MuestreadorFalso())
 
         with ruta_temporal_del_grafo.open("rb") as archivo:
             guardado = pickle.load(archivo)

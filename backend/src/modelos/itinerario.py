@@ -7,7 +7,6 @@ distribución geográfica ni el tiempo y costo de desplazamiento*.
 """
 
 from datetime import date, datetime, time
-from enum import StrEnum
 
 from sqlalchemy import (
     CheckConstraint,
@@ -27,32 +26,13 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.base_datos import Base
+from src.domain.valores.itinerario import (  # noqa: F401
+    EstadoItinerario,
+    OrigenDelCalculo,
+)
 from src.modelos.catalogo import RecursoTuristico
 from src.modelos.preferencias import PreferenciaViaje
 from src.modelos.usuario import Usuario
-
-
-class EstadoItinerario(StrEnum):
-    """En qué punto del proceso está un itinerario."""
-
-    BORRADOR = "borrador"
-    GUARDADO = "guardado"
-    CONFIRMADO = "confirmado"
-    COMPLETADO = "completado"
-
-
-class OrigenDelCalculo(StrEnum):
-    """Cómo se calculó un tramo, y por tanto cuánto fiarse de él.
-
-    Es la distinción que exige la medición de cobertura de OSM: en los
-    distritos donde no hay red vial registrada, el tiempo es una estimación
-    sobre línea recta y **el visitante tiene que saberlo**.
-    """
-
-    #: Ruta calculada sobre el grafo real de OpenStreetMap.
-    RED_VIAL = "red_vial"
-    #: Línea recta corregida por el factor de rodeo medido (1,26).
-    LINEA_RECTA = "linea_recta"
 
 
 class Itinerario(Base):

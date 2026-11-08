@@ -48,9 +48,10 @@ from weakref import WeakKeyDictionary
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from src.adapters.outbound.red_vial_osm import obtener_red_vial
+from src.domain.red_vial import Traslado, distancia_en_linea_recta_m
 from src.modelos.itinerario import OrigenDelCalculo
 from src.modelos.transporte import ModoTransporte, TarifaTransporte
-from src.servicios.red_vial import Traslado, distancia_en_linea_recta_m, obtener_red_vial
 
 # ---------------------------------------------------------------------------
 # Reglas de elección del modo
@@ -371,8 +372,8 @@ def _traslado_recto_sin_red(
     recta_km: float, altitud_origen: float | None, altitud_destino: float | None
 ) -> Traslado:
     """Caminata estimada cuando no hay grafo cargado."""
-    from src.ia.tiempo_recorrido import calcular_tramo_caminando
-    from src.servicios.red_vial import FACTOR_DE_RODEO
+    from src.domain.red_vial import FACTOR_DE_RODEO
+    from src.domain.tiempo_recorrido import calcular_tramo_caminando
 
     metros = recta_km * 1000.0 * FACTOR_DE_RODEO
     tramo = calcular_tramo_caminando(metros, altitud_origen, altitud_destino)
@@ -478,7 +479,7 @@ def _distancia_por_carretera(
     usar_red: bool,
 ) -> tuple[float, str, list[tuple[float, float]]]:
     """Distancia rodada entre dos puntos, con su procedencia y su trazado."""
-    from src.servicios.red_vial import FACTOR_DE_RODEO
+    from src.domain.red_vial import FACTOR_DE_RODEO
 
     red = obtener_red_vial() if usar_red else None
 

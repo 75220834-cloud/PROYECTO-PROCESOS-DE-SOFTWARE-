@@ -13,7 +13,6 @@ accesibilidad del proceso como objetivo.
 """
 
 from datetime import date, datetime
-from enum import StrEnum
 
 from sqlalchemy import (
     CheckConstraint,
@@ -28,46 +27,12 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.base_datos import Base
+from src.domain.valores.preferencias import (  # noqa: F401
+    Interes,
+    Movilidad,
+    Ritmo,
+)
 from src.modelos.usuario import Usuario
-
-
-class Ritmo(StrEnum):
-    """A qué velocidad quiere viajar el visitante.
-
-    Determina cuántas paradas cabe proponer en un día cuando el Incremento 4
-    construya el itinerario.
-    """
-
-    RELAJADO = "relajado"
-    MODERADO = "moderado"
-    INTENSO = "intenso"
-
-
-class Movilidad(StrEnum):
-    """Cómo prefiere desplazarse el visitante entre un recurso y otro."""
-
-    CAMINANDO = "caminando"
-    TRANSPORTE_PUBLICO = "transporte_publico"
-    TAXI = "taxi"
-    COMBINADO = "combinado"
-
-
-class Interes(StrEnum):
-    """Los ocho intereses que puede declarar el visitante.
-
-    Se eligieron para que se puedan enlazar con las categorías del inventario
-    del MINCETUR en el Incremento 3: no son etiquetas decorativas, son la
-    entrada del cálculo de afinidad.
-    """
-
-    NATURALEZA = "naturaleza"
-    ARQUEOLOGIA = "arqueologia"
-    IGLESIAS_CONVENTOS = "iglesias_conventos"
-    ARTESANIA = "artesania"
-    GASTRONOMIA = "gastronomia"
-    FERIAS_FIESTAS = "ferias_fiestas"
-    AVENTURA = "aventura"
-    FOTOGRAFIA = "fotografia"
 
 
 class PreferenciaViaje(Base):

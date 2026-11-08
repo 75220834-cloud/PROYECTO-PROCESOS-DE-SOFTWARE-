@@ -20,9 +20,10 @@ import time
 from geoalchemy2 import Geometry
 from sqlalchemy import cast, func, select
 
+from src.adapters.outbound.elevacion_copernicus import MuestreadorDeAltitud
+from src.adapters.outbound.red_vial_osm import RUTA_DEL_GRAFO, construir_y_guardar
 from src.base_datos import FabricaDeSesiones
 from src.modelos.catalogo import RecursoTuristico
-from src.servicios.red_vial import RUTA_DEL_GRAFO, construir_y_guardar
 
 #: Margen que se añade al rectángulo de los recursos, en grados. Sin él, un
 #: recurso pegado al borde se quedaría sin las vías que lo conectan con el
@@ -70,7 +71,10 @@ def main() -> int:
     print("  (la red ya está en caché; lo lento ahora es muestrear 40 000 nodos)")
 
     inicio = time.time()
-    red = construir_y_guardar(limites)
+    # El muestreador abre teselas GeoTIFF del disco, así que se cierra al
+    # salir del `with`. La construcción solo le pregunta: no sabe de archivos.
+    with MuestreadorDeAltitud() as fuente_de_altitud:
+        red = construir_y_guardar(limites, fuente_de_altitud)
     tardanza = time.time() - inicio
 
     nodos = red.grafo.number_of_nodes()

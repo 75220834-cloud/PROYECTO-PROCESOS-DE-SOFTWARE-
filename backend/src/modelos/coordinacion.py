@@ -29,7 +29,6 @@ teniendo fecha, porque un precio de hace dos años no sirve.
 """
 
 from datetime import date, datetime, time
-from enum import StrEnum
 
 from sqlalchemy import (
     CheckConstraint,
@@ -48,46 +47,12 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.base_datos import Base
+from src.domain.valores.coordinacion import (  # noqa: F401
+    EstadoSolicitud,
+    TipoServicio,
+)
 from src.modelos.itinerario import Itinerario
 from src.modelos.usuario import Usuario
-
-
-class TipoServicio(StrEnum):
-    """Qué clase de servicio ofrece un proveedor.
-
-    El conjunto sale de lo que necesita un visitante del valle para completar
-    un itinerario: llegar, comer, dormir, entender lo que ve y llevárselo.
-    """
-
-    TRANSPORTE = "transporte"
-    ALIMENTACION = "alimentacion"
-    HOSPEDAJE = "hospedaje"
-    GUIADO = "guiado"
-    TALLER = "taller"
-    ARTESANIA = "artesania"
-
-
-class EstadoSolicitud(StrEnum):
-    """Por dónde va una solicitud de coordinación.
-
-    El orden importa: es el ciclo de vida que el indicador del incremento
-    cuenta. ``ENVIADA`` y ``CONFIRMADA`` son los dos extremos que fija la
-    verificación del plan de trabajo.
-    """
-
-    #: El visitante la mandó y el proveedor aún no la ha visto.
-    ENVIADA = "enviada"
-    #: El proveedor la leyó y está mirando si puede.
-    EN_REVISION = "en_revision"
-    #: El proveedor propone cambiar algo (hora, número de personas, precio).
-    CONTRAPROPUESTA = "contrapropuesta"
-    #: Acuerdo cerrado. Es el estado que persigue el indicador.
-    CONFIRMADA = "confirmada"
-    #: El proveedor no puede.
-    RECHAZADA = "rechazada"
-    #: El visitante se echó atrás.
-    CANCELADA = "cancelada"
-
 
 #: Desde qué estado se puede pasar a cuál. Tener esto explícito evita que un
 #: endpoint mueva una solicitud a cualquier sitio: una solicitud rechazada no

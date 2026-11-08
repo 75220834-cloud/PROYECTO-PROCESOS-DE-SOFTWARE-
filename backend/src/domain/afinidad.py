@@ -29,7 +29,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.modelos.preferencias import Interes
+from src.domain.valores.preferencias import Interes
 
 # ---------------------------------------------------------------------------
 # Puente entre los intereses del visitante y el vocabulario del MINCETUR

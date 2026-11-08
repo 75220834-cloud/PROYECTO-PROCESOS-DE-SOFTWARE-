@@ -48,6 +48,7 @@ from fastapi.testclient import TestClient
 from jose import jwt
 from sqlalchemy.orm import Session
 
+from pruebas.conftest import necesita_base_de_datos
 from src.base_datos import obtener_sesion
 from src.configuracion import obtener_configuracion
 from src.modelos.usuario import RolUsuario, Usuario
@@ -58,7 +59,6 @@ from src.utilidades.dependencias import (
     obtener_usuario_opcional,
     obtener_usuario_requerido,
 )
-from pruebas.conftest import necesita_base_de_datos
 
 pytestmark = necesita_base_de_datos
 

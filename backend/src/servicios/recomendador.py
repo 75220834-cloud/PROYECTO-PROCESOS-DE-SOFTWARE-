@@ -25,12 +25,12 @@ from geoalchemy2 import Geometry
 from sqlalchemy import cast, func, select
 from sqlalchemy.orm import Session
 
-from src.ia.afinidad import RecursoParaPuntuar, calcular_afinidad
+from src.domain.afinidad import RecursoParaPuntuar, calcular_afinidad
+from src.domain.avisos import Aviso, aviso
+from src.domain.temporada import esta_en_temporada, meses_del_viaje
 from src.ia.afluencia import PrediccionAfluencia, predecir_afluencia
 from src.modelos.catalogo import RecursoTuristico
 from src.modelos.preferencias import PreferenciaViaje
-from src.servicios.avisos import Aviso, aviso
-from src.servicios.temporada import esta_en_temporada, meses_del_viaje
 
 # ---------------------------------------------------------------------------
 # Capa 0 — filtros duros

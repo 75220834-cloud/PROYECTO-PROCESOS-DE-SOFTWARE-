@@ -42,6 +42,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from pruebas.conftest import necesita_base_de_datos
 from src.ia.asistente import (
     HERRAMIENTAS,
     INSTRUCCIONES,
@@ -53,7 +54,6 @@ from src.ia.asistente import (
 from src.modelos.catalogo import RecursoTuristico
 from src.modelos.preferencias import PreferenciaViaje
 from src.servicios import ruteo
-from pruebas.conftest import necesita_base_de_datos
 
 pytestmark = necesita_base_de_datos
 

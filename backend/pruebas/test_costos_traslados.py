@@ -43,6 +43,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from pruebas.conftest import necesita_base_de_datos
+from src.domain.red_vial import FACTOR_DE_RODEO, RedVial, distancia_en_linea_recta_m
 from src.modelos.itinerario import OrigenDelCalculo
 from src.modelos.transporte import ModoTransporte, TarifaTransporte
 from src.servicios import costos
@@ -53,8 +55,6 @@ from src.servicios.costos import (
     calcular_traslado,
     estimar_precio,
 )
-from src.servicios.red_vial import FACTOR_DE_RODEO, RedVial, distancia_en_linea_recta_m
-from pruebas.conftest import necesita_base_de_datos
 
 pytestmark = necesita_base_de_datos
 

@@ -17,6 +17,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
+from src.domain.avisos import aviso
+from src.domain.sentimiento import analizar
 from src.esquemas.errores import CONFLICTO, NO_ENCONTRADO
 from src.esquemas.valoraciones import (
     DistribucionPublica,
@@ -29,11 +31,9 @@ from src.esquemas.valoraciones import (
     ValoracionNueva,
     ValoracionPublica,
 )
-from src.ia.sentimiento import analizar
 from src.modelos.coordinacion import EstadoSolicitud, SolicitudCoordinacion
 from src.modelos.itinerario import Itinerario
 from src.modelos.valoracion import Valoracion
-from src.servicios.avisos import aviso
 from src.servicios.evidencia import resumir_evidencia
 from src.servicios.validacion_catalogo import obtener_ultimo_registro
 from src.utilidades.dependencias import ConfiguracionInyectada, SesionBD, UsuarioOpcional

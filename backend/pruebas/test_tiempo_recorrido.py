@@ -10,7 +10,7 @@ import math
 
 import pytest
 
-from src.ia.tiempo_recorrido import (
+from src.domain.tiempo_recorrido import (
     ALTITUD_DE_AVISO_M,
     PENDIENTE_OPTIMA,
     VELOCIDAD_MAXIMA_KMH,

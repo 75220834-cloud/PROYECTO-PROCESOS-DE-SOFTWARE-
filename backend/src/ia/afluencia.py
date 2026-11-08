@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 
+from src.domain.avisos import Aviso, aviso
 from src.ia.calendario import (
     dias_hasta_la_festividad_mas_cercana,
     es_feriado_nacional,
@@ -32,7 +33,6 @@ from src.ia.calendario import (
     hay_feria_dominical,
     temporada_de,
 )
-from src.servicios.avisos import Aviso, aviso
 
 
 class NivelAfluencia(StrEnum):

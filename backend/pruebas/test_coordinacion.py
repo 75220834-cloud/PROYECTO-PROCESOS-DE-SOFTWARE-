@@ -22,6 +22,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from pruebas.conftest import codigos
 from src.base_datos import obtener_sesion
 from src.main import aplicacion
 from src.modelos.coordinacion import (
@@ -33,7 +34,6 @@ from src.modelos.coordinacion import (
 )
 from src.modelos.usuario import RolUsuario
 from src.servicios.usuarios import registrar_usuario
-from pruebas.conftest import codigos
 
 #: Fecha del servicio en las pruebas: un sábado lejano, para que siempre pase
 #: el filtro de antelación mínima y el día de la semana sea estable.

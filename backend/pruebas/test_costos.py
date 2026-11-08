@@ -10,6 +10,11 @@ from decimal import Decimal
 
 import pytest
 
+from src.domain.red_vial import (
+    FACTOR_DE_RODEO,
+    RADIO_TERRESTRE_M,
+    distancia_en_linea_recta_m,
+)
 from src.modelos.transporte import ModoTransporte
 from src.servicios.costos import (
     DISTANCIA_DE_COLECTIVO_KM,
@@ -18,11 +23,6 @@ from src.servicios.costos import (
     _redondear_a_medio_sol,
     elegir_modo,
     estimar_precio,
-)
-from src.servicios.red_vial import (
-    FACTOR_DE_RODEO,
-    RADIO_TERRESTRE_M,
-    distancia_en_linea_recta_m,
 )
 
 # ---------------------------------------------------------------------------

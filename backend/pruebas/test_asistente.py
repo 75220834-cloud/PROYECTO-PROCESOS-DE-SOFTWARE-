@@ -25,6 +25,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from pruebas.conftest import necesita_base_de_datos
 from src.ia.asistente import (
     _CATEGORIA_DEL_INVENTARIO,
     HERRAMIENTAS,
@@ -33,7 +34,6 @@ from src.ia.asistente import (
 )
 from src.main import aplicacion
 from src.modelos.catalogo import RecursoTuristico
-from pruebas.conftest import necesita_base_de_datos
 
 pytestmark = necesita_base_de_datos
 

@@ -34,10 +34,10 @@ from datetime import UTC, date, datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from src.domain.avisos import Aviso, aviso
 from src.modelos.catalogo import RecursoTuristico
 from src.modelos.itinerario import Itinerario
 from src.modelos.valoracion import RegistroDeEvidencia, Sentimiento, Valoracion
-from src.servicios.avisos import Aviso, aviso
 
 #: Cuántas valoraciones hacen falta para que una media signifique algo.
 #:

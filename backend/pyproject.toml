@@ -109,10 +109,10 @@ exclude = '(\.venv|alembic/versions|notebooks)'
 [tool.pytest.ini_options]
 testpaths = ["pruebas"]
 pythonpath = ["."]
-addopts = "-v --cov=app --cov-report=term-missing"
+addopts = "-v --cov=src --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["app"]
+source = ["src"]
 
 # Que se EXCLUYE de la medicion, y por que.
 #
@@ -137,22 +137,22 @@ source = ["app"]
 # se excluye se nombra uno por uno, para que cualquiera pueda comprobar que
 # no se cuela nada que si atienda peticiones.
 omit = [
-    "app/__init__.py",
+    "src/__init__.py",
     "*/pruebas/*",
     # --- Carga de datos desde fuentes oficiales ---
-    "app/utilidades/cargar_calendario.py",
-    "app/utilidades/cargar_catalogo.py",
-    "app/utilidades/cargar_fichas.py",
-    "app/utilidades/cargar_prestadores.py",
+    "src/utilidades/cargar_calendario.py",
+    "src/utilidades/cargar_catalogo.py",
+    "src/utilidades/cargar_fichas.py",
+    "src/utilidades/cargar_prestadores.py",
     # --- Descarga y preparacion de datos geoespaciales ---
-    "app/utilidades/descargar_dem.py",
-    "app/utilidades/medir_cobertura_osm.py",
-    "app/utilidades/preparar_red_vial.py",
+    "src/utilidades/descargar_dem.py",
+    "src/utilidades/medir_cobertura_osm.py",
+    "src/utilidades/preparar_red_vial.py",
     # --- Siembra de datos de demostracion ---
-    "app/utilidades/proveedores_semilla.py",
-    "app/utilidades/usuarios_semilla.py",
+    "src/utilidades/proveedores_semilla.py",
+    "src/utilidades/usuarios_semilla.py",
     # --- Verificacion manual de una fase ---
-    "app/utilidades/verificar_fase4.py",
+    "src/utilidades/verificar_fase4.py",
 ]
 
 [tool.coverage.report]
@@ -179,7 +179,7 @@ omit = [
 # salta.
 fail_under = 95
 
-# Le indica a setuptools que el codigo del backend es el paquete "app"
+# Le indica a setuptools que el codigo del backend es el paquete "src"
 # y todos sus subpaquetes (modelos, esquemas, rutas, servicios, ia...).
 [tool.setuptools.packages.find]
-include = ["app*"]
+include = ["src*"]

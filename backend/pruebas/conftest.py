@@ -23,7 +23,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.base_datos import motor
+from src.base_datos import motor
 
 
 def hay_base_de_datos() -> bool:

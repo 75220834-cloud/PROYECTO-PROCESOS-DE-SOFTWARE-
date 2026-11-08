@@ -11,7 +11,7 @@ from datetime import date
 
 import pytest
 
-from app.ia.calendario import (
+from src.ia.calendario import (
     DIA_DE_LA_FERIA_DOMINICAL,
     TipoFestividad,
     calcular_domingo_de_pascua,

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from app.servicios.seguridad import (
+from src.servicios.seguridad import (
     crear_token_de_acceso,
     hashear_contrasena,
     leer_token_de_acceso,

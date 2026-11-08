@@ -23,15 +23,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.base_datos import obtener_sesion
-from app.configuracion import Configuracion, obtener_configuracion
-from app.main import aplicacion
-from app.modelos.catalogo import RecursoTuristico
-from app.modelos.itinerario import Itinerario
-from app.modelos.preferencias import PreferenciaViaje
-from app.modelos.valoracion import Valoracion
-from app.servicios.avisos import CODIGOS_CONOCIDOS
-from app.servicios.evidencia import (
+from src.base_datos import obtener_sesion
+from src.configuracion import Configuracion, obtener_configuracion
+from src.main import aplicacion
+from src.modelos.catalogo import RecursoTuristico
+from src.modelos.itinerario import Itinerario
+from src.modelos.preferencias import PreferenciaViaje
+from src.modelos.valoracion import Valoracion
+from src.servicios.avisos import CODIGOS_CONOCIDOS
+from src.servicios.evidencia import (
     MINIMO_PARA_FIARSE,
     calcular_cobertura,
     guardar_instantanea,

@@ -22,17 +22,17 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.base_datos import obtener_sesion
-from app.main import aplicacion
-from app.modelos.coordinacion import (
+from src.base_datos import obtener_sesion
+from src.main import aplicacion
+from src.modelos.coordinacion import (
     DisponibilidadServicio,
     EstadoSolicitud,
     Proveedor,
     Servicio,
     TipoServicio,
 )
-from app.modelos.usuario import RolUsuario
-from app.servicios.usuarios import registrar_usuario
+from src.modelos.usuario import RolUsuario
+from src.servicios.usuarios import registrar_usuario
 from pruebas.conftest import codigos
 
 #: Fecha del servicio en las pruebas: un sábado lejano, para que siempre pase
@@ -852,8 +852,8 @@ def test_una_solicitud_puede_venir_de_un_itinerario(
     Es lo que conecta el Incremento 5 con el 4: el visitante ve su itinerario y
     desde ahí pide lo que necesita.
     """
-    from app.modelos.itinerario import Itinerario
-    from app.modelos.preferencias import PreferenciaViaje
+    from src.modelos.itinerario import Itinerario
+    from src.modelos.preferencias import PreferenciaViaje
 
     preferencia = PreferenciaViaje(
         usuario_id=None,
@@ -915,7 +915,7 @@ class TestFiltrosDelCatalogoDeServicios:
         self, cliente: TestClient, escenario: dict, sesion: Session
     ):
         """Un taller junto a la laguna no sirve a quien va al convento."""
-        from app.modelos.catalogo import RecursoTuristico
+        from src.modelos.catalogo import RecursoTuristico
 
         recurso = RecursoTuristico(
             codigo_mincetur="970001",

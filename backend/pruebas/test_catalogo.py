@@ -10,8 +10,8 @@ import pytest
 from geoalchemy2 import Geometry
 from sqlalchemy import cast, func, select
 
-from app.modelos.catalogo import RecursoTuristico
-from app.servicios.catalogo import (
+from src.modelos.catalogo import RecursoTuristico
+from src.servicios.catalogo import (
     convertir_a_numero,
     convertir_fecha_de_corte,
     detectar_codificacion,

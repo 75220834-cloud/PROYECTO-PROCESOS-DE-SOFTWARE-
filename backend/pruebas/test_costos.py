@@ -10,8 +10,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.modelos.transporte import ModoTransporte
-from app.servicios.costos import (
+from src.modelos.transporte import ModoTransporte
+from src.servicios.costos import (
     DISTANCIA_DE_COLECTIVO_KM,
     DISTANCIA_MAXIMA_A_PIE_KM,
     PARAMETROS_DE_ESTIMACION,
@@ -19,7 +19,7 @@ from app.servicios.costos import (
     elegir_modo,
     estimar_precio,
 )
-from app.servicios.red_vial import (
+from src.servicios.red_vial import (
     FACTOR_DE_RODEO,
     RADIO_TERRESTRE_M,
     distancia_en_linea_recta_m,

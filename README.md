@@ -145,7 +145,7 @@ pip install -e ".[desarrollo]"
 Levanta la API:
 
 ```bash
-uvicorn app.main:aplicacion --reload
+uvicorn src.main:aplicacion --reload
 ```
 
 Abre <http://localhost:8000/docs> para ver la documentación interactiva de
@@ -459,7 +459,7 @@ cd frontend && npm run probar
 
 | Comando | Qué hace |
 |---|---|
-| `uvicorn app.main:aplicacion --reload` | Levanta la API y la recarga al guardar |
+| `uvicorn src.main:aplicacion --reload` | Levanta la API y la recarga al guardar |
 | `pytest` | Ejecuta las pruebas y muestra la cobertura |
 | `ruff check app tests` | Revisa errores y estilo |
 | `black app tests` | Formatea el código |

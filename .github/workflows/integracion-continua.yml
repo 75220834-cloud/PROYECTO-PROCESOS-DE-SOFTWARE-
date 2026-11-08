@@ -331,7 +331,7 @@ jobs:
       # mano, `alembic/` incluida: las migraciones también son código.
       # ---------------------------------------------------------------------
       - name: Revisar el estilo con ruff
-        run: python -m ruff check app/ pruebas/ alembic/
+        run: python -m ruff check src/ pruebas/ alembic/
 
       # ---------------------------------------------------------------------
       # PASO 8 — black
@@ -345,7 +345,7 @@ jobs:
       # de una línea demasiado larga.
       # ---------------------------------------------------------------------
       - name: Comprobar el formato con black
-        run: python -m black --check app/ pruebas/ alembic/
+        run: python -m black --check src/ pruebas/ alembic/
 
   # =========================================================================
   # TRABAJO 2 — FRONTEND

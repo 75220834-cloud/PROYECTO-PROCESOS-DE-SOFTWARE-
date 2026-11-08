@@ -25,12 +25,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.base_datos import obtener_sesion
-from app.main import aplicacion
-from app.modelos.catalogo import HorarioAtencion, RecursoTuristico
-from app.modelos.itinerario import Itinerario
-from app.modelos.preferencias import PreferenciaViaje
-from app.servicios import ruteo
+from src.base_datos import obtener_sesion
+from src.main import aplicacion
+from src.modelos.catalogo import HorarioAtencion, RecursoTuristico
+from src.modelos.itinerario import Itinerario
+from src.modelos.preferencias import PreferenciaViaje
+from src.servicios import ruteo
 from pruebas.conftest import codigos, parametros_de
 
 #: Un sábado, para que el día de la semana sea estable en las pruebas de

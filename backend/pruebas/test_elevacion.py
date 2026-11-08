@@ -26,8 +26,8 @@ from pathlib import Path
 
 import pytest
 
-from app.servicios import elevacion
-from app.servicios.elevacion import (
+from src.servicios import elevacion
+from src.servicios.elevacion import (
     MuestreadorDeAltitud,
     descargar_tesela,
     nombre_de_tesela,

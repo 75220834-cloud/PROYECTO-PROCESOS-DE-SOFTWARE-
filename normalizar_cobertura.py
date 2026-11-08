@@ -10,7 +10,7 @@ montado en ``/usr/src``, y resuelve las rutas de los informes de cobertura
 existen:
 
 - ``backend/coverage.xml`` guarda en ``<source>`` la ruta **absoluta de
-  Windows** del directorio ``backend/app`` y los nombres de archivo relativos a
+  Windows** del directorio ``backend/src`` y los nombres de archivo relativos a
   ella. Dentro del contenedor esa ruta no existe.
 - ``frontend/coverage/lcov.info`` guarda ``SF:src\\componentes\\...``: relativo a
   ``frontend/`` y con **barras invertidas**. El escáner buscaría
@@ -46,7 +46,7 @@ def normalizar_xml() -> bool:
     texto = ruta.read_text(encoding="utf-8")
     nuevo, cuantos = re.subn(
         r"<source>.*?</source>",
-        "<source>backend/app</source>",
+        "<source>backend/src</source>",
         texto,
         flags=re.DOTALL,
     )
@@ -56,7 +56,7 @@ def normalizar_xml() -> bool:
         return False
 
     ruta.write_text(nuevo, encoding="utf-8")
-    print(f"  OK     coverage.xml: {cuantos} <source> -> backend/app")
+    print(f"  OK     coverage.xml: {cuantos} <source> -> backend/src")
     return True
 
 

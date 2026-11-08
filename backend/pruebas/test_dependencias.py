@@ -48,12 +48,12 @@ from fastapi.testclient import TestClient
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from app.base_datos import obtener_sesion
-from app.configuracion import obtener_configuracion
-from app.modelos.usuario import RolUsuario, Usuario
-from app.servicios.seguridad import ALGORITMO_DEL_TOKEN, crear_token_de_acceso
-from app.servicios.usuarios import registrar_usuario
-from app.utilidades.dependencias import (
+from src.base_datos import obtener_sesion
+from src.configuracion import obtener_configuracion
+from src.modelos.usuario import RolUsuario, Usuario
+from src.servicios.seguridad import ALGORITMO_DEL_TOKEN, crear_token_de_acceso
+from src.servicios.usuarios import registrar_usuario
+from src.utilidades.dependencias import (
     exigir_rol,
     obtener_usuario_opcional,
     obtener_usuario_requerido,

@@ -9,9 +9,9 @@ sirve como red de seguridad.
 import pytest
 from fastapi.testclient import TestClient
 
-from app.base_datos import obtener_sesion
-from app.configuracion import Configuracion, obtener_configuracion
-from app.main import aplicacion
+from src.base_datos import obtener_sesion
+from src.configuracion import Configuracion, obtener_configuracion
+from src.main import aplicacion
 
 
 class SesionSimulada:
@@ -89,7 +89,7 @@ def test_salud_reporta_operativo_cuando_todo_responde(cliente, monkeypatch):
             return {"models": [{"name": "modelo-de-prueba"}]}
 
     # Sustituimos la llamada HTTP real a Ollama por una respuesta fija.
-    monkeypatch.setattr("app.rutas.salud.httpx.get", lambda *a, **k: RespuestaSimulada())
+    monkeypatch.setattr("src.rutas.salud.httpx.get", lambda *a, **k: RespuestaSimulada())
 
     aplicacion.dependency_overrides[obtener_sesion] = lambda: SesionSimulada("3.4 USE_GEOS=1")
     aplicacion.dependency_overrides[obtener_configuracion] = lambda: configuracion

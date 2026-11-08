@@ -15,8 +15,8 @@ from datetime import date
 
 import pytest
 
-from app.servicios.temporada import esta_en_temporada, meses_del_viaje
-from app.utilidades.fichas_mincetur import (
+from src.servicios.temporada import esta_en_temporada, meses_del_viaje
+from src.utilidades.fichas_mincetur import (
     codigo_de_la_url,
     cuando_se_celebra,
     interpretar_horario,

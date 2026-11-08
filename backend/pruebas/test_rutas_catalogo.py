@@ -10,10 +10,10 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from app.base_datos import obtener_sesion
-from app.main import aplicacion
-from app.servicios.catalogo import importar_inventario
-from app.servicios.validacion_catalogo import validar_catalogo
+from src.base_datos import obtener_sesion
+from src.main import aplicacion
+from src.servicios.catalogo import importar_inventario
+from src.servicios.validacion_catalogo import validar_catalogo
 
 
 @pytest.fixture

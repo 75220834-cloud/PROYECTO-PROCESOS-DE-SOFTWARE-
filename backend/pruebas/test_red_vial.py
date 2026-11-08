@@ -33,9 +33,9 @@ import pickle
 
 import pytest
 
-from app.ia.tiempo_recorrido import calcular_tramo_caminando
-from app.modelos.itinerario import OrigenDelCalculo
-from app.servicios.red_vial import (
+from src.ia.tiempo_recorrido import calcular_tramo_caminando
+from src.modelos.itinerario import OrigenDelCalculo
+from src.servicios.red_vial import (
     DISTANCIA_MAXIMA_AL_NODO_M,
     FACTOR_DE_RODEO,
     RedVial,
@@ -520,7 +520,7 @@ def ruta_temporal_del_grafo(tmp_path, monkeypatch):
     de una prueba a la siguiente.
     """
     ruta = tmp_path / "red" / "grafo_de_prueba.pickle"
-    monkeypatch.setattr("app.servicios.red_vial.RUTA_DEL_GRAFO", ruta)
+    monkeypatch.setattr("src.servicios.red_vial.RUTA_DEL_GRAFO", ruta)
     obtener_red_vial.cache_clear()
 
     yield ruta
@@ -549,7 +549,7 @@ class TestConstruccionYCarga:
 
         monkeypatch.setattr(ox, "graph_from_bbox", descarga_falsa)
         monkeypatch.setattr(
-            "app.servicios.elevacion.MuestreadorDeAltitud", lambda: _MuestreadorFalso()
+            "src.servicios.elevacion.MuestreadorDeAltitud", lambda: _MuestreadorFalso()
         )
 
         limites = (-75.4, -12.3, -75.0, -11.7)
@@ -568,7 +568,7 @@ class TestConstruccionYCarga:
 
         monkeypatch.setattr(ox, "graph_from_bbox", lambda **_: _grafo_de_prueba())
         monkeypatch.setattr(
-            "app.servicios.elevacion.MuestreadorDeAltitud", lambda: _MuestreadorFalso()
+            "src.servicios.elevacion.MuestreadorDeAltitud", lambda: _MuestreadorFalso()
         )
 
         construir_y_guardar((-75.4, -12.3, -75.0, -11.7))

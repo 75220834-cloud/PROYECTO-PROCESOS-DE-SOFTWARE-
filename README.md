@@ -492,17 +492,58 @@ cd frontend && npm run probar
 
 ## 6. Estructura del repositorio
 
+### 6.1 Arquitectura hexagonal: dominio, puertos y adaptadores
+
+El núcleo de cálculo está separado de la infraestructura. La dependencia apunta
+siempre hacia adentro: el ORM importa del dominio, nunca al revés.
+
+```
+backend/src/
+├── domain/                    el cálculo y las reglas. CERO frameworks.
+│   ├── red_vial.py            caminos sobre la red, pendientes, rodeo
+│   ├── tiempo_recorrido.py    función de Tobler
+│   ├── afinidad.py            TF-IDF y términos decisivos
+│   ├── sentimiento.py         análisis con umbral de confianza
+│   ├── avisos.py              avisos como {código, parámetros}
+│   ├── temporada.py           meses del viaje y temporada
+│   └── valores/               objetos de valor: Interes, Sentimiento,
+│                              ModoTransporte, OrigenDelCalculo, Ritmo…
+├── ports/                     lo que el dominio declara y otro implementa
+│   └── elevacion.py           FuenteDeAltitud
+└── adapters/
+    ├── inbound/               entrada (los enrutadores, fases siguientes)
+    └── outbound/              salida: lo que toca el mundo
+        ├── elevacion_copernicus.py   teselas GeoTIFF, httpx, rasterio
+        └── red_vial_osm.py           descarga de OSM, grafo en disco
+```
+
+**Que el dominio no importa ningún framework no es una afirmación: lo comprueba
+una prueba automática.** `backend/pruebas/test_dominio_sin_frameworks.py` lee
+los imports con el módulo `ast` y falla si aparece FastAPI, SQLAlchemy,
+GeoAlchemy2, psycopg, Alembic, Pydantic o un cliente HTTP. Tiene un paso propio
+en la integración continua.
+
+OR-Tools, scikit-learn, OSMnx y pysentimiento **sí** pueden aparecer en el
+dominio: son librerías de cálculo, no de infraestructura. El razonamiento está
+en [ADR-017](docs/adr/ADR-017-migracion-a-arquitectura-hexagonal.md), junto con
+lo que todavía falta por migrar.
+
+### 6.2 El repositorio completo
+
 ```
 PROYECTO-PROCESOS-DE-SOFTWARE-/
 ├── backend/
-│   ├── app/
+│   ├── src/
 │   │   ├── main.py            punto de entrada de FastAPI
 │   │   ├── configuracion.py   variables de entorno e interruptores de modelo
 │   │   ├── base_datos.py      conexión y sesiones de SQLAlchemy
+│   │   ├── domain/            el cálculo y las reglas (ver 6.1)
+│   │   ├── ports/             interfaces que el dominio declara
+│   │   ├── adapters/          entrada y salida
 │   │   ├── modelos/           tablas (SQLAlchemy)
 │   │   ├── esquemas/          entrada y salida (Pydantic)
 │   │   ├── rutas/             endpoints de la API
-│   │   ├── servicios/         lógica de negocio
+│   │   ├── servicios/         lógica aún acoplada a la base (fases 3 a 6)
 │   │   ├── ia/                modelos y sus alternativas por reglas
 │   │   └── utilidades/
 │   ├── datos/                 CSV fuente y datos derivados (no versionados)

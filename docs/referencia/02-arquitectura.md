@@ -6,6 +6,68 @@ que se descartó, que suele ser lo que preguntan.
 
 ---
 
+## Dominio, puertos y adaptadores
+
+Desde el 8 de noviembre de 2026 el núcleo de cálculo está separado de la
+infraestructura siguiendo el patrón de puertos y adaptadores. La migración
+está **en curso**: lo que sigue describe lo que hay hoy, no lo que se pretende.
+
+```mermaid
+graph LR
+    subgraph adaptadores_entrada["Adaptadores de entrada"]
+        RUTAS["rutas/ · esquemas/<br/><i>pendiente de mover</i>"]
+    end
+
+    subgraph nucleo["src/domain/ — cero frameworks"]
+        DOM["red_vial · tiempo_recorrido<br/>afinidad · sentimiento<br/>avisos · temporada<br/>valores/"]
+    end
+
+    subgraph puertos["src/ports/"]
+        P1["FuenteDeAltitud"]
+    end
+
+    subgraph adaptadores_salida["src/adapters/outbound/"]
+        A1["elevacion_copernicus<br/><i>GeoTIFF · httpx · rasterio</i>"]
+        A2["red_vial_osm<br/><i>OSM · grafo en disco</i>"]
+    end
+
+    RUTAS --> DOM
+    DOM -.declara.-> P1
+    A1 -.implementa.-> P1
+    A2 --> DOM
+    A2 --> P1
+```
+
+**La flecha que importa es la punteada.** El dominio *declara* el puerto; el
+adaptador lo *implementa*. El dominio no conoce a `elevacion_copernicus`, y por
+eso una prueba puede darle un diccionario de tres entradas en su lugar.
+
+### Qué puede y qué no puede importar el dominio
+
+| | |
+|---|---|
+| **Prohibido** | FastAPI, Starlette, SQLAlchemy, GeoAlchemy2, psycopg, Alembic, Pydantic, httpx, requests |
+| **Prohibido** | `src.adapters`, `src.modelos`, `src.rutas`, `src.esquemas`, `src.servicios`, `src.ia`, `src.base_datos` |
+| **Permitido** | OR-Tools, scikit-learn, NumPy, OSMnx, NetworkX, pysentimiento |
+
+Las librerías de cálculo están permitidas a propósito: no hablan con la red, ni
+con el disco, ni con la base. El razonamiento completo está en
+[ADR-017](../adr/ADR-017-migracion-a-arquitectura-hexagonal.md).
+
+Lo comprueba `backend/pruebas/test_dominio_sin_frameworks.py` leyendo los
+imports con `ast`, y tiene paso propio en la integración continua.
+
+### Lo que todavía no es hexagonal
+
+`src/servicios/`, `src/rutas/`, `src/modelos/` y `src/esquemas/` conservan la
+estructura anterior. Nueve módulos de `servicios/` siguen importando SQLAlchemy
+y hay 47 firmas que reciben `sesion: Session`. Las fases 3 a 6 del
+[plan de migración](../plan-migracion-hexagonal.md) son exactamente eso.
+
+La sección siguiente describe esas capas tal como están hoy.
+
+---
+
 ## La vista de conjunto
 
 ```mermaid

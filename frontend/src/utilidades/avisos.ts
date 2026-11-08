@@ -2,7 +2,7 @@
  * Convierte los avisos del backend en frases, en el idioma del visitante.
  *
  * El backend manda `{codigo, parametros}` en vez de una frase. El razonamiento
- * está en `backend/app/servicios/avisos.py`; aquí está la otra mitad: cómo se
+ * está en `backend/src/domain/avisos.py`; aquí está la otra mitad: cómo se
  * redacta.
  *
  * ## El detalle de `count`

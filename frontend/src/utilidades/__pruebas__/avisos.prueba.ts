@@ -18,9 +18,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import instancia from '@/i18n';
 import { redactarAviso, redactarAvisos, traducirError } from '@/utilidades/avisos';
 
-/** Los códigos que el backend declara, leídos de `servicios/avisos.py`. */
+/** Los códigos que el backend declara, leídos de `domain/avisos.py`. */
 function codigosDelBackend(): string[] {
-  const ruta = join(process.cwd(), '..', 'backend', 'app', 'servicios', 'avisos.py');
+  const ruta = join(process.cwd(), '..', 'backend', 'src', 'domain', 'avisos.py');
   const fuente = readFileSync(ruta, 'utf8');
 
   const bloque = fuente.slice(

@@ -320,8 +320,28 @@ jobs:
       # dar por hecho que hay red. La honestidad del sistema sobre lo que sabe
       # y lo que estima es lo que permite que esto se pueda probar aquí.
       # ---------------------------------------------------------------------
-      - name: Correr las pruebas con cobertura (falla por debajo del 60 %)
+      - name: Correr las pruebas con cobertura (falla por debajo del 95 %)
         run: python -m pytest -q
+
+      # ---------------------------------------------------------------------
+      # PASO 6 bis — El dominio no conoce ningún framework
+      #
+      # Esta comprobación ya corre dentro del paso anterior, porque es parte
+      # de la suite. Se repite aquí como paso con nombre propio a propósito:
+      # «cero acoplamiento de frameworks en el Dominio» es un requisito de la
+      # asignatura, y un requisito que solo se puede comprobar leyendo 68
+      # archivos a mano no es un requisito, es una esperanza.
+      #
+      # Al tener paso propio, el registro de la integración continua dice en
+      # una línea si la arquitectura hexagonal sigue siendo cierta o si
+      # alguien metió SQLAlchemy en el dominio sin darse cuenta.
+      #
+      # Lee los imports con `ast`, no con búsqueda de texto: un comentario
+      # que mencione SQLAlchemy no la engaña, y un import construido a mano
+      # tampoco se le escapa.
+      # ---------------------------------------------------------------------
+      - name: Comprobar que el dominio no importa frameworks
+        run: python -m pytest pruebas/test_dominio_sin_frameworks.py -v --no-cov
 
       # ---------------------------------------------------------------------
       # PASO 7 — ruff
@@ -331,7 +351,7 @@ jobs:
       # mano, `alembic/` incluida: las migraciones también son código.
       # ---------------------------------------------------------------------
       - name: Revisar el estilo con ruff
-        run: python -m ruff check app/ pruebas/ alembic/
+        run: python -m ruff check src/ pruebas/ alembic/
 
       # ---------------------------------------------------------------------
       # PASO 8 — black
@@ -345,7 +365,7 @@ jobs:
       # de una línea demasiado larga.
       # ---------------------------------------------------------------------
       - name: Comprobar el formato con black
-        run: python -m black --check app/ pruebas/ alembic/
+        run: python -m black --check src/ pruebas/ alembic/
 
   # =========================================================================
   # TRABAJO 2 — FRONTEND
@@ -376,7 +396,7 @@ jobs:
       # OJO: se descarga el repositorio COMPLETO, no solo `frontend/`.
       #
       # No es descuido. La prueba `utilidades/avisos.prueba.ts` abre el
-      # archivo Python `backend/app/servicios/avisos.py` y lee de ahí la lista
+      # archivo Python `backend/src/domain/avisos.py` y lee de ahí la lista
       # de los 67 códigos de aviso, para comprobar que todos tienen su frase
       # en español y en inglés. Duplicar esa lista en el frontend sería copiar
       # justo lo que se quiere comprobar, que no comprueba nada.

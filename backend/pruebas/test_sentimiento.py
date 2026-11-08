@@ -15,7 +15,7 @@ import importlib.util
 
 import pytest
 
-from app.ia.sentimiento import (
+from src.domain.sentimiento import (
     ALCANCE_DE_LA_NEGACION,
     PALABRAS_NEGATIVAS,
     PALABRAS_POSITIVAS,
@@ -27,7 +27,7 @@ from app.ia.sentimiento import (
     normalizar,
     validar_puntuacion,
 )
-from app.modelos.valoracion import Sentimiento, TemaValoracion
+from src.modelos.valoracion import Sentimiento, TemaValoracion
 
 #: Se salta lo que necesita el modelo si pysentimiento no está instalado. El
 #: proyecto tiene que poder probarse sin él.
@@ -295,7 +295,7 @@ class TestElInterruptor:
 
     def test_si_el_modelo_falla_se_degrada_a_reglas_y_se_dice(self, monkeypatch):
         """Fallar dejaría valoraciones sin analizar justo en la exposición."""
-        import app.ia.sentimiento as modulo
+        import src.domain.sentimiento as modulo
 
         def revienta(*_args, **_kwargs):
             raise RuntimeError("el modelo no está")
@@ -332,7 +332,7 @@ class TestValidacionDePuntuacion:
 class TestElModelo:
     def test_clasifica_una_positiva_y_una_negativa(self):
         """La comprobación explícita del plan de trabajo, con el modelo."""
-        from app.ia.sentimiento import analizar_con_modelo
+        from src.domain.sentimiento import analizar_con_modelo
 
         positiva = analizar_con_modelo("Excelente lugar, el guía muy amable y todo muy limpio.", 5)
         negativa = analizar_con_modelo("Pésimo. Los baños estaban sucios y nos cobraron de más.", 1)
@@ -349,7 +349,7 @@ class TestElModelo:
         lee. Las frases son literalmente las de la medición documentada en el
         ADR del incremento.
         """
-        from app.ia.sentimiento import analizar_con_modelo
+        from src.domain.sentimiento import analizar_con_modelo
 
         assert (
             analizar_con_modelo(
@@ -382,7 +382,7 @@ class TestElModelo:
         de confianza: con 0,52 el modelo NO se impone a la puntuación, que es
         exactamente lo que debe pasar cuando duda.
         """
-        from app.ia.sentimiento import CONFIANZA_PARA_IMPONERSE, _obtener_analizador
+        from src.domain.sentimiento import CONFIANZA_PARA_IMPONERSE, _obtener_analizador
 
         prediccion = _obtener_analizador().predict("Superó todas nuestras expectativas.")
         confianza = prediccion.probas[prediccion.output]
@@ -394,7 +394,7 @@ class TestElModelo:
 
     def test_tambien_detecta_temas(self):
         """El modelo clasifica sentimiento; los temas los ponen las reglas."""
-        from app.ia.sentimiento import analizar_con_modelo
+        from src.domain.sentimiento import analizar_con_modelo
 
         analisis = analizar_con_modelo("Los baños estaban sucios y caro.", 2)
 
@@ -403,7 +403,7 @@ class TestElModelo:
 
     def test_sin_comentario_cae_a_las_reglas(self):
         """Un modelo de texto no tiene nada que leer en una cadena vacía."""
-        from app.ia.sentimiento import analizar_con_modelo
+        from src.domain.sentimiento import analizar_con_modelo
 
         analisis = analizar_con_modelo(None, 5)
 

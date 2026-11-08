@@ -20,12 +20,12 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from app.base_datos import Base
-from app.configuracion import obtener_configuracion
+from src.base_datos import Base
+from src.configuracion import obtener_configuracion
 
 # Importar los módulos de modelos es lo que registra las tablas en Base.
 # Sin este import, Alembic no vería ninguna tabla y generaría migraciones vacías.
-from app.modelos import (  # noqa: F401
+from src.modelos import (  # noqa: F401
     afluencia,
     catalogo,
     coordinacion,

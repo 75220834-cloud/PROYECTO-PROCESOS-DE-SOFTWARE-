@@ -12,9 +12,9 @@ from datetime import date, timedelta
 import pytest
 from sqlalchemy import select
 
-from app.modelos.catalogo import RecursoTuristico, RegistroValidacion
-from app.servicios.catalogo import importar_inventario
-from app.servicios.validacion_catalogo import (
+from src.modelos.catalogo import RecursoTuristico, RegistroValidacion
+from src.servicios.catalogo import importar_inventario
+from src.servicios.validacion_catalogo import (
     DIAS_DE_VIGENCIA,
     coordenada_esta_en_el_valle,
     evaluar_recurso,

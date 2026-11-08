@@ -25,15 +25,15 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.ia.asistente import (
+from pruebas.conftest import necesita_base_de_datos
+from src.ia.asistente import (
     _CATEGORIA_DEL_INVENTARIO,
     HERRAMIENTAS,
     RespuestaDelAsistente,
     ejecutar_funcion,
 )
-from app.main import aplicacion
-from app.modelos.catalogo import RecursoTuristico
-from pruebas.conftest import necesita_base_de_datos
+from src.main import aplicacion
+from src.modelos.catalogo import RecursoTuristico
 
 pytestmark = necesita_base_de_datos
 
@@ -419,7 +419,7 @@ class TestSinOllamaSeAvisaSinFallar:
         ofrecer el camino por formulario con calma.
         """
         monkeypatch.setattr(
-            "app.rutas.asistente.conversar",
+            "src.rutas.asistente.conversar",
             lambda *args, **kwargs: RespuestaDelAsistente(
                 mensaje="El asistente no está disponible ahora mismo.",
                 esta_disponible=False,

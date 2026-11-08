@@ -12,9 +12,9 @@ from datetime import date, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from app.base_datos import obtener_sesion
-from app.main import aplicacion
-from app.servicios.usuarios import registrar_usuario
+from src.base_datos import obtener_sesion
+from src.main import aplicacion
+from src.servicios.usuarios import registrar_usuario
 
 HOY = date.today()
 

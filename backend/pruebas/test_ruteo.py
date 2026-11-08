@@ -19,10 +19,10 @@ from decimal import Decimal
 
 import pytest
 
-from app.modelos.itinerario import OrigenDelCalculo
-from app.modelos.transporte import ModoTransporte
-from app.servicios.costos import CostoDeTraslado
-from app.servicios.ruteo import (
+from src.modelos.itinerario import OrigenDelCalculo
+from src.modelos.transporte import ModoTransporte
+from src.servicios.costos import CostoDeTraslado
+from src.servicios.ruteo import (
     DURACION_DE_RESERVA_MIN,
     DURACION_PREDETERMINADA_MIN,
     MAXIMO_CANDIDATOS,

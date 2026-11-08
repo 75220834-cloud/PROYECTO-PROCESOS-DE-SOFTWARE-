@@ -26,8 +26,8 @@ from pathlib import Path
 
 import pytest
 
-from app.servicios import elevacion
-from app.servicios.elevacion import (
+from src.adapters.outbound import elevacion_copernicus as elevacion
+from src.adapters.outbound.elevacion_copernicus import (
     MuestreadorDeAltitud,
     descargar_tesela,
     nombre_de_tesela,

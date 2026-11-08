@@ -88,7 +88,7 @@ módulos. Sería declarar hexagonal lo que no lo es, que es exactamente el defec
 que esta migración viene a corregir.
 
 **Crear las tres carpetas vacías o casi vacías.** Se descarta por lo mismo. El
-dominio migrado son 1 947 líneas de cálculo real.
+dominio migrado son **2 275 líneas en 13 módulos**, medidas al terminar.
 
 **Migrar las nueve dependencias de base de datos en la misma entrega.** Son 47
 firmas que invertir y dos módulos con PostGIS incrustado dentro de la consulta

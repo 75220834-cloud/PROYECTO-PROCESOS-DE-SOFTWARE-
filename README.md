@@ -20,6 +20,43 @@ Universidad Continental, Huancayo. Ciclo 2026-20.
 > inventario del MINCETUR, 414 conteos de visitantes, y 162 prestadores
 > certificados por el Estado a los que el visitante puede llamar.
 
+## Enlaces rápidos
+
+| | |
+|---|---|
+| **Aplicación desplegada** | https://proyecto-procesos-de-software.vercel.app |
+| **API y su contrato** | https://rutavivamantaro-api.onrender.com · [`/docs`](https://rutavivamantaro-api.onrender.com/docs) |
+| **Versiones publicadas** | [Releases](https://github.com/75220834-cloud/PROYECTO-PROCESOS-DE-SOFTWARE-/releases) |
+| **Cómo contribuir** | [CONTRIBUTING.md](CONTRIBUTING.md) — ramas, commits y versiones |
+| **Decisiones de arquitectura** | [docs/adr/](docs/adr/) — 17 decisiones fechadas |
+| **Integración continua** | [Actions](https://github.com/75220834-cloud/PROYECTO-PROCESOS-DE-SOFTWARE-/actions) |
+
+## Arquitectura, en una pantalla
+
+El núcleo de cálculo está separado de la infraestructura siguiendo puertos y
+adaptadores. **Que el dominio no importe ningún marco de trabajo no es una
+afirmación de este README: lo comprueba una prueba automática en cada envío.**
+
+```
+backend/src/
+├── domain/        el cálculo y las reglas — CERO frameworks
+│   ├── red_vial.py · tiempo_recorrido.py · afinidad.py
+│   ├── sentimiento.py · avisos.py · temporada.py
+│   └── valores/   objetos de valor: Interes, Sentimiento, ModoTransporte…
+├── ports/         lo que el dominio declara y otro implementa
+│   └── elevacion.py          FuenteDeAltitud
+└── adapters/
+    ├── inbound/              entrada (fases siguientes del ADR-017)
+    └── outbound/
+        ├── elevacion_copernicus.py   teselas GeoTIFF · httpx · rasterio
+        └── red_vial_osm.py           OpenStreetMap · grafo en disco
+```
+
+La prueba es [`backend/pruebas/test_dominio_sin_frameworks.py`](backend/pruebas/test_dominio_sin_frameworks.py);
+lee los imports con el módulo `ast` y tiene paso propio en la integración
+continua. El alcance de lo que **todavía no** está migrado está declarado en
+[ADR-017](docs/adr/ADR-017-migracion-a-arquitectura-hexagonal.md).
+
 ---
 
 ## 0. Documentación

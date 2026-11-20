@@ -121,7 +121,8 @@ que poder defender.
 | **El asistente nunca genera datos** | Solo llama a funciones del backend y redacta con lo que devuelven. Ver [08](08-asistente-conversacional.md). |
 | **Honestidad con los datos** | Todo dato estimado se marca como tal, con su fuente y su fecha. Lo que la fuente no publica se queda vacío y se dice. Ver [06](06-fuentes-de-datos.md). |
 | **Pruebas desde la fase 1** | Una fase no está hecha si sus pruebas no pasan. Ver [12](12-pruebas-y-calidad.md). |
-| **Un commit por tarea** | Conventional Commits en español, con la brecha entre corchetes. Todo a `main`, sin ramas. |
+| **Un commit por tarea** | Conventional Commits en español, con la brecha entre corchetes. |
+| **Ramificación GitFlow** | Desde el 19 de noviembre de 2026 el trabajo entra por `feature/*` → propuesta de cambio hacia `develop` → `release/*` → propuesta hacia `main`. Ninguna rama larga admite commits directos. **Sustituye a la regla anterior**, que mandaba todo a `main` sin ramas y fue el hallazgo principal de aseguramiento de calidad del informe integrador. Ver [CONTRIBUTING.md](../../CONTRIBUTING.md). |
 
 ### Lo que el proyecto decidió NO hacer
 

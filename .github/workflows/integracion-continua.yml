@@ -34,21 +34,27 @@ name: Integración continua
 # ---------------------------------------------------------------------------
 # CUÁNDO SE DISPARA
 #
-# Dos situaciones, y las dos apuntan a `main` porque este proyecto no usa
-# ramas (regla 1.4 del plan de trabajo: todo va a `main`):
+# Dos situaciones sobre DOS ramas, desde que el proyecto adopto GitFlow
+# (regla 1.4 revisada: el trabajo entra por `feature/*` -> `develop` ->
+# `release/*` -> `main`, siempre por propuesta de cambio).
 #
-#   push          — cada vez que se sube un commit. Es el caso real de este
-#                   proyecto, y el que deja el distintivo verde o rojo junto
-#                   al commit en la página del repositorio.
-#   pull_request  — si alguna vez se abre una propuesta de cambio contra
-#                   `main`, se comprueba ANTES de integrarla. Hoy no se usa,
-#                   pero cuesta una línea y es lo que pide la asignatura.
+#   push          — cada vez que se sube un commit a `main` o a `develop`.
+#                   Deja el distintivo verde o rojo junto al commit en la
+#                   pagina del repositorio.
+#   pull_request  — cuando se abre una propuesta contra `main` o `develop`,
+#                   se comprueba ANTES de integrarla. Esto ya NO es
+#                   decorativo: la proteccion de ramas exige que estas
+#                   comprobaciones pasen para poder fusionar.
+#
+# Las ramas `feature/*` no se nombran aqui a proposito: su codigo se
+# comprueba igualmente en la propuesta que abren contra `develop`, y
+# disparar dos veces por el mismo cambio solo gasta minutos de ejecucion.
 # ---------------------------------------------------------------------------
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 # ---------------------------------------------------------------------------
 # PERMISOS

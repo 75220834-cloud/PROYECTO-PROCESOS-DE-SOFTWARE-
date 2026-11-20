@@ -76,10 +76,12 @@ graph TB
         UI["React 19 + TypeScript 6<br/>Vite · Tailwind 4 · i18next"]
     end
 
-    subgraph servidor["Servidor"]
-        API["FastAPI<br/>rutas/ · esquemas/"]
-        SRV["Lógica de negocio<br/>servicios/"]
-        IA["Modelos y reglas<br/>ia/"]
+    subgraph servidor["Servidor · backend/src/"]
+        API["FastAPI<br/>rutas/ · esquemas/<br/><i>cumple de adaptador de entrada</i>"]
+        SRV["servicios/ · ia/<br/><i>9 módulos aún con SQLAlchemy</i>"]
+        DOM["<b>domain/</b><br/>ruteo · Tobler · TF-IDF<br/>sentimiento · avisos · valores<br/><b>cero frameworks</b>"]
+        PORT["<b>ports/</b><br/>FuenteDeAltitud"]
+        ADA["<b>adapters/outbound/</b><br/>elevacion_copernicus<br/>red_vial_osm"]
         ORM["SQLAlchemy 2 + GeoAlchemy2<br/>modelos/"]
     end
 
@@ -96,18 +98,36 @@ graph TB
 
     UI -->|"HTTP · JSON"| API
     API --> SRV
-    SRV --> IA
+    API --> DOM
+    SRV --> DOM
     SRV --> ORM
     ORM --> BD
+    ORM --> DOM
+    DOM -.->|"declara"| PORT
+    ADA -.->|"implementa"| PORT
+    ADA --> DISCO
     SRV -.->|"solo el asistente"| OLLAMA
-    SRV --> DISCO
     MINCETUR -.->|"carga puntual"| DISCO
-    OSM -.->|"carga puntual"| DISCO
+    OSM -.->|"carga puntual"| ADA
 
+    style DOM stroke-width:3px
+    style PORT stroke-dasharray: 3 3
     style OLLAMA stroke-dasharray: 5 5
     style MINCETUR stroke-dasharray: 5 5
     style OSM stroke-dasharray: 5 5
 ```
+
+> **Cómo se lee este diagrama.** Todas las flechas que tocan `domain/` apuntan
+> **hacia él**, nunca al revés: el ORM importa del dominio, no el dominio del
+> ORM. Las dos punteadas de `ports/` son la inversión de dependencias — el
+> dominio *declara* el puerto y el adaptador lo *implementa*, de modo que el
+> cálculo nunca conoce a `elevacion_copernicus`.
+>
+> `servicios/`, `ia/`, `rutas/`, `esquemas/` y `modelos/` conservan la
+> estructura anterior a la migración. Nueve de esos módulos importan
+> SQLAlchemy y cincuenta firmas reciben una sesión de base de datos. Está
+> declarado con su alcance en
+> [ADR-017](../adr/ADR-017-migracion-a-arquitectura-hexagonal.md), fases 3 a 6.
 
 Las líneas discontinuas son **opcionales o puntuales**: Ollama puede no estar y
 la aplicación funciona entera; el MINCETUR y OpenStreetMap se consultan al

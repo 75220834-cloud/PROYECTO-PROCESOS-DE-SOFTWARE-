@@ -129,8 +129,6 @@ graph TB
 > declarado con su alcance en
 > [ADR-017](../adr/ADR-017-migracion-a-arquitectura-hexagonal.md), fases 3 a 6.
 
-```
-
 Las líneas discontinuas son **opcionales o puntuales**: Ollama puede no estar y
 la aplicación funciona entera; el MINCETUR y OpenStreetMap se consultan al
 cargar los datos, no en cada petición.

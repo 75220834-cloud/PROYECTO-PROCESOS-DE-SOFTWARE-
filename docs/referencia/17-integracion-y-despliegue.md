@@ -139,8 +139,8 @@ commit se acuerde.
 
 | Suceso | Cuándo ocurre en este proyecto |
 |---|---|
-| `push` a `main` | **En cada commit.** Es el caso real: el proyecto no usa ramas (regla 1.4) |
-| `pull_request` contra `main` | Hoy nunca. Está por lo que pide la asignatura y porque cuesta una línea |
+| `push` a `main` o a `develop` | Cada vez que se integra algo en cualquiera de las dos ramas largas |
+| `pull_request` contra `main` o `develop` | **En cada propuesta de cambio.** Desde la adopción de GitFlow es el caso habitual: ningún cambio llega a `develop` sin pasar por aquí |
 
 Además hay una regla de simultaneidad: si se suben dos commits seguidos, la
 comprobación del primero **se cancela**. Lo que interesa es si el último
